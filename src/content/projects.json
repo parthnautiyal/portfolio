@@ -1,0 +1,46 @@
+[
+  {
+    "id": "training-upskilling-v2",
+    "name": "training-upskilling-v2",
+    "description": "Full-stack e-learning platform for 500+ users with real-time progress tracking, automated workflows, course management, scheduling, and certificate automation. Reduced manual administrative effort by 6+ hours/week.",
+    "url": "https://github.com/parthnautiyal/training-upskilling-v2",
+    "stack": ["Angular.js", "TypeScript", "MySQL"],
+    "stars": 5,
+    "forks": 2,
+    "lastUpdated": "2024-06-01T00:00:00Z",
+    "isResumeProject": true
+  },
+  {
+    "id": "training-upskilling",
+    "name": "training-upskilling",
+    "description": "Full-stack e-learning platform for 500+ users with real-time progress tracking, automated workflows, course management, scheduling, and certificate automation.",
+    "url": "https://github.com/parthnautiyal/training-upskilling",
+    "stack": ["Angular.js", "TypeScript", "MySQL"],
+    "stars": 3,
+    "forks": 1,
+    "lastUpdated": "2024-01-01T00:00:00Z",
+    "isResumeProject": true
+  },
+  {
+    "id": "automated-deployment-pipeline",
+    "name": "automated-deployment-pipeline",
+    "description": "Automated CI/CD pipeline on AWS EC2 with Jenkins, Ansible, Docker, and Kubernetes to streamline deployments and release management across distributed environments.",
+    "url": "https://github.com/parthnautiyal/automated-deployment-pipeline",
+    "stack": ["Jenkins", "AWS EC2", "Ansible", "Docker", "Kubernetes"],
+    "stars": 8,
+    "forks": 3,
+    "lastUpdated": "2023-12-01T00:00:00Z",
+    "isResumeProject": true
+  },
+  {
+    "id": "portfolio",
+    "name": "portfolio",
+    "description": "Personal portfolio website featuring AI-powered chatbot, ATS resume analyzer, observability playground, and glassmorphic design system.",
+    "url": "https://github.com/parthnautiyal/portfolio",
+    "stack": ["React", "TypeScript", "TailwindCSS", "Vite"],
+    "stars": 2,
+    "forks": 0,
+    "lastUpdated": "2024-06-23T00:00:00Z",
+    "isResumeProject": true
+  }
+]

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { FiGithub, FiExternalLink, FiStar, FiGitBranch, FiBookmark } from 'react-icons/fi'
 import ProjectSkeleton from '../components/ProjectSkeleton.tsx'
+import staticProjectsRaw from '../content/projects.json'
 
 type Project = {
   id: string
@@ -14,136 +15,72 @@ type Project = {
   isResumeProject?: boolean
 }
 
-// Projects mentioned in Parth's resume — these are always pinned at the top
-const RESUME_PROJECT_NAMES = [
-  'training-upskilling-v2',
-  'training-upskilling',
-  'automated-deployment-pipeline',
-  'portfolio',
-]
+const STATIC_PROJECTS = staticProjectsRaw as Project[]
 
-// Enhanced descriptions & stacks from resume for known projects
 const RESUME_PROJECT_OVERRIDES: Record<string, Partial<Project>> = {
   'training-upskilling-v2': {
-    description:
-      'Full-stack e-learning platform for 500+ users with real-time progress tracking, automated workflows, course management, scheduling, and certificate automation. Reduced manual administrative effort by 6+ hours/week.',
+    description: 'Full-stack e-learning platform for 500+ users with real-time progress tracking, automated workflows, course management, scheduling, and certificate automation. Reduced manual administrative effort by 6+ hours/week.',
     stack: ['Angular.js', 'TypeScript', 'MySQL'],
     isResumeProject: true,
   },
   'training-upskilling': {
-    description:
-      'Full-stack e-learning platform for 500+ users with real-time progress tracking, automated workflows, course management, scheduling, and certificate automation.',
+    description: 'Full-stack e-learning platform for 500+ users with real-time progress tracking, automated workflows, course management, scheduling, and certificate automation.',
     stack: ['Angular.js', 'TypeScript', 'MySQL'],
     isResumeProject: true,
   },
   'automated-deployment-pipeline': {
-    description:
-      'Automated CI/CD pipeline on AWS EC2 with Jenkins, Ansible, Docker, and Kubernetes to streamline deployments and release management across distributed environments.',
+    description: 'Automated CI/CD pipeline on AWS EC2 with Jenkins, Ansible, Docker, and Kubernetes to streamline deployments and release management across distributed environments.',
     stack: ['Jenkins', 'AWS EC2', 'Ansible', 'Docker', 'Kubernetes'],
     isResumeProject: true,
   },
   portfolio: {
-    description:
-      'Personal portfolio website featuring AI-powered chatbot, ATS resume analyzer, observability playground, and glassmorphic design system.',
+    description: 'Personal portfolio website featuring AI-powered chatbot, ATS resume analyzer, observability playground, and glassmorphic design system.',
     stack: ['React', 'TypeScript', 'TailwindCSS', 'Vite'],
     isResumeProject: true,
   },
 }
 
-// Fallback projects if GitHub API fails
-const FALLBACK_PROJECTS: Project[] = [
-  {
-    id: 'training-upskilling-v2',
-    name: 'training-upskilling-v2',
-    description:
-      'Full-stack e-learning platform for 500+ users with real-time progress tracking, automated workflows, course management, scheduling, and certificate automation. Reduced manual administrative effort by 6+ hours/week.',
-    url: 'https://github.com/parthnautiyal/training-upskilling-v2',
-    stack: ['Angular.js', 'TypeScript', 'MySQL'],
-    stars: 5,
-    forks: 2,
-    isResumeProject: true,
-  },
-  {
-    id: 'automated-deployment-pipeline',
-    name: 'automated-deployment-pipeline',
-    description:
-      'Automated CI/CD pipeline on AWS EC2 with Jenkins, Ansible, Docker, and Kubernetes to streamline deployments.',
-    url: 'https://github.com/parthnautiyal/automated-deployment-pipeline',
-    stack: ['Jenkins', 'AWS EC2', 'Ansible', 'Docker', 'Kubernetes'],
-    stars: 8,
-    forks: 3,
-    isResumeProject: true,
-  },
-]
+const RESUME_PROJECT_NAMES = Object.keys(RESUME_PROJECT_OVERRIDES)
 
 export default function Projects() {
-  const [projects, setProjects] = useState<Project[]>(FALLBACK_PROJECTS)
+  const [projects, setProjects] = useState<Project[]>(STATIC_PROJECTS)
   const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState<'updated' | 'stars' | 'forks'>('updated')
-  const [githubError, setGithubError] = useState(false)
 
   useEffect(() => {
-    const fetchGitHubProjects = async () => {
-      // Check Session Storage Cache (15 min TTL)
+    const fetchProjects = async () => {
       const cached = sessionStorage.getItem('github_repos')
       const cachedAt = sessionStorage.getItem('github_repos_at')
-      if (cached && cachedAt) {
-        const age = Date.now() - parseInt(cachedAt)
-        if (age < 15 * 60 * 1000) {
-          try {
-            const parsed = JSON.parse(cached) as Project[]
-            if (parsed && parsed.length > 0) {
-              setProjects(parsed)
-              setLoading(false)
-              return
-            }
-          } catch {
-            // ignore cache error, fall through to fetch
-          }
-        }
+      if (cached && cachedAt && Date.now() - parseInt(cachedAt) < 15 * 60 * 1000) {
+        try {
+          const parsed = JSON.parse(cached) as Project[]
+          if (parsed.length > 0) { setProjects(parsed); setLoading(false); return }
+        } catch { /* fall through */ }
       }
 
-      setLoading(true)
-      setGithubError(false)
       try {
-        const apiUrl = import.meta.env.DEV
+        const url = import.meta.env.DEV
           ? 'https://api.github.com/users/parthnautiyal/repos?sort=updated&per_page=50'
           : '/api/github?username=parthnautiyal'
 
-        const response = await fetch(apiUrl)
-        if (!response.ok) {
-          throw new Error(`GitHub API returned ${response.status}`)
-        }
+        const res = await fetch(url)
+        if (!res.ok) throw new Error(`${res.status}`)
 
-        const repos = (await response.json()) as any[]
-
-        // Map GitHub repos to our Project type
+        const repos = (await res.json()) as any[]
         const mapped: Project[] = repos
-          .filter((repo) => !repo.fork)
-          .map((repo) => {
-            const key = repo.name.toLowerCase()
+          .filter(r => !r.fork)
+          .map(r => {
+            const key = r.name.toLowerCase()
             const override = RESUME_PROJECT_OVERRIDES[key] || {}
-
-            const stack =
-              override.stack ??
-              (repo.topics && repo.topics.length > 0
-                ? repo.topics
-                : repo.language
-                ? [repo.language]
-                : ['Software Engineering'])
-
             return {
               id: key,
-              name: repo.name,
-              description:
-                override.description ||
-                repo.description ||
-                'Professional software repository showcasing scalable systems implementation.',
-              url: repo.html_url,
-              stack,
-              stars: repo.stargazers_count,
-              forks: repo.forks_count,
-              lastUpdated: repo.pushed_at,
+              name: r.name,
+              description: override.description || r.description || 'Professional software repository.',
+              url: r.html_url,
+              stack: override.stack ?? (r.topics?.length ? r.topics : r.language ? [r.language] : ['Software Engineering']),
+              stars: r.stargazers_count,
+              forks: r.forks_count,
+              lastUpdated: r.pushed_at,
               isResumeProject: override.isResumeProject ?? RESUME_PROJECT_NAMES.includes(key),
             }
           })
@@ -154,15 +91,13 @@ export default function Projects() {
           sessionStorage.setItem('github_repos_at', Date.now().toString())
         }
       } catch (err) {
-        console.warn('GitHub API failed, using fallback portfolio data:', err)
-        setGithubError(true)
-        setProjects(FALLBACK_PROJECTS)
+        console.warn('GitHub API failed, using bundled data:', err)
+        // STATIC_PROJECTS already set as initial state — no-op
       } finally {
         setLoading(false)
       }
     }
-
-    void fetchGitHubProjects()
+    void fetchProjects()
   }, [])
 
   // Split projects into resume-pinned and the rest
@@ -189,9 +124,7 @@ export default function Projects() {
         <div>
           <h2 className="section-heading">Projects</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-            {githubError
-              ? 'Showing resume projects · GitHub API unavailable'
-              : 'Resume projects are pinned · others sorted by your selection'}
+            Resume projects are pinned · others sorted by your selection
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -213,16 +146,14 @@ export default function Projects() {
 
       <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {loading ? (
-          <>
-            <ProjectSkeleton />
-            <ProjectSkeleton />
-            <ProjectSkeleton />
-          </>
-        ) : (
-          displayProjects.map((project) => (
-            <article
+          <><ProjectSkeleton /><ProjectSkeleton /><ProjectSkeleton /></>
+        ) : displayProjects.map((project) => (
+            <a
               key={project.id}
-              className={`group glass-card flex flex-col justify-between p-5 transition-all hover:scale-[1.02] ${
+              href={project.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`group glass-card flex flex-col justify-between p-5 cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-500/10 dark:hover:shadow-sky-400/10 hover:border-blue-500/30 dark:hover:border-sky-400/30 ${
                 project.isResumeProject ? 'ring-1 ring-blue-500/20 dark:ring-sky-400/20' : ''
               }`}
             >
@@ -237,7 +168,7 @@ export default function Projects() {
                         <FiBookmark size={13} />
                       </span>
                     )}
-                    <FiGithub className="text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300" size={16} />
+                    <FiGithub className="text-slate-400 group-hover:text-blue-500 dark:group-hover:text-sky-400 transition-colors" size={16} />
                   </div>
                 </div>
                 <p className="text-[0.7rem] leading-relaxed text-slate-600 dark:text-slate-300 min-h-[50px] line-clamp-3">
@@ -256,15 +187,10 @@ export default function Projects() {
               </div>
 
               <div className="mt-5 border-t border-slate-200/40 dark:border-slate-800/40 pt-3 flex items-center justify-between text-[0.65rem]">
-                <a
-                  href={project.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 font-semibold text-blue-600 hover:text-blue-700 dark:text-sky-400 dark:hover:text-sky-300"
-                >
+                <span className="flex items-center gap-1 font-semibold text-blue-600 dark:text-sky-400 group-hover:gap-2 transition-all">
                   View Repo
-                  <FiExternalLink size={10} />
-                </a>
+                  <FiExternalLink size={10} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </span>
 
                 <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
                   {project.stars !== undefined && project.stars > 0 && (
@@ -286,9 +212,8 @@ export default function Projects() {
                   )}
                 </div>
               </div>
-            </article>
-          ))
-        )}
+            </a>
+          ))}
       </div>
     </section>
   )

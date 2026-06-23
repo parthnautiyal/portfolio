@@ -27,8 +27,6 @@ export default function Contact() {
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
-  const apiBase = import.meta.env.VITE_API_BASE_URL as string | undefined
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -69,19 +67,11 @@ export default function Contact() {
     e.preventDefault()
     setStatus('idle')
 
-    if (!validateForm()) {
-      setStatus('error')
-      return
-    }
-
-    if (!apiBase) {
-      setStatus('error')
-      return
-    }
+    if (!validateForm()) return
 
     try {
       setSubmitting(true)
-      const res = await fetch(`${apiBase}/contact`, {
+      const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
