@@ -1,4 +1,4 @@
-import { personal } from '../content/personal'
+import { getPersonal } from '../utils/contentLoader'
 import { TbRocket, TbShieldCheck, TbClockUp, TbActivity } from 'react-icons/tb'
 
 const highlights = [
@@ -9,6 +9,7 @@ const highlights = [
 ]
 
 export default function About() {
+  const personal = getPersonal()
   return (
     <section id="about" className="py-16">
       <h2 className="section-heading animate-fade-up">About</h2>

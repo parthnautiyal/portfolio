@@ -8,26 +8,29 @@ export type ExperienceItem = {
 
 export const experience: ExperienceItem[] = [
   {
-    role: 'Software Development Engineer I',
-    company: 'ZopSmart',
-    location: 'Bangalore, India',
-    period: 'Jul 2024 – Present',
-    bullets: [
-      'Designed and scaled Spring Boot microservices using Kafka and Spring Security, cutting response latency by ~50%.',
-      'Deployed containerized services via Kubernetes and Helm for consistent, zero-downtime releases.',
-      'Built GitHub Actions CI/CD pipelines with validation gates, reducing rollback incidents by 70% and improving reliability.',
-      'Implemented observability with Grafana, Prometheus, and Datadog to achieve 99.9% uptime and reduce MTTR by 40%.',
-    ],
+    "role": "Software Development Engineer II (Promoted)",
+    "company": "ZopSmart",
+    "location": "Bangalore, India",
+    "period": "Mar 2026 – Present",
+    "bullets": [
+      "Designed and scaled 20+ Spring Boot microservices in a distributed, event-driven architecture using Kafka, reducing latency by 50% and improving system throughput and reliability under high-load conditions.",
+      "Refactored distributed workflow orchestration using Temporal, decomposing monolithic logic into 11+ activities; implemented retry, idempotency, and failure handling to improve reliability of long-running workflows.",
+      "Orchestrated asynchronous workflows across 7+ use cases, enabling parallel processing and improving throughput for high-volume product data pipelines.",
+      "Drove platform-level standardization across services, improving configuration consistency and reducing onboarding friction for new services.",
+      "Mentored 2 interns and led knowledge-sharing sessions on distributed systems and workflow orchestration."
+    ]
   },
   {
-    role: 'Software Development Engineer Intern',
-    company: 'ZopSmart',
-    location: 'Bangalore, India',
-    period: 'Jan 2024 – Jun 2024',
-    bullets: [
-      'Built and deployed Java Spring Boot microservices with RESTful APIs.',
-      'Led adoption of test-driven development using JUnit and Mockito, increasing code coverage by 45%.',
-    ],
-  },
+    "role": "Software Development Engineer I",
+    "company": "ZopSmart",
+    "location": "Bangalore, India",
+    "period": "Jul 2024 – Mar 2026",
+    "bullets": [
+      "Built 3+ production-grade microservices with CI/CD pipelines; reduced build time from 9 to 4 mins via caching, pipeline upgrades, and automated retries, cutting failures by 90%.",
+      "Developed scalable backend services using Spring Boot and REST APIs, ensuring efficient request handling in distributed environments.",
+      "Improved system reliability and observability using Grafana, Prometheus, and Datadog, reducing MTTR and resolving production issues.",
+      "Ensured code quality with 85%+ coverage, eliminated vulnerabilities, and enforced testing using JUnit and Mockito.",
+      "Collaborated with QA and cross-functional teams to deliver stable, production-ready features with faster turnaround times."
+    ]
+  }
 ]
-

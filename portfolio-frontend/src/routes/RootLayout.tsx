@@ -6,10 +6,10 @@ import DevConsolePanel from '../components/DevConsolePanel'
 
 export default function RootLayout() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:text-slate-50">
+    <div className="min-h-screen text-[var(--color-text)]">
       <StructuredData />
       <Navbar />
-      <main id="main-content" className="max-w-5xl mx-auto px-4 pb-16 pt-4">
+      <main id="main-content" className="max-w-7xl mx-auto px-6 pb-16 pt-6">
         <Outlet />
       </main>
       <DevConsolePanel />

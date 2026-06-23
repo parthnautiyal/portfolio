@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { FiCpu, FiSettings, FiCheckCircle, FiAlertTriangle, FiUploadCloud, FiBookOpen, FiTerminal, FiTrendingUp } from 'react-icons/fi'
+import { FiCpu, FiSettings, FiCheckCircle, FiAlertTriangle, FiUploadCloud, FiBookOpen, FiTerminal, FiTrendingUp, FiTrash2, FiClock } from 'react-icons/fi'
 import JobMatchAnalyzer from '../components/JobMatchAnalyzer'
+import OllamaDiagnosticModal from '../components/OllamaDiagnosticModal'
 
 type Category = {
   name: string
@@ -77,11 +78,47 @@ const parthBenchmark: EvaluationReport = {
   ]
 }
 
+const atsSystemPrompt = `
+You are HackerRank's AI Hiring Agent (cloned from interviewstreet/hiring-agent).
+Evaluate the provided resume against standard industry ATS dimensions. Be objective, strict, and evidence-based. 
+
+Analyze the candidate resume across 4 categories:
+1. Technical Depth (Self-directed projects, complexity of implementation, databases, concurrency, design patterns).
+2. Production Experience (Professional roles, scale metrics, CI/CD pipelines, containerization, cloud systems).
+3. Tools & Breadth (Tech stack versatility, programming languages, database languages, DevOps tools, observability).
+4. Engineering Rigor (Unit testing, code coverage, documentation, git collaboration, clean coding practices).
+
+Calculate a score (0 to 100) for each category. For each category, provide:
+- A list of "evidence" (specific statements from the resume proving this capability).
+- A list of "bonusPoints" (outstanding skills, metrics, or certifications).
+- A list of "deductions" (weak spots, lack of metrics, gaps in knowledge).
+
+Format the output strictly as a JSON object matching this schema:
+{
+  "overallScore": 85,
+  "analysis": "A concise 2-3 paragraph summary of candidate strengths and clear areas of improvement...",
+  "categories": [
+    {
+      "name": "Technical Depth",
+      "score": 82,
+      "evidence": ["Developed X microservice using Kafka"],
+      "bonusPoints": ["Used Kafka for event streaming"],
+      "deductions": ["No mention of deep query optimization"]
+    },
+    ...
+  ]
+}
+
+Return ONLY this JSON block. Do not wrap in markdown \`\`\`json tags. Do not write any conversational text.
+`
+
 export default function AtsCheckerPage() {
   // Settings state
   const [showSettings, setShowSettings] = useState(false)
   const [customKey, setCustomKey] = useState('')
-  const [provider, setProvider] = useState<'gemini' | 'openai'>('gemini')
+  const [provider, setProvider] = useState<'gemini' | 'openai' | 'ollama'>('gemini')
+  const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434')
+  const [ollamaModel, setOllamaModel] = useState('llama3')
   const [activeTab, setActiveTab] = useState<'ats' | 'job-match'>('ats')
 
   // Scanner state
@@ -90,18 +127,135 @@ export default function AtsCheckerPage() {
   const [report, setReport] = useState<EvaluationReport | null>(null)
   const [error, setError] = useState('')
 
+  // PDF Parser drag-and-drop state
+  const [pdfDragActive, setPdfDragActive] = useState(false)
+  const [isPdfParsing, setIsPdfParsing] = useState(false)
+  const [pdfStatusMessage, setPdfStatusMessage] = useState('')
+  
+  // PDF File Reference for history log labeling
+  const [pdfFile, setPdfFile] = useState<File | null>(null)
+
+  // Recruiter History Log State & Diagnostic Modal State
+  const [history, setHistory] = useState<any[]>([])
+  const [isDiagnosticModalOpen, setIsDiagnosticModalOpen] = useState(false)
+
   // Load custom settings
   useEffect(() => {
     const savedKey = localStorage.getItem('portfolio_custom_api_key') || ''
-    const savedProvider = (localStorage.getItem('portfolio_api_provider') as 'gemini' | 'openai') || 'gemini'
+    const savedProvider = (localStorage.getItem('portfolio_api_provider') as 'gemini' | 'openai' | 'ollama') || 'gemini'
+    const savedOllamaUrl = localStorage.getItem('portfolio_ollama_url') || 'http://localhost:11434'
+    const savedOllamaModel = localStorage.getItem('portfolio_ollama_model') || 'llama3'
     setCustomKey(savedKey)
     setProvider(savedProvider)
+    setOllamaUrl(savedOllamaUrl)
+    setOllamaModel(savedOllamaModel)
+
+    // Load history
+    const savedHistory = localStorage.getItem('portfolio_ats_history')
+    if (savedHistory) {
+      try {
+        setHistory(JSON.parse(savedHistory))
+      } catch (e) {
+        console.error('Failed to parse history:', e)
+      }
+    }
   }, [])
 
   const saveSettings = () => {
     localStorage.setItem('portfolio_custom_api_key', customKey)
     localStorage.setItem('portfolio_api_provider', provider)
+    localStorage.setItem('portfolio_ollama_url', ollamaUrl)
+    localStorage.setItem('portfolio_ollama_model', ollamaModel)
     setShowSettings(false)
+  }
+
+  const saveToHistory = (newReport: EvaluationReport, fileObj?: File | null) => {
+    let resumeName = fileObj ? fileObj.name : 'Pasted Resume Text'
+    if (resumeName === 'Pasted Resume Text') {
+      const snippet = resumeInput.trim().substring(0, 30)
+      if (snippet) {
+        resumeName = `"${snippet}..."`
+      }
+    }
+
+    const newItem = {
+      id: Date.now().toString(),
+      date: new Date().toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      resumeName,
+      report: newReport
+    }
+
+    const updated = [newItem, ...history].slice(0, 10)
+    setHistory(updated)
+    localStorage.setItem('portfolio_ats_history', JSON.stringify(updated))
+  }
+
+  // Client-Side PDF Text Extractor
+  const extractTextFromPdf = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const fileReader = new FileReader()
+      fileReader.onload = async (event) => {
+        const typedarray = new Uint8Array(event.target?.result as ArrayBuffer)
+        try {
+          let pdfjsLib = (window as any)['pdfjs-dist/build/pdf']
+          if (!pdfjsLib) {
+            setPdfStatusMessage('Loading PDF parser...')
+            const script = document.createElement('script')
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js'
+            script.onload = async () => {
+              const loadedLib = (window as any)['pdfjs-dist/build/pdf']
+              loadedLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js'
+              resolve(parsePdfBytes(loadedLib, typedarray))
+            }
+            script.onerror = () => reject(new Error('Failed to load PDF worker from CDN.'))
+            document.head.appendChild(script)
+          } else {
+            resolve(parsePdfBytes(pdfjsLib, typedarray))
+          }
+        } catch (err) {
+          reject(err)
+        }
+      }
+      fileReader.onerror = (err) => reject(err)
+      fileReader.readAsArrayBuffer(file)
+    })
+  }
+
+  const parsePdfBytes = async (pdfjsLib: any, bytes: Uint8Array): Promise<string> => {
+    const pdf = await pdfjsLib.getDocument({ data: bytes }).promise
+    let text = ''
+    for (let i = 1; i <= pdf.numPages; i++) {
+      setPdfStatusMessage(`Extracting text from page ${i} of ${pdf.numPages}...`)
+      const page = await pdf.getPage(i)
+      const textContent = await page.getTextContent()
+      const pageText = textContent.items.map((item: any) => item.str).join(' ')
+      text += pageText + '\n'
+    }
+    return text
+  }
+
+  const handlePdfExtract = async (file: File) => {
+    setIsPdfParsing(true)
+    setPdfStatusMessage('Reading PDF file...')
+    setError('')
+    try {
+      const extractedText = await extractTextFromPdf(file)
+      if (!extractedText || extractedText.trim().length === 0) {
+        throw new Error('Extracted text is empty. Make sure the PDF has a text layer.')
+      }
+      setResumeInput(extractedText)
+      setPdfStatusMessage('Text successfully extracted!')
+      setPdfFile(file)
+    } catch (err: any) {
+      setError(`PDF Extraction failed: ${err.message}`)
+    } finally {
+      setIsPdfParsing(false)
+    }
   }
 
   const runScan = async () => {
@@ -114,26 +268,74 @@ export default function AtsCheckerPage() {
     setError('')
     setReport(null)
 
-    try {
-      const response = await fetch('/api/ats-scan', {
+    const runOllamaScan = async () => {
+      const response = await fetch(`${ollamaUrl}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          resumeText: resumeInput,
-          customApiKey: customKey || undefined,
-          apiProvider: provider
+          model: ollamaModel,
+          prompt: `${atsSystemPrompt}\n\nResume Text:\n${resumeInput}`,
+          stream: false,
+          options: {
+            temperature: 0.1
+          }
         })
       })
 
       if (!response.ok) {
-        const errData = await response.json()
-        throw new Error(errData.error || 'Failed to scan resume')
+        throw new Error(`Ollama generation failed: make sure Ollama is running at ${ollamaUrl} and model "${ollamaModel}" is pulled.`)
       }
 
-      const data = await response.json() as EvaluationReport
-      setReport(data)
+      const resJson = await response.json()
+      const jsonResponseText = resJson.response.replace(/```json/g, '').replace(/```/g, '').trim()
+      const parsedData = JSON.parse(jsonResponseText) as EvaluationReport
+      
+      if (!parsedData.overallScore || !parsedData.categories) {
+        throw new Error('Ollama parsed output did not match expected schema format.')
+      }
+      return parsedData
+    }
+
+    try {
+      if (provider === 'ollama') {
+        const data = await runOllamaScan()
+        setReport(data)
+        saveToHistory(data, pdfFile)
+      } else {
+        const response = await fetch('/api/ats-scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            resumeText: resumeInput,
+            customApiKey: customKey || undefined,
+            apiProvider: provider
+          })
+        })
+
+        if (!response.ok) {
+          const errData = await response.json()
+          throw new Error(errData.error || 'Failed to scan resume')
+        }
+
+        const data = await response.json() as EvaluationReport
+        setReport(data)
+        saveToHistory(data, pdfFile)
+      }
     } catch (err: any) {
-      setError(err.message || 'Something went wrong during evaluation.')
+      if (provider !== 'ollama') {
+        console.warn('Backend ATS scan failed, trying client-side Ollama fallback:', err.message)
+        setError('Backend failed/keyless. Running client-side fallback via local Ollama...')
+        try {
+          const data = await runOllamaScan()
+          setReport(data)
+          saveToHistory(data, pdfFile)
+          setError('') // clear fallback message
+        } catch (ollamaErr: any) {
+          setError(`Evaluation failed: ${err.message}. (Ollama Fallback also failed: ${ollamaErr.message})`)
+        }
+      } else {
+        setError(err.message || 'Something went wrong during Ollama evaluation.')
+      }
     } finally {
       setLoading(false)
     }
@@ -166,30 +368,54 @@ export default function AtsCheckerPage() {
             Developer API Key Settings
           </h3>
           <p className="text-xs text-slate-500">
-            Provide your own API Key to bypass portfolio backend rate-limits. Stored locally in your browser.
+            Provide your own API Key or configure local Ollama. Stored locally in your browser.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 mb-1">Provider</label>
               <select
                 value={provider}
-                onChange={(e) => setProvider(e.target.value as 'gemini' | 'openai')}
-                className="w-full text-xs rounded-lg glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none"
+                onChange={(e) => setProvider(e.target.value as 'gemini' | 'openai' | 'ollama')}
+                className="w-full text-xs rounded-lg glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none text-[var(--color-text)]"
               >
                 <option value="gemini">Google Gemini</option>
                 <option value="openai">OpenAI (ChatGPT)</option>
+                <option value="ollama">Ollama (Local Offline LLM)</option>
               </select>
             </div>
-            <div>
-              <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 mb-1">API Key</label>
-              <input
-                type="password"
-                value={customKey}
-                onChange={(e) => setCustomKey(e.target.value)}
-                placeholder={provider === 'gemini' ? 'AIzaSy...' : 'sk-proj-...'}
-                className="w-full text-xs rounded-lg glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none"
-              />
-            </div>
+            {provider === 'ollama' ? (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 mb-1">Ollama URL</label>
+                  <input
+                    type="text"
+                    value={ollamaUrl}
+                    onChange={(e) => setOllamaUrl(e.target.value)}
+                    className="w-full text-xs rounded-lg glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none text-[var(--color-text)]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 mb-1">Model Name</label>
+                  <input
+                    type="text"
+                    value={ollamaModel}
+                    onChange={(e) => setOllamaModel(e.target.value)}
+                    className="w-full text-xs rounded-lg glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none text-[var(--color-text)]"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 mb-1">API Key</label>
+                <input
+                  type="password"
+                  value={customKey}
+                  onChange={(e) => setCustomKey(e.target.value)}
+                  placeholder={provider === 'gemini' ? 'AIzaSy...' : 'sk-proj-...'}
+                  className="w-full text-xs rounded-lg glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none text-[var(--color-text)]"
+                />
+              </div>
+            )}
           </div>
           <div className="flex gap-2 justify-end">
             <button
@@ -318,7 +544,63 @@ export default function AtsCheckerPage() {
                   Upload your own resume text or copy/paste it below to run the HackerRank scoring agent on your credentials.
                 </p>
 
+                {/* Drag and Drop PDF Zone */}
                 <div className="space-y-2">
+                  <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-slate-400">
+                    Upload Resume (.PDF)
+                  </label>
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                      setPdfDragActive(true)
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault()
+                      setPdfDragActive(false)
+                    }}
+                    onDrop={async (e) => {
+                      e.preventDefault()
+                      setPdfDragActive(false)
+                      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        await handlePdfExtract(e.dataTransfer.files[0])
+                      }
+                    }}
+                    className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all relative ${
+                      pdfDragActive 
+                        ? 'border-blue-500 bg-blue-500/5' 
+                        : 'border-slate-200/60 dark:border-slate-800/60 hover:border-blue-500 dark:hover:border-sky-400 bg-slate-50/50 dark:bg-slate-900/30'
+                    }`}
+                  >
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={async (e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          await handlePdfExtract(e.target.files[0])
+                        }
+                      }}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                    <FiUploadCloud className="text-slate-400 mb-2" size={24} />
+                    {isPdfParsing ? (
+                      <p className="text-xs text-blue-500 animate-pulse font-medium">{pdfStatusMessage}</p>
+                    ) : (
+                      <div>
+                        <p className="text-xs font-semibold text-[var(--color-text)]">
+                          Drag & drop resume PDF or click to browse
+                        </p>
+                        <p className="text-[0.65rem] text-slate-500 mt-0.5">
+                          Extracted text will automatically populate the textarea below
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-slate-400">
+                    Resume Plain Text
+                  </label>
                   <textarea
                     value={resumeInput}
                     onChange={(e) => setResumeInput(e.target.value)}
@@ -329,9 +611,17 @@ export default function AtsCheckerPage() {
                 </div>
 
                 {error && (
-                  <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg flex items-center gap-2">
-                    <FiAlertTriangle />
-                    {error}
+                  <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <FiAlertTriangle className="shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                    <button
+                      onClick={() => setIsDiagnosticModalOpen(true)}
+                      className="text-[0.65rem] font-semibold text-blue-500 dark:text-sky-400 hover:underline self-start mt-1 cursor-pointer bg-transparent border-none outline-none"
+                    >
+                      Need help? Open AI Diagnostic Setup Guides
+                    </button>
                   </div>
                 )}
 
@@ -356,6 +646,75 @@ export default function AtsCheckerPage() {
                   )}
                 </button>
               </div>
+
+              {/* History Log Card */}
+              {history.length > 0 && (
+                <div className="glass-card p-6 space-y-4 animate-fade-up">
+                  <div className="flex justify-between items-center border-b border-slate-200/40 dark:border-slate-800/40 pb-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                      <FiClock /> Previous Evaluations Log
+                    </h4>
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem('portfolio_ats_history')
+                        setHistory([])
+                      }}
+                      className="text-[0.65rem] text-rose-500 hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none"
+                    >
+                      <FiTrash2 size={10} /> Clear All
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                    {history.map((item) => (
+                      <div 
+                        key={item.id}
+                        onClick={() => {
+                          setReport(item.report)
+                          setError('')
+                        }}
+                        className={`p-3 glass-panel rounded-xl flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors border ${
+                          report?.overallScore === item.report.overallScore && report?.analysis === item.report.analysis
+                            ? 'border-blue-500/50 bg-blue-500/5'
+                            : 'border-transparent'
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold text-[var(--color-text-bright)] truncate">
+                            {item.resumeName}
+                          </p>
+                          <p className="text-[0.6rem] text-slate-500 mt-0.5">
+                            {item.date}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[0.7rem] font-bold px-2 py-0.5 rounded ${
+                            item.report.overallScore >= 80 
+                              ? 'bg-green-500/10 text-green-500 border border-green-500/20' 
+                              : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                          }`}>
+                            {item.report.overallScore}%
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              const filtered = history.filter(h => h.id !== item.id)
+                              setHistory(filtered)
+                              localStorage.setItem('portfolio_ats_history', JSON.stringify(filtered))
+                              if (report?.overallScore === item.report.overallScore && report?.analysis === item.report.analysis) {
+                                setReport(null)
+                              }
+                            }}
+                            className="p-1 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded-lg transition-colors cursor-pointer bg-transparent border-none"
+                          >
+                            <FiTrash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Sandbox Scan Report Output */}
               {report && (
@@ -414,6 +773,13 @@ export default function AtsCheckerPage() {
           )}
         </div>
       </div>
+
+      <OllamaDiagnosticModal
+        isOpen={isDiagnosticModalOpen}
+        onClose={() => setIsDiagnosticModalOpen(false)}
+        currentOllamaUrl={ollamaUrl}
+        currentOllamaModel={ollamaModel}
+      />
     </section>
   )
 }

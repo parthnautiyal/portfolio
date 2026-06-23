@@ -1,7 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import pdf from 'pdf-parse/lib/pdf-parse.js';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pdf = require('pdf-parse');
 
 // Setup paths
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
@@ -69,8 +71,10 @@ async function syncAndParse() {
   
   let pdfText = '';
   try {
-    const parsedPdf = await pdf(dataBuffer);
-    pdfText = parsedPdf.text;
+    const parser = new pdf.PDFParse({ data: dataBuffer });
+    await parser.load();
+    const result = await parser.getText();
+    pdfText = result.text;
   } catch (err) {
     console.error('❌ Failed to read PDF file:', err.message);
     process.exit(1);
@@ -83,12 +87,26 @@ async function syncAndParse() {
 
   const geminiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+  const ollamaUrl = process.env.OLLAMA_HOST || 'http://localhost:11434';
+  let ollamaModel = process.env.OLLAMA_MODEL;
 
-  if (!geminiKey && !openaiKey) {
-    console.warn('⚠️ Warning: No GEMINI_API_KEY or OPENAI_API_KEY found in your environment variables.');
-    console.warn('   Local file syncing completed, but website content was NOT parsed.');
-    console.warn('   To parse and update content, run: GEMINI_API_KEY=your_key npm run sync-resume');
-    return;
+  if (!geminiKey && !openaiKey && !ollamaModel) {
+    try {
+      const tagsResponse = await fetch(`${ollamaUrl}/api/tags`);
+      if (tagsResponse.ok) {
+        const tagsData = await tagsResponse.json();
+        if (tagsData.models && tagsData.models.length > 0) {
+          ollamaModel = tagsData.models[0].name;
+          console.log(`🔍 Auto-detected local Ollama model: "${ollamaModel}"`);
+        }
+      }
+    } catch (err) {
+      console.warn('⚠️ Could not connect to local Ollama to auto-detect model:', err.message);
+    }
+  }
+
+  if (!ollamaModel) {
+    ollamaModel = 'llama3';
   }
 
   console.log('🤖 Contacting AI to parse resume...');
@@ -135,14 +153,6 @@ You are a highly precise resume parser. You will convert the provided raw resume
       "name": "Skill Name (e.g. React)",
       "category": "frontend" | "backend" | "devops" | "tools"
     }
-  ],
-  "certifications": [
-    {
-      "name": "Certificate Name",
-      "issuer": "Issuing Body",
-      "date": "Date Earned",
-      "url": "Optional Certificate Link"
-    }
   ]
 }
 
@@ -178,7 +188,7 @@ Ensure:
 
       const result = await response.json();
       jsonText = result.candidates[0].content.parts[0].text;
-    } else {
+    } else if (openaiKey) {
       console.log('✨ Using OpenAI API (gpt-4o-mini)...');
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -202,6 +212,27 @@ Ensure:
 
       const result = await response.json();
       jsonText = result.choices[0].message.content;
+    } else {
+      console.log(`✨ No cloud keys. Attempting local Ollama fallback offline at ${ollamaUrl} using model ${ollamaModel}...`);
+      const response = await fetch(`${ollamaUrl}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: ollamaModel,
+          prompt: `${systemPrompt}\n\nResume Text:\n${pdfText}`,
+          stream: false,
+          options: {
+            temperature: 0.1
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Ollama generation failed: make sure Ollama is running at ${ollamaUrl} and model "${ollamaModel}" is pulled.`);
+      }
+
+      const resJson = await response.json();
+      jsonText = resJson.response.replace(/```json/g, '').replace(/```/g, '').trim();
     }
 
     console.log('✅ Parsed successfully. Writing changes to source code...');
@@ -212,7 +243,6 @@ Ensure:
     writeTSFile('experience.ts', 'experience', parsedData.experience, 'ExperienceItem[]');
     writeTSFile('education.ts', 'education', parsedData.education, 'EducationItem[]');
     writeTSFile('skills.ts', 'skills', parsedData.skills, 'Skill[]');
-    writeTSFile('certifications.ts', 'certifications', parsedData.certifications, 'Certification[]');
 
     console.log('🎉 Website content updated successfully from PDF!');
   } catch (error) {

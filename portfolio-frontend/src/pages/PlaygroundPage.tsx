@@ -64,8 +64,8 @@ export default function PlaygroundPage() {
         </p>
       </div>
 
-      {/* Grid Layout: Architecture Map & Telemetry Dashboard */}
-      <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
+      {/* Grid Layout: Widen grid columns for architecture and telemetry */}
+      <div className="grid gap-8 lg:grid-cols-[1.4fr_0.6fr]">
         
         {/* Left Side: System Architecture Map */}
         <SystemArchitectureCanvas />
@@ -93,12 +93,15 @@ export default function PlaygroundPage() {
               <span className="text-[0.55rem] text-slate-500 dark:text-slate-400 block">Avg Response Time</span>
             </div>
 
-            <div className="p-4 glass-panel rounded-2xl space-y-1">
-              <span className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-wider block">Total Requests</span>
-              <span className="text-xl font-extrabold text-slate-800 dark:text-slate-100">
+            <div 
+              className="p-4 glass-panel rounded-2xl space-y-1 cursor-help"
+              title="This is a simulated metrics baseline representing Parth's edge microservice deployment logs. It models HTTP edge traffic to showcase full-stack observability features."
+            >
+              <span className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-wider block">Simulated Requests</span>
+              <span className="text-xl font-extrabold text-blue-500 dark:text-sky-400">
                 {requestCount}
               </span>
-              <span className="text-[0.55rem] text-slate-500 dark:text-slate-400 block">Since Site Boot</span>
+              <span className="text-[0.55rem] text-slate-500 dark:text-slate-400 block">Edge Region Mock Baseline</span>
             </div>
 
             <div className="p-4 glass-panel rounded-2xl space-y-1">

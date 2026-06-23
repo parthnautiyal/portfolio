@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     return res.status(450).json({ error: 'Method not allowed' });
   }
 
-  const { message, history, customApiKey, apiProvider } = req.body;
+  const { message, history, customApiKey, apiProvider, kbContext } = req.body;
 
   if (!message || message.trim().length === 0) {
     return res.status(400).json({ error: 'Message is required' });
@@ -31,23 +31,50 @@ export default async function handler(req, res) {
     ? customApiKey 
     : process.env.OPENAI_API_KEY;
 
-  if (!geminiKey && !openaiKey) {
-    return res.status(200).json({ 
-      reply: "Hi! I'm Parth's portfolio chatbot. Currently, no server-side API Key is configured. Once you add GEMINI_API_KEY or paste your own key in Developer Settings, I will answer all your questions using Gemini! For now, Parth is a Full-Stack Engineer at ZopSmart who specializes in Spring Boot, Kafka, and DevOps."
-    });
-  }
-
   const resumeContext = `
 You are a helpful, professional assistant representing Parth Nautiyal. Answers should be derived from his career profile:
 - SDE I at ZopSmart (Jul 2024 - Present): Built Spring Boot microservices, Kafka, Spring Security, Helm, Kubernetes, Grafana, Datadog. Reduced API latency by ~50%.
 - SDE Intern at ZopSmart (Jan 2024 - Jun 2024): Worked on TDD, JUnit, Mockito, increasing coverage by 45%.
 - Skills: Java, Spring Boot, Microservices, Kafka, SQL, TypeScript, React, Docker, Kubernetes, Jenkins, Ansible, Grafana.
-- Education: B.Tech in Computer Science.
-- Certifications: AWS Certified Developer, Oracle Java SE Developer (or similar).
+- Education: B.Tech in Computer Science from Lovely Professional University.
 - Hobbies & Interests: System Design, Open Source, Obsidian notes, custom CLI tools.
 
 Base answers on the above facts. Be concise, developer-friendly, and polite. If a user asks something completely unrelated, gently redirect them to Parth's work.
   `;
+
+  let activeContext = resumeContext;
+  if (kbContext && kbContext.trim().length > 0) {
+    activeContext += `\n\nADDITIONAL USER KNOWLEDGE BASE CONTEXT:\n${kbContext}\n\nUse this additional context to answer the user's question if relevant.`;
+  }
+
+  if (!geminiKey && !openaiKey) {
+    // Attempt local Ollama fallback (useful in vercel dev local mode)
+    try {
+      const response = await fetch('http://localhost:11434/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llama3',
+          messages: [
+            { role: 'system', content: activeContext },
+            { role: 'user', content: message }
+          ],
+          stream: false
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return res.status(200).json({ reply: data.message.content });
+      }
+    } catch (e) {
+      console.log('Local Ollama instance not reachable from serverless function:', e.message);
+    }
+
+    return res.status(200).json({ 
+      reply: "Hi! I'm Parth's portfolio chatbot. Currently, no server-side API Key is configured. Once you add GEMINI_API_KEY or paste your own key in Developer Settings, I will answer all your questions using Gemini! For now, Parth is a Full-Stack Engineer at ZopSmart who specializes in Spring Boot, Kafka, and DevOps."
+    });
+  }
 
   try {
     if (geminiKey) {
@@ -57,7 +84,7 @@ Base answers on the above facts. Be concise, developer-friendly, and polite. If 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [
-            { role: 'user', parts: [{ text: `${resumeContext}\n\nUser Message: ${message}` }] }
+            { role: 'user', parts: [{ text: `${activeContext}\n\nUser Message: ${message}` }] }
           ]
         })
       });
@@ -80,7 +107,7 @@ Base answers on the above facts. Be concise, developer-friendly, and polite. If 
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages: [
-            { role: 'system', content: resumeContext },
+            { role: 'system', content: activeContext },
             { role: 'user', content: message }
           ]
         })

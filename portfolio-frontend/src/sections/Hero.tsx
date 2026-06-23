@@ -1,62 +1,71 @@
 import { Link } from 'react-router-dom'
-import { personal } from '../content/personal'
+import { getPersonal } from '../utils/contentLoader'
 import { SiSpringboot, SiKubernetes, SiDocker, SiGithubactions } from 'react-icons/si'
 
 export default function Hero() {
+  const personal = getPersonal()
   return (
-    <section id="top" className="relative py-20 md:py-24">
-      <div className="pointer-events-none absolute inset-x-0 -top-32 -z-10 h-64 bg-gradient-to-b from-slate-100/80 via-slate-50/40 to-transparent dark:from-slate-800/50 dark:via-slate-900/30" />
-      {/* Decorative circles */}
-      <div className="pointer-events-none absolute right-0 top-10 -z-10 h-72 w-72 rounded-full bg-blue-500/5 blur-3xl dark:bg-blue-400/10" />
-      <div className="pointer-events-none absolute left-0 bottom-10 -z-10 h-64 w-64 rounded-full bg-purple-500/5 blur-3xl dark:bg-purple-400/10" />
-      <div className="grid gap-10 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] md:items-center">
-        <div className="space-y-6 animate-fade-up">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-            Portfolio
+    <section id="top" className="relative py-24 md:py-32">
+      <div className="pointer-events-none absolute inset-x-0 -top-32 -z-10 h-96 bg-gradient-to-b from-slate-100/80 via-slate-50/40 to-transparent dark:from-slate-800/50 dark:via-slate-900/30" />
+      {/* Decorative glows */}
+      <div className="pointer-events-none absolute right-0 top-10 -z-10 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl dark:bg-blue-400/20" />
+      <div className="pointer-events-none absolute left-0 bottom-10 -z-10 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl dark:bg-purple-400/15" />
+      
+      <div className="grid gap-12 md:grid-cols-[1.3fr_0.7fr] md:items-center">
+        <div className="space-y-8 animate-fade-up">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--color-primary)]">
+            Full-Stack & DevOps Engineer
           </p>
-          <h1 className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 md:text-5xl">
-            {personal.name}
+          <h1 className="text-5xl font-extrabold tracking-tight md:text-6xl lg:text-7xl">
+            Hi, I&apos;m{' '}
+            <span className="bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent dark:from-sky-400 dark:to-indigo-300">
+              {personal.name}
+            </span>
           </h1>
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+          <p className="text-lg md:text-xl font-medium text-[var(--color-text-bright)]">
             {personal.title}
           </p>
-          <p className="max-w-xl text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+          <p className="max-w-2xl text-base md:text-lg leading-relaxed text-[var(--color-text-muted)]">
             {personal.summary}
           </p>
-          <div className="flex flex-wrap gap-3 pt-2 text-xs">
+          
+          <div className="flex flex-wrap gap-4 pt-4 text-sm">
             <a
               href={personal.resumeUrl}
               target="_blank"
               rel="noreferrer"
-              className="rounded-full border border-slate-900 px-5 py-2 font-medium text-slate-900 shadow-sm transition-colors hover:bg-slate-900 hover:text-white dark:border-slate-100 dark:text-slate-100 dark:hover:bg-slate-100 dark:hover:text-slate-900"
+              className="rounded-full bg-blue-650 hover:bg-blue-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white px-7 py-3 font-semibold shadow-lg hover:shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
             >
               View Resume
             </a>
             <Link
               to="/projects"
-              className="rounded-full border border-slate-300 bg-white px-5 py-2 text-slate-700 shadow-sm transition hover:border-slate-900 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:border-slate-100 dark:hover:text-slate-100"
+              className="rounded-full border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-[var(--color-text-bright)] px-7 py-3 font-semibold shadow-sm transition-all hover:border-[var(--border-color-hover)] hover:scale-[1.02] active:scale-[0.98]"
             >
               View Projects
             </Link>
             <Link
               to="/contact"
-              className="rounded-full border border-slate-300 bg-white px-5 py-2 text-slate-700 shadow-sm transition hover:border-slate-900 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:border-slate-100 dark:hover:text-slate-100"
+              className="rounded-full border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-[var(--color-text-bright)] px-7 py-3 font-semibold shadow-sm transition-all hover:border-[var(--border-color-hover)] hover:scale-[1.02] active:scale-[0.98]"
             >
               Contact Me
             </Link>
           </div>
         </div>
 
-        <div className="animate-fade-up md:delay-100">
-          <div className="card-elevated flex flex-col items-center gap-4 p-6 text-sm">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white dark:bg-slate-100 dark:text-slate-900">
+        <div className="animate-fade-up md:delay-100 flex justify-center">
+          <div className="card-elevated flex flex-col items-center gap-6 p-8 text-sm w-full max-w-sm">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-600/10 text-xl font-bold text-blue-600 dark:bg-sky-400/10 dark:text-sky-400 border border-blue-500/20">
               PN
             </div>
-            <p className="text-center text-xs text-slate-600 dark:text-slate-300">
-              Building reliable backend systems, automating deployments, and
-              improving developer experience through clean tooling.
-            </p>
-            <div className="flex flex-wrap justify-center gap-2 text-[0.65rem] text-slate-600 dark:text-slate-300">
+            <div className="text-center space-y-2">
+              <p className="font-semibold text-[var(--color-text-bright)] text-base">Parth Nautiyal</p>
+              <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+                Building reliable backend systems, automating deployments, and
+                improving developer experience through clean tooling.
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2 pt-2">
               <span className="pill flex items-center gap-1">
                 <SiSpringboot className="text-green-600 dark:text-green-400" size={12} />
                 Spring Boot

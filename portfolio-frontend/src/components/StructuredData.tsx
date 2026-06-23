@@ -19,7 +19,6 @@ export default function StructuredData() {
       addressCountry: 'IN',
     },
     email: personal.email,
-    telephone: personal.phone,
     description: personal.summary,
     knowsAbout: [
       'Java',

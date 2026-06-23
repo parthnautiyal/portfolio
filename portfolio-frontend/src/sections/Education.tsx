@@ -1,7 +1,8 @@
-import { education } from '../content/education'
+import { getEducation } from '../utils/contentLoader'
 import { HiAcademicCap } from 'react-icons/hi'
 
 export default function Education() {
+  const education = getEducation()
   return (
     <section id="education" className="py-16">
       <h2 className="section-heading animate-fade-up">Education</h2>
@@ -24,7 +25,7 @@ export default function Education() {
           Relevant coursework
         </p>
         <ul className="mt-1 flex flex-wrap gap-1.5 text-xs text-slate-600 dark:text-slate-300">
-          {education.coursework.map((c) => (
+          {education.coursework.map((c: string) => (
             <li
               key={c}
               className="rounded-full border border-slate-200 px-2 py-0.5 dark:border-slate-700"

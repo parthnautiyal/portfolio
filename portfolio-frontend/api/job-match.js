@@ -35,13 +35,6 @@ export default async function handler(req, res) {
     ? customApiKey 
     : process.env.OPENAI_API_KEY;
 
-  if (!geminiKey && !openaiKey) {
-    return res.status(400).json({ 
-      error: 'No API key configured. Please set GEMINI_API_KEY on the server or provide a custom key in the Developer Settings panel.' 
-    });
-  }
-
-  // Compile Parth's resume profile as text context for the model
   const parthProfileText = `
 Name: ${personal.name}
 Title: ${personal.title}
@@ -57,6 +50,7 @@ Skills:
 ${skills.map(s => `- ${s.name} (${s.category})`).join('\n')}
   `;
 
+  // 2. Prepare the recruitment system prompt
   const systemPrompt = `
 You are an expert recruitment advisor.
 You are given a candidate profile (Parth Nautiyal) and a target Job Description (JD).
@@ -71,15 +65,47 @@ Provide a structured evaluation containing:
 
 Format the output strictly as a JSON object matching this schema:
 {
-  "matchPercentage": 88,
-  "customPitch": "Dear Hiring Manager, Parth's experience at ZopSmart scaling Spring Boot microservices with Kafka aligns perfectly with your requirements for...",
-  "matchingSkills": ["Java", "Spring Boot", "Kafka", "Docker", "Kubernetes"],
-  "missingSkills": ["React Native", "Go"],
-  "relevantProjects": ["Training and Upskilling v2", "Automated Deployment Pipeline"]
+  "matchPercentage": 85,
+  "customPitch": "...",
+  "matchingSkills": ["Java", "Spring Boot"],
+  "missingSkills": ["AWS CloudFront"],
+  "relevantProjects": ["training-upskilling-v2"]
 }
 
 Return ONLY this JSON block. Do not wrap in markdown \`\`\`json tags. Do not write any conversational text.
-  `;
+`;
+
+  if (!geminiKey && !openaiKey) {
+    try {
+      const response = await fetch('http://localhost:11434/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llama3',
+          prompt: `${systemPrompt}\n\nCandidate Profile:\n${parthProfileText}\n\nTarget Job Description:\n${jobDescription}`,
+          stream: false,
+          options: {
+            temperature: 0.1
+          }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        let cleanedResponse = data.response.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsedReport = JSON.parse(cleanedResponse);
+        return res.status(200).json(parsedReport);
+      }
+    } catch (e) {
+      console.log('Local Ollama instance not reachable from serverless function:', e.message);
+    }
+
+    return res.status(400).json({ 
+      error: 'No API key configured. Please set GEMINI_API_KEY on the server or provide a custom key in the Developer Settings panel.' 
+    });
+  }
+
+
 
   try {
     let jsonText = '';

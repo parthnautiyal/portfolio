@@ -39,6 +39,7 @@ const mockProjects: Project[] = [
 export default function Projects() {
   const [projects, setProjects] = useState<Project[]>(mockProjects)
   const [loading, setLoading] = useState(false)
+  const [sortBy, setSortBy] = useState<'updated' | 'stars' | 'forks'>('updated')
 
   useEffect(() => {
     const fetchGitHubProjects = async () => {
@@ -66,8 +67,6 @@ export default function Projects() {
         const repos = await response.json() as any[]
         
         // Filter and map repos.
-        // We select repos that are public, not forks, and have description.
-        // If they have topics, we use topics as stack, otherwise fallback to main language.
         const mapped: Project[] = repos
           .filter(repo => !repo.fork)
           .map(repo => {
@@ -86,9 +85,6 @@ export default function Projects() {
               lastUpdated: repo.pushed_at
             }
           })
-          // Sort by stars descending, then lastUpdated descending
-          .sort((a, b) => (b.stars || 0) - (a.stars || 0))
-          .slice(0, 6) // Highlight top 6 projects
 
         if (mapped.length > 0) {
           setProjects(mapped)
@@ -96,7 +92,6 @@ export default function Projects() {
         }
       } catch (err) {
         console.warn('GitHub API failed, falling back to mock portfolio data:', err)
-        // Graceful fallback to mockProjects (which matches Parth's actual stack)
         setProjects(mockProjects)
       } finally {
         setLoading(false)
@@ -106,13 +101,47 @@ export default function Projects() {
     void fetchGitHubProjects()
   }, [])
 
+  const sortedProjects = [...projects]
+    .sort((a, b) => {
+      if (sortBy === 'updated') {
+        const dateA = a.lastUpdated ? new Date(a.lastUpdated).getTime() : 0
+        const dateB = b.lastUpdated ? new Date(b.lastUpdated).getTime() : 0
+        return dateB - dateA
+      }
+      if (sortBy === 'stars') {
+        return (b.stars || 0) - (a.stars || 0)
+      }
+      if (sortBy === 'forks') {
+        return (b.forks || 0) - (a.forks || 0)
+      }
+      return 0
+    })
+    .slice(0, 9) // Highlight top 9 repositories
+
   return (
     <section id="projects" className="py-16 animate-fade-up">
-      <div>
-        <h2 className="section-heading">Projects</h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-          A dynamic grid of software repositories queried directly from the GitHub API.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200/40 dark:border-slate-800/40 pb-4">
+        <div>
+          <h2 className="section-heading">Projects</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+            A dynamic grid of software repositories queried directly from the GitHub API.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <label htmlFor="project-sort" className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            Sort By
+          </label>
+          <select
+            id="project-sort"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="text-xs rounded-xl glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none cursor-pointer text-[var(--color-text)]"
+          >
+            <option value="updated">Latest Updated</option>
+            <option value="stars">Most Stars</option>
+            <option value="forks">Most Forks</option>
+          </select>
+        </div>
       </div>
 
       <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -123,7 +152,7 @@ export default function Projects() {
             <ProjectSkeleton />
           </>
         ) : (
-          projects.map((project) => (
+          sortedProjects.map((project) => (
             <article
               key={project.id}
               className="group glass-card flex flex-col justify-between p-5 transition-all hover:scale-[1.02]"

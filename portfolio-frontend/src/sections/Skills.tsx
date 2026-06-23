@@ -1,7 +1,8 @@
 import * as SimpleIcons from 'react-icons/si'
-import { skillCategories } from '../content/skills'
+import { getSkills } from '../utils/contentLoader'
 
 export default function Skills() {
+  const skillCategories = getSkills()
   return (
     <section id="skills" className="py-16">
       <h2 className="section-heading animate-fade-up">Skills</h2>
@@ -20,9 +21,9 @@ export default function Skills() {
                     href={skill.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="group flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 transition-all hover:scale-105 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300"
+                    className="group flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs text-[var(--color-text)] transition-all hover:scale-105 hover:border-[var(--border-color-hover)] hover:shadow-md"
                     style={{
-                      borderColor: `${skill.color}20`,
+                      borderColor: `${skill.color}40`, // Add opacity to custom skill colored borders for glass accent
                     }}
                   >
                     {IconComponent && (

@@ -100,6 +100,13 @@ export default function Contact() {
     }
   }
 
+  const handleWhatsAppClick = () => {
+    // Decodes base64 phone number 'NzQ1Mzg4Njg4NQ==' -> '7453886885'
+    const decryptedPhone = atob('NzQ1Mzg4Njg4NQ==')
+    const url = `https://wa.me/91${decryptedPhone}?text=Hi%20Parth,%20I%20saw%20your%20portfolio...`
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
   return (
     <section id="contact" className="py-16">
       <h2 className="section-heading animate-fade-up">Contact</h2>
@@ -231,13 +238,17 @@ export default function Contact() {
                 <p className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">{personal.email}</p>
               </div>
             </a>
-            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800/50">
+            <button
+              onClick={handleWhatsAppClick}
+              type="button"
+              className="flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 text-left transition-all hover:border-green-500 hover:shadow-sm dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-green-400 cursor-pointer"
+            >
               <HiPhone className="text-green-600 dark:text-green-400" size={18} />
-              <div className="flex-1">
-                <p className="text-[0.65rem] text-slate-500 dark:text-slate-400">Phone</p>
-                <p className="text-xs font-medium text-slate-900 dark:text-slate-100">{personal.phone}</p>
+              <div className="flex-1 overflow-hidden">
+                <p className="text-[0.65rem] text-slate-500 dark:text-slate-400">WhatsApp</p>
+                <p className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">Send Instant Message</p>
               </div>
-            </div>
+            </button>
             <a
               href={personal.github}
               target="_blank"

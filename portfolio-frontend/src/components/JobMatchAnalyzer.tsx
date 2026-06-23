@@ -1,5 +1,30 @@
 import { useState, useEffect } from 'react'
 import { FiSliders, FiCheck, FiMinus, FiAward, FiAlertCircle, FiChevronRight } from 'react-icons/fi'
+import { getPersonal, getExperience, getSkills } from '../utils/contentLoader'
+
+const jobMatchSystemPrompt = `
+You are an expert recruitment advisor.
+You are given a candidate profile (Parth Nautiyal) and a target Job Description (JD).
+Evaluate the match quality between Parth's profile and the JD.
+
+Provide a structured evaluation containing:
+1. matchPercentage: An integer from 0 to 100 representing the fit score.
+2. customPitch: A short, compelling 2-3 sentence elevator pitch written directly to the hiring manager explaining why Parth is a great fit (referencing his specific accomplishments like latency reduction or coverage improvement if relevant).
+3. matchingSkills: Array of specific key skills requested in the JD that Parth possesses.
+4. missingSkills: Array of key skills requested in the JD that Parth does not explicitly mention in his profile (things he might need to learn or cover).
+5. relevantProjects: Array of strings matching the names of the most relevant projects Parth has worked on that align with their stack.
+
+Format the output strictly as a JSON object matching this schema:
+{
+  "matchPercentage": 85,
+  "customPitch": "...",
+  "matchingSkills": ["Java", "Spring Boot"],
+  "missingSkills": ["AWS CloudFront"],
+  "relevantProjects": ["training-upskilling-v2"]
+}
+
+Return ONLY this JSON block. Do not wrap in markdown \`\`\`json tags. Do not write any conversational text.
+`
 
 type MatchReport = {
   matchPercentage: number
@@ -17,14 +42,20 @@ export default function JobMatchAnalyzer() {
 
   // Developer settings loading
   const [customKey, setCustomKey] = useState('')
-  const [provider, setProvider] = useState<'gemini' | 'openai'>('gemini')
+  const [provider, setProvider] = useState<'gemini' | 'openai' | 'ollama'>('gemini')
+  const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434')
+  const [ollamaModel, setOllamaModel] = useState('llama3')
 
   useEffect(() => {
     // Sync with state stored by AtsCheckerPage
     const savedKey = localStorage.getItem('portfolio_custom_api_key') || ''
-    const savedProvider = (localStorage.getItem('portfolio_api_provider') as 'gemini' | 'openai') || 'gemini'
+    const savedProvider = (localStorage.getItem('portfolio_api_provider') as 'gemini' | 'openai' | 'ollama') || 'gemini'
+    const savedOllamaUrl = localStorage.getItem('portfolio_ollama_url') || 'http://localhost:11434'
+    const savedOllamaModel = localStorage.getItem('portfolio_ollama_model') || 'llama3'
     setCustomKey(savedKey)
     setProvider(savedProvider)
+    setOllamaUrl(savedOllamaUrl)
+    setOllamaModel(savedOllamaModel)
   }, [])
 
   const runAnalysis = async () => {
@@ -37,26 +68,91 @@ export default function JobMatchAnalyzer() {
     setError('')
     setReport(null)
 
-    try {
-      const response = await fetch('/api/job-match', {
+    // Load active resume content
+    const personalData = getPersonal()
+    const experienceData = getExperience()
+    const skillsData = getSkills()
+
+    const parthProfileText = `
+Name: ${personalData.name}
+Title: ${personalData.title}
+Summary: ${personalData.summary}
+Email: ${personalData.email}
+GitHub: ${personalData.github}
+LinkedIn: ${personalData.linkedin}
+
+Experience:
+${experienceData.map((exp: any) => `- ${exp.role} at ${exp.company} (${exp.period}):\n  ${exp.bullets.join('\n  ')}`).join('\n\n')}
+
+Skills:
+${skillsData.map((cat: any) => cat.items.map((item: any) => `- ${item.name} (${cat.name})`).join('\n')).join('\n')}
+`
+
+    const runOllamaAnalysis = async () => {
+      const response = await fetch(`${ollamaUrl}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          jobDescription,
-          customApiKey: customKey || undefined,
-          apiProvider: provider
+          model: ollamaModel,
+          prompt: `${jobMatchSystemPrompt}\n\nCandidate Profile:\n${parthProfileText}\n\nTarget Job Description:\n${jobDescription}`,
+          stream: false,
+          options: {
+            temperature: 0.1
+          }
         })
       })
 
       if (!response.ok) {
-        const errData = await response.json()
-        throw new Error(errData.error || 'Failed to analyze job description')
+        throw new Error(`Ollama generation failed: make sure Ollama is running at ${ollamaUrl} and model "${ollamaModel}" is pulled.`)
       }
 
-      const data = await response.json() as MatchReport
-      setReport(data)
+      const resJson = await response.json()
+      const jsonResponseText = resJson.response.replace(/```json/g, '').replace(/```/g, '').trim()
+      const parsedData = JSON.parse(jsonResponseText) as MatchReport
+      
+      if (parsedData.matchPercentage === undefined || !parsedData.customPitch) {
+        throw new Error('Ollama parsed output did not match expected schema format.')
+      }
+      return parsedData
+    }
+
+    try {
+      if (provider === 'ollama') {
+        const data = await runOllamaAnalysis()
+        setReport(data)
+      } else {
+        const response = await fetch('/api/job-match', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jobDescription,
+            customApiKey: customKey || undefined,
+            apiProvider: provider
+          })
+        })
+
+        if (!response.ok) {
+          const errData = await response.json()
+          throw new Error(errData.error || 'Failed to analyze job description')
+        }
+
+        const data = await response.json() as MatchReport
+        setReport(data)
+      }
     } catch (err: any) {
-      setError(err.message || 'Something went wrong during analysis.')
+      if (provider !== 'ollama') {
+        console.warn('Backend job match failed, trying client-side Ollama fallback:', err.message)
+        setError('Backend failed/keyless. Running client-side fallback via local Ollama...')
+        try {
+          const data = await runOllamaAnalysis()
+          setReport(data)
+          setError('') // clear fallback message
+        } catch (ollamaErr: any) {
+          setError(`Analysis failed: ${err.message}. (Ollama Fallback also failed: ${ollamaErr.message})`)
+        }
+      } else {
+        setError(err.message || 'Something went wrong during Ollama analysis.')
+      }
     } finally {
       setLoading(false)
     }

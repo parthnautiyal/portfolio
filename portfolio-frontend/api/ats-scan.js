@@ -1,3 +1,38 @@
+// 2. Prepare the HackerRank-based ATS Scorer system prompt
+const systemPrompt = `
+You are HackerRank's AI Hiring Agent (cloned from interviewstreet/hiring-agent).
+Evaluate the provided resume against standard industry ATS dimensions. Be objective, strict, and evidence-based. 
+
+Analyze the candidate resume across 4 categories:
+1. Technical Depth (Self-directed projects, complexity of implementation, databases, concurrency, design patterns).
+2. Production Experience (Professional roles, scale metrics, CI/CD pipelines, containerization, cloud systems).
+3. Tools & Breadth (Tech stack versatility, programming languages, database languages, DevOps tools, observability).
+4. Engineering Rigor (Unit testing, code coverage, documentation, git collaboration, clean coding practices).
+
+Calculate a score (0 to 100) for each category. For each category, provide:
+- A list of "evidence" (specific statements from the resume proving this capability).
+- A list of "bonusPoints" (outstanding skills, metrics, or certifications).
+- A list of "deductions" (weak spots, lack of metrics, gaps in knowledge).
+
+Format the output strictly as a JSON object matching this schema:
+{
+  "overallScore": 85,
+  "analysis": "A concise 2-3 paragraph summary of candidate strengths and clear areas of improvement...",
+  "categories": [
+    {
+      "name": "Technical Depth",
+      "score": 82,
+      "evidence": ["Developed X microservice using Kafka"],
+      "bonusPoints": ["Used Kafka for event streaming"],
+      "deductions": ["No mention of deep query optimization"]
+    },
+    ...
+  ]
+}
+
+Return ONLY this JSON block. Do not wrap in markdown \`\`\`json tags. Do not write any conversational text.
+`;
+
 export default async function handler(req, res) {
   // Handle CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -33,45 +68,34 @@ export default async function handler(req, res) {
     : process.env.OPENAI_API_KEY;
 
   if (!geminiKey && !openaiKey) {
+    try {
+      const response = await fetch('http://localhost:11434/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llama3',
+          prompt: `${systemPrompt}\n\nResume Text:\n${resumeText}`,
+          stream: false,
+          options: {
+            temperature: 0.1
+          }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        let cleanedResponse = data.response.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsedReport = JSON.parse(cleanedResponse);
+        return res.status(200).json(parsedReport);
+      }
+    } catch (e) {
+      console.log('Local Ollama instance not reachable from serverless function:', e.message);
+    }
+
     return res.status(400).json({ 
       error: 'No API key configured. Please set GEMINI_API_KEY on the server or provide a custom key in the Developer Settings panel.' 
     });
   }
-
-  // 2. Prepare the HackerRank-based ATS Scorer system prompt
-  const systemPrompt = `
-You are HackerRank's AI Hiring Agent (cloned from interviewstreet/hiring-agent).
-Evaluate the provided resume against standard industry ATS dimensions. Be objective, strict, and evidence-based. 
-
-Analyze the candidate resume across 4 categories:
-1. Technical Depth (Self-directed projects, complexity of implementation, databases, concurrency, design patterns).
-2. Production Experience (Professional roles, scale metrics, CI/CD pipelines, containerization, cloud systems).
-3. Tools & Breadth (Tech stack versatility, programming languages, database languages, DevOps tools, observability).
-4. Engineering Rigor (Unit testing, code coverage, documentation, git collaboration, clean coding practices).
-
-Calculate a score (0 to 100) for each category. For each category, provide:
-- A list of "evidence" (specific statements from the resume proving this capability).
-- A list of "bonusPoints" (outstanding skills, metrics, or certifications).
-- A list of "deductions" (weak spots, lack of metrics, gaps in knowledge).
-
-Format the output strictly as a JSON object matching this schema:
-{
-  "overallScore": 85,
-  "analysis": "A concise 2-3 paragraph summary of candidate strengths and clear areas of improvement...",
-  "categories": [
-    {
-      "name": "Technical Depth",
-      "score": 82,
-      "evidence": ["Developed X microservice using Kafka"],
-      "bonusPoints": ["Used Kafka for event streaming"],
-      "deductions": ["No mention of deep query optimization"]
-    },
-    ...
-  ]
-}
-
-Return ONLY this JSON block. Do not wrap in markdown \`\`\`json tags. Do not write any conversational text.
-  `;
 
   try {
     let jsonText = '';

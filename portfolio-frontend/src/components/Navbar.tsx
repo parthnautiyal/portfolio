@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { personal } from '../content/personal'
+import OllamaDiagnosticModal from './OllamaDiagnosticModal'
 
 const links = [
   { to: '/', label: 'Home' },
@@ -11,48 +12,99 @@ const links = [
   { to: '/chat', label: 'Chatbot' },
 ]
 
-type Theme = 'light' | 'dark'
+type ThemeMode = 'light' | 'dark' | 'auto'
 
 export default function Navbar() {
-  const [theme, setTheme] = useState<Theme>('light')
+  const [themeMode, setThemeMode] = useState<ThemeMode>('dark')
+  const [ollamaStatus, setOllamaStatus] = useState<'checking' | 'connected' | 'offline'>('checking')
+  const [ollamaModel, setOllamaModel] = useState<string>('llama3')
+  const [isOllamaModalOpen, setIsOllamaModalOpen] = useState(false)
 
   useEffect(() => {
-    const stored = window.localStorage.getItem('theme') as Theme | null
-    let initial: Theme = 'light'
-    if (stored) {
-      initial = stored
-    } else {
-      // Time-based auto theme detection: dark mode between 18:00 and 06:00
-      const hour = new Date().getHours()
-      initial = (hour >= 18 || hour < 6) ? 'dark' : 'light'
+    let mode = window.localStorage.getItem('themeMode') as ThemeMode | null
+    if (!mode) {
+      const oldTheme = window.localStorage.getItem('theme')
+      mode = (oldTheme as ThemeMode) || 'dark'
+      window.localStorage.setItem('themeMode', mode)
     }
-    setTheme(initial)
-    if (initial === 'dark') {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
+    setThemeMode(mode)
+    applyThemeClass(mode)
+
+    // Ollama ping setup
+    const savedUrl = localStorage.getItem('portfolio_ollama_url') || 'http://localhost:11434'
+    const savedModel = localStorage.getItem('portfolio_ollama_model') || 'llama3'
+    setOllamaModel(savedModel)
+
+    const checkOllama = async () => {
+      try {
+        const res = await fetch(`${savedUrl}/api/tags`, { 
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        })
+        if (res.ok) {
+          setOllamaStatus('connected')
+        } else {
+          setOllamaStatus('offline')
+        }
+      } catch (e) {
+        setOllamaStatus('offline')
+      }
+    }
+    
+    checkOllama()
+    const checkInterval = setInterval(checkOllama, 15000)
+
+    const interval = setInterval(() => {
+      const currentMode = window.localStorage.getItem('themeMode') as ThemeMode || 'dark'
+      if (currentMode === 'auto') {
+        applyThemeClass('auto')
+      }
+    }, 60000)
+
+    return () => {
+      clearInterval(interval)
+      clearInterval(checkInterval)
     }
   }, [])
 
-  const toggleTheme = () => {
-    const next: Theme = theme === 'light' ? 'dark' : 'light'
-
-    // Apply dark class to html element
-    if (next === 'dark') {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
+  const applyThemeClass = (mode: ThemeMode) => {
+    let active: 'light' | 'dark' = 'dark'
+    if (mode === 'light') {
+      active = 'light'
+    } else if (mode === 'dark') {
+      active = 'dark'
+    } else if (mode === 'auto') {
+      const hour = new Date().getHours()
+      active = (hour >= 18 || hour < 6) ? 'dark' : 'light'
     }
 
-    // Save to localStorage
-    window.localStorage.setItem('theme', next)
+    if (active === 'light') {
+      document.documentElement.classList.add('light-theme')
+      document.documentElement.classList.remove('dark')
+    } else {
+      document.documentElement.classList.remove('light-theme')
+      document.documentElement.classList.add('dark')
+    }
+    window.localStorage.setItem('theme', active)
+  }
 
-    // Update state
-    setTheme(next)
+  const toggleTheme = () => {
+    let next: ThemeMode = 'dark'
+    if (themeMode === 'light') {
+      next = 'auto'
+    } else if (themeMode === 'auto') {
+      next = 'dark'
+    } else {
+      next = 'light'
+    }
+
+    window.localStorage.setItem('themeMode', next)
+    setThemeMode(next)
+    applyThemeClass(next)
   }
 
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/80">
+    <header className="sticky top-0 z-20 glass-panel border-x-0 border-t-0 bg-[var(--bg-surface)]">
       {/* Skip to main content link for accessibility */}
       <a
         href="#main-content"
@@ -60,10 +112,16 @@ export default function Navbar() {
       >
         Skip to main content
       </a>
-      <nav aria-label="Main navigation" className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-        <NavLink to="/" aria-label="Home" className="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+      <nav aria-label="Main navigation" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
+        <a
+          href={personal.linkedin}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="LinkedIn Profile"
+          className="text-sm font-semibold tracking-tight text-[var(--color-text-bright)] hover:text-blue-600 dark:hover:text-sky-400 transition-colors"
+        >
           {personal.name}
-        </NavLink>
+        </a>
         <ul className="hidden gap-2 text-sm md:flex" role="menubar">
           {links.map((link) => (
             <li key={link.to}>
@@ -84,14 +142,31 @@ export default function Navbar() {
           ))}
         </ul>
         <div className="flex items-center gap-3">
+          {/* Local AI status badge */}
+          <button
+            type="button"
+            onClick={() => setIsOllamaModalOpen(true)}
+            className="flex items-center gap-1.5 rounded-full border border-[var(--border-color)] px-3 py-1 text-[0.7rem] hover:border-[var(--border-color-hover)] cursor-pointer transition-colors duration-200"
+            title={`Local LLM Connectivity Setup & Status (Active Model: ${ollamaModel})`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${
+              ollamaStatus === 'connected' ? 'bg-green-500 animate-pulse' :
+              ollamaStatus === 'checking' ? 'bg-amber-500 animate-pulse' :
+              'bg-rose-500'
+            }`} />
+            <span className="hidden lg:inline text-[var(--color-text)] font-medium">
+              Local AI: {ollamaStatus === 'connected' ? 'Online' : ollamaStatus === 'checking' ? 'Checking' : 'Offline'}
+            </span>
+          </button>
+
           <button
             type="button"
             onClick={toggleTheme}
-            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            aria-label={`Switch theme mode. Current mode: ${themeMode}`}
             aria-live="polite"
-            className="hidden rounded-full border border-slate-300 px-3 py-1 text-[0.7rem] text-slate-700 hover:border-slate-900 hover:text-slate-900 dark:border-slate-600 dark:text-slate-200 dark:hover:border-slate-100 md:inline-block"
+            className="hidden rounded-full border border-[var(--border-color)] px-3 py-1 text-[0.7rem] text-[var(--color-text)] hover:border-[var(--border-color-hover)] md:inline-block cursor-pointer transition-colors duration-200"
           >
-            {theme === 'light' ? 'Dark' : 'Light'} Mode
+            {themeMode === 'light' ? '☀️ Light' : themeMode === 'auto' ? '⏰ Auto' : '🌙 Dark'} Mode
           </button>
           <NavLink
             to="/contact"
@@ -101,6 +176,13 @@ export default function Navbar() {
           </NavLink>
         </div>
       </nav>
+
+      <OllamaDiagnosticModal
+        isOpen={isOllamaModalOpen}
+        onClose={() => setIsOllamaModalOpen(false)}
+        currentOllamaUrl={localStorage.getItem('portfolio_ollama_url') || 'http://localhost:11434'}
+        currentOllamaModel={localStorage.getItem('portfolio_ollama_model') || 'llama3'}
+      />
     </header>
   )
 }

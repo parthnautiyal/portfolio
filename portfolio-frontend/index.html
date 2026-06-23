@@ -4,6 +4,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <script>
+      (function() {
+        let themeMode = localStorage.getItem('themeMode');
+        if (!themeMode) {
+          const oldTheme = localStorage.getItem('theme');
+          themeMode = oldTheme || 'dark';
+          localStorage.setItem('themeMode', themeMode);
+        }
+        let activeTheme = themeMode;
+        if (themeMode === 'auto') {
+          const currentHour = new Date().getHours();
+          if (currentHour >= 18 || currentHour < 6) {
+            activeTheme = 'dark';
+          } else {
+            activeTheme = 'light';
+          }
+        }
+        if (activeTheme === 'light') {
+          document.documentElement.classList.add('light-theme');
+        } else {
+          document.documentElement.classList.remove('light-theme');
+        }
+      })();
+    </script>
+
     <!-- Primary Meta Tags -->
     <title>Parth Nautiyal · Software Engineer | Java, Spring Boot, Kubernetes</title>
     <meta name="title" content="Parth Nautiyal · Software Engineer | Java, Spring Boot, Kubernetes" />
