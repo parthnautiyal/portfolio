@@ -106,9 +106,11 @@ export default function Projects() {
       setLoading(true)
       setGithubError(false)
       try {
-        const response = await fetch(
-          'https://api.github.com/users/parthnautiyal/repos?sort=updated&per_page=50'
-        )
+        const apiUrl = import.meta.env.DEV
+          ? 'https://api.github.com/users/parthnautiyal/repos?sort=updated&per_page=50'
+          : '/api/github?username=parthnautiyal'
+
+        const response = await fetch(apiUrl)
         if (!response.ok) {
           throw new Error(`GitHub API returned ${response.status}`)
         }

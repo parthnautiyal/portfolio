@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import Navbar from '../components/Navbar.tsx'
 import Footer from '../components/Footer.tsx'
 import StructuredData from '../components/StructuredData.tsx'
+import DevConsolePanel from '../components/DevConsolePanel.tsx'
 
 export default function RootLayout() {
   return (
@@ -12,6 +13,7 @@ export default function RootLayout() {
         <Outlet />
       </main>
       <Footer />
+      <DevConsolePanel />
     </div>
   )
 }
