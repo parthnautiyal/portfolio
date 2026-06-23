@@ -10,6 +10,8 @@ import ProjectsPage from './pages/ProjectsPage.tsx'
 import ContactPage from './pages/ContactPage.tsx'
 import PlaygroundPage from './pages/PlaygroundPage.tsx'
 import ChatPage from './pages/ChatPage.tsx'
+import AtsCheckerPage from './pages/AtsCheckerPage.tsx'
+import ResumeManagerPage from './pages/ResumeManagerPage.tsx'
 import NotFoundPage from './pages/NotFoundPage.tsx'
 import ErrorBoundary from './components/ErrorBoundary.tsx'
 import { reportWebVitals } from './utils/reportWebVitals'
@@ -27,6 +29,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path="contact" element={<ContactPage />} />
             <Route path="playground" element={<PlaygroundPage />} />
             <Route path="chat" element={<ChatPage />} />
+            <Route path="ats-checker" element={<AtsCheckerPage />} />
+            <Route path="resume-manager" element={<ResumeManagerPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

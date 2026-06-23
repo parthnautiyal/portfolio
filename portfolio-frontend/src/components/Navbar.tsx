@@ -6,9 +6,9 @@ const links = [
   { to: '/', label: 'Home' },
   { to: '/experience', label: 'Experience' },
   { to: '/projects', label: 'Projects' },
+  { to: '/ats-checker', label: 'ATS Checker' },
   { to: '/playground', label: 'Playground' },
-  { to: '/chat', label: 'Chat' },
-  { to: '/contact', label: 'Contact' },
+  { to: '/chat', label: 'Chatbot' },
 ]
 
 type Theme = 'light' | 'dark'
@@ -18,7 +18,14 @@ export default function Navbar() {
 
   useEffect(() => {
     const stored = window.localStorage.getItem('theme') as Theme | null
-    const initial: Theme = stored ?? 'light'
+    let initial: Theme = 'light'
+    if (stored) {
+      initial = stored
+    } else {
+      // Time-based auto theme detection: dark mode between 18:00 and 06:00
+      const hour = new Date().getHours()
+      initial = (hour >= 18 || hour < 6) ? 'dark' : 'light'
+    }
     setTheme(initial)
     if (initial === 'dark') {
       document.documentElement.classList.add('dark')

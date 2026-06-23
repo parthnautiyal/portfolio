@@ -1,4 +1,5 @@
-import { Component, ErrorInfo, ReactNode } from 'react'
+import { Component } from 'react'
+import type { ErrorInfo, ReactNode } from 'react'
 import { HiOutlineExclamationCircle } from 'react-icons/hi'
 
 interface Props {
@@ -42,7 +43,7 @@ class ErrorBoundary extends Component<Props, State> {
               <p className="text-sm text-slate-600 dark:text-slate-400">
                 We're sorry, but something unexpected happened. Please try refreshing the page.
               </p>
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {import.meta.env.DEV && this.state.error && (
                 <details className="mt-4 rounded-lg bg-red-50 p-4 text-left dark:bg-red-900/20">
                   <summary className="cursor-pointer text-xs font-medium text-red-900 dark:text-red-300">
                     Error Details

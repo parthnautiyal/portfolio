@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import StructuredData from '../components/StructuredData'
+import DevConsolePanel from '../components/DevConsolePanel'
 
 export default function RootLayout() {
   return (
@@ -11,8 +12,8 @@ export default function RootLayout() {
       <main id="main-content" className="max-w-5xl mx-auto px-4 pb-16 pt-4">
         <Outlet />
       </main>
+      <DevConsolePanel />
       <Footer />
     </div>
   )
 }
-
