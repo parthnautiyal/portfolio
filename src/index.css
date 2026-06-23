@@ -1,0 +1,142 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+@variant dark (.dark &);
+
+html {
+  scroll-behavior: smooth;
+}
+
+:root {
+  color-scheme: dark;
+  --bg-main: #060814;
+  --bg-glow: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.22) 0%, transparent 55%),
+             radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 60%),
+             radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.06) 0%, transparent 45%);
+  --bg-surface: rgba(16, 22, 42, 0.35);
+  --bg-surface-hover: rgba(16, 22, 42, 0.55);
+  --border-color: rgba(255, 255, 255, 0.06);
+  --border-color-hover: rgba(99, 102, 241, 0.25);
+  --color-text: #e2e8f0;
+  --color-text-muted: #64748b;
+  --color-text-bright: #ffffff;
+  --color-primary: #38bdf8;
+  --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+}
+
+.light-theme {
+  color-scheme: light;
+  --bg-main: #faf6ee;
+  --bg-glow: radial-gradient(circle at 15% 15%, rgba(214, 93, 14, 0.12) 0%, transparent 50%),
+             radial-gradient(circle at 85% 85%, rgba(217, 119, 6, 0.1) 0%, transparent 50%),
+             radial-gradient(circle at 75% 15%, rgba(236, 72, 153, 0.06) 0%, transparent 40%);
+  --bg-surface: rgba(255, 253, 248, 0.55);
+  --bg-surface-hover: rgba(255, 253, 248, 0.75);
+  --border-color: rgba(0, 0, 0, 0.06);
+  --border-color-hover: rgba(214, 93, 14, 0.35);
+  --color-text: #3c3836;
+  --color-text-muted: #7c6f64;
+  --color-text-bright: #282828;
+  --color-primary: #d6570e;
+  --shadow-card: 0 8px 32px 0 rgba(44, 42, 41, 0.03), 0 8px 32px 0 rgba(214, 93, 14, 0.01);
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-main);
+  background-image: var(--bg-glow);
+  background-attachment: fixed;
+  color: var(--color-text);
+  @apply antialiased transition-colors duration-500;
+}
+
+.text-link {
+  @apply underline-offset-2 transition-colors text-blue-600 hover:text-blue-700 dark:text-sky-400 dark:hover:text-sky-300;
+}
+
+/* Glassmorphism Styles */
+@utility glass-card {
+  background-color: var(--bg-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-card);
+  @apply rounded-2xl transition-all duration-300;
+
+  &:hover {
+    border-color: var(--border-color-hover);
+  }
+}
+
+@utility glass-panel {
+  background-color: var(--bg-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+}
+
+.card-elevated {
+  @apply glass-card p-5 hover:-translate-y-1;
+}
+
+.pill {
+  background-color: light-dark(rgba(255, 255, 255, 0.6), rgba(30, 41, 59, 0.5));
+  border: 1px solid light-dark(rgba(226, 232, 240, 0.8), rgba(51, 65, 85, 0.5));
+  @apply rounded-full px-3 py-1 text-xs text-slate-700 dark:text-slate-200 transition-all duration-200 hover:scale-105;
+}
+
+.section-heading {
+  @apply text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 relative inline-block after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-12 after:bg-blue-600 dark:after:bg-sky-400 pb-1;
+}
+
+/* Animations */
+.animate-fade-up {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fade-up {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.console-cursor {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  from, to { background-color: transparent; }
+  50% { background-color: #4ade80; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .6; }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+  @apply rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: light-dark(rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.2));
+}
+
