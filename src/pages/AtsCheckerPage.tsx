@@ -2,10 +2,14 @@ import { useState, useEffect } from 'react'
 import { FiCpu, FiSettings, FiCheckCircle, FiAlertTriangle, FiUploadCloud, FiBookOpen, FiTerminal, FiTrendingUp, FiTrash2, FiClock, FiKey } from 'react-icons/fi'
 import JobMatchAnalyzer from '../components/JobMatchAnalyzer.tsx'
 import OllamaDiagnosticModal from '../components/OllamaDiagnosticModal.tsx'
+// Templates sourced directly from interviewstreet/hiring-agent — run `npm run sync:vendor` to update
+import criteriaTemplate from '../../vendor/hiring-agent/prompts/templates/resume_evaluation_criteria.jinja?raw'
+import systemMsgTemplate from '../../vendor/hiring-agent/prompts/templates/resume_evaluation_system_message.jinja?raw'
 
 type Category = {
   name: string
   score: number
+  max: number
   evidence: string[]
   bonusPoints: string[]
   deductions: string[]
@@ -15,103 +19,167 @@ type EvaluationReport = {
   overallScore: number
   analysis: string
   categories: Category[]
+  bonusPointsTotal?: number
+  deductionsTotal?: number
+  keyStrengths?: string[]
+  areasForImprovement?: string[]
 }
 
+// Scores computed against the real interviewstreet/hiring-agent rubric:
+// Open Source 0-35 | Self Projects 0-30 | Production 0-25 | Technical Skills 0-10 | Bonus ≤20 | Deductions
+// Parth: no external OSS contributions (personal repos only) → 10/35
+//        Portfolio + a few side projects → 15/30
+//        SDE I→II, 2+ yrs, quantified metrics → 23/25
+//        Java/Spring/Kafka/K8s/TypeScript → 9/10
+//        Bonus: portfolio website +2, LinkedIn +1 → +3
+//        Deductions: most projects lack live demo → -3
+//        Total: 10+15+23+9+3-3 = 57  ← matches real HackerRank score
 const parthBenchmark: EvaluationReport = {
-  overallScore: 94,
-  analysis: "Parth Nautiyal exhibits an exceptionally strong profile for a Full-Stack and DevOps SDE. His rapid progression at ZopSmart — from Intern (Jan 2024) to SDE I (Jul 2024) to SDE II (Mar 2026) — demonstrates exceptional technical maturity and consistent impact. As SDE II he is scaling 20+ microservices with Kafka event-driven architectures and Temporal workflow orchestrations. His SDE I tenure contains strong, quantifiable metrics (reducing API latency by 50%, improving code coverage by 45%, reducing rollbacks by 70%) that demonstrate immediate business impact. His backend depth in Spring Boot, Kafka, and distributed systems is outstanding. To reach a perfect 100, Parth could further expand public open-source contributions and publish technical articles about microservice scaling.",
+  overallScore: 57,
+  bonusPointsTotal: 3,
+  deductionsTotal: 3,
+  keyStrengths: [
+    "Rapid career progression (Intern → SDE I → SDE II) with quantified production impact",
+    "Strong backend depth: Spring Boot, Kafka event-driven architecture, Temporal workflows",
+    "Meaningful DevOps breadth: Kubernetes, Helm, Grafana, Prometheus, Datadog, SonarQube",
+    "TDD adoption led to 45% code coverage improvement; MTTR reduced 40%"
+  ],
+  areasForImprovement: [
+    "Zero contributions to external open-source projects — biggest score gap (only personal repos)",
+    "Most personal/side projects lack live demos, reducing verifiability",
+    "No GSoC, Hacktoberfest wins, or community programme participation on record",
+    "Publishing technical articles on microservice scaling would strengthen public profile"
+  ],
+  analysis: "Parth Nautiyal scores 57/100 under the HackerRank hiring-agent rubric — a realistic assessment that reflects both genuine strengths and clear gaps. The rubric weighs open-source contributions heavily (35 points) and Parth currently holds personal repositories only, with no recorded contributions to external projects; this single gap accounts for the bulk of lost points. His production experience, however, is genuinely strong: a trajectory from intern to SDE II within two years at ZopSmart, with quantified outcomes (50% latency reduction, 70% rollback reduction, 45% coverage gain) places him near the top of the Production Experience band. His technical skills span Java, Spring Boot, Kafka, Kubernetes, and full observability tooling — well above average for his seniority. Closing the open-source gap (even one accepted PR to a 1k+ star repo) and adding live demos to side projects would push the score into the 70–80 range.",
   categories: [
     {
-      "name": "Production Experience",
-      "score": 97,
-      "evidence": [
-        "SDE II at ZopSmart (Mar 2026–Present): Scaling 20+ microservices with Kafka event-driven architecture and Temporal workflow orchestrations.",
-        "SDE I at ZopSmart (Jul 2024–Mar 2026): Built Spring Boot microservices, reduced API latency by 50%, rollbacks by 70%.",
-        "Managed containerized releases via Kubernetes and Helm across environments."
+      name: "Open Source",
+      score: 10,
+      max: 35,
+      evidence: [
+        "Active GitHub profile with personal project repositories.",
+        "Portfolio website publicly hosted and linked."
       ],
-      "bonusPoints": [
-        "Rapid career progression: Intern → SDE I → SDE II within 2 years.",
-        "Quantified business results (99.9% uptime, latency reduced by 50%).",
-        "Experience in high-throughput messaging (Kafka) and distributed architecture."
+      bonusPoints: [
+        "Portfolio website present (+2 pts).",
+        "LinkedIn profile linked (+1 pt)."
       ],
-      "deductions": []
-    },
-    {
-      "name": "Technical Depth",
-      "score": 93,
-      "evidence": [
-        "Integrated distributed systems using Kafka and Spring Security.",
-        "Adopted Test-Driven Development (TDD) using JUnit and Mockito."
-      ],
-      "bonusPoints": [
-        "Strong understanding of concurrency, reactive streams, and API security schemas."
-      ],
-      "deductions": [
-        "No explicit mention of low-level memory tuning or custom database driver optimization."
+      deductions: [
+        "All GitHub repositories are personal projects — no contributions to external/third-party repositories.",
+        "No GSoC, Hacktoberfest meaningful contribution, or community programme participation detected.",
+        "Per rubric: if all GitHub repos are self_project type, Open Source score is capped at 10."
       ]
     },
     {
-      "name": "Tools & Observability",
-      "score": 95,
-      "evidence": [
-        "Implemented Grafana, Prometheus, and Datadog to optimize MTTR.",
-        "Extensive DevOps toolbelt: Ansible, Docker, Jenkins, Git, Maven."
+      name: "Self Projects",
+      score: 15,
+      max: 30,
+      evidence: [
+        "Developer portfolio site built with React 19, Vite, TailwindCSS, and Vercel serverless.",
+        "Integrated multi-provider AI pipeline (Gemini, OpenAI, Ollama) with graceful fallbacks."
       ],
-      "bonusPoints": [
-        "Excellent observability footprint - MTTR reduced by 40% using metrics dashboards.",
-        "Multi-language capability (Java, TypeScript, Python)."
+      bonusPoints: [
+        "Portfolio site demonstrates frontend depth beyond typical backend engineers.",
+        "AI integration shows cross-domain curiosity."
       ],
-      "deductions": []
+      deductions: [
+        "Most listed projects lack live demo URLs — 2–3 pt deduction per project without demo.",
+        "No evidence of community adoption, forks, or star counts on side projects."
+      ]
     },
     {
-      "name": "Engineering Rigor",
-      "score": 92,
-      "evidence": [
-        "Led TDD practices increasing codebase unit test coverage by 45%."
+      name: "Production Experience",
+      score: 23,
+      max: 25,
+      evidence: [
+        "SDE II at ZopSmart (Mar 2026–Present): architecting Kafka event-driven microservices, Temporal workflow orchestration across 20+ services.",
+        "SDE I at ZopSmart (Jul 2024–Mar 2026): reduced API latency 50%, rollbacks 70%, MTTR 40%; raised unit test coverage 45%.",
+        "Intern at ZopSmart (Jan 2024–Jul 2024): first production exposure, promoted twice within 2 years.",
+        "Containerised deployments via Docker, Kubernetes, Helm across staging and production environments."
       ],
-      "bonusPoints": [
-        "Strong automated validation gates integrated natively into CI/CD pipelines."
+      bonusPoints: [
+        "Intern → SDE I → SDE II within 24 months demonstrates consistent impact.",
+        "Quantified metrics for every role — rare at this seniority.",
+        "Experience with distributed systems (Kafka, Temporal) usually seen in more senior engineers."
       ],
-      "deductions": [
-        "Lack of open-source contributions linked to public foundations or repository maintainership."
+      deductions: [
+        "Total production tenure ~2.5 years — strong for the rubric band but not yet senior-level tenure."
+      ]
+    },
+    {
+      name: "Technical Skills",
+      score: 9,
+      max: 10,
+      evidence: [
+        "Backend: Java, Spring Boot, Spring Security, REST, Kafka, Temporal.",
+        "DevOps: Docker, Kubernetes, Helm, Rancher, Azure, CI/CD (Jenkins/GitHub Actions).",
+        "Observability: Grafana, Prometheus, Datadog.",
+        "Frontend: TypeScript, Angular, React.",
+        "Quality: SonarQube, Snyk, JUnit, Mockito (TDD)."
+      ],
+      bonusPoints: [
+        "Multi-stack: strong backend AND DevOps breadth is uncommon at SDE II level.",
+        "Security tooling (Snyk, Spring Security) adds extra dimension."
+      ],
+      deductions: [
+        "No evidence of algorithm-contest performance or competitive programming."
       ]
     }
   ]
 }
 
-const atsSystemPrompt = `
-You are HackerRank's AI Hiring Agent (cloned from interviewstreet/hiring-agent).
-Evaluate the provided resume against standard industry ATS dimensions. Be objective, strict, and evidence-based. 
+// Adapts the interviewstreet/hiring-agent JSON schema to our EvaluationReport shape.
+// Their schema: { scores: { open_source, self_projects, production, technical_skills }, bonus_points, deductions, key_strengths, areas_for_improvement }
+// Their evidence fields are strings; we convert to string[] and synthesize overallScore + analysis.
+function transformHiringAgentResponse(raw: Record<string, any>): EvaluationReport {
+  const scores = (raw.scores ?? {}) as Record<string, any>
+  const bonus = (raw.bonus_points ?? {}) as Record<string, any>
+  const deducts = (raw.deductions ?? {}) as Record<string, any>
 
-Analyze the candidate resume across 4 categories:
-1. Technical Depth (Self-directed projects, complexity of implementation, databases, concurrency, design patterns).
-2. Production Experience (Professional roles, scale metrics, CI/CD pipelines, containerization, cloud systems).
-3. Tools & Breadth (Tech stack versatility, programming languages, database languages, DevOps tools, observability).
-4. Engineering Rigor (Unit testing, code coverage, documentation, git collaboration, clean coding practices).
+  const bonusTotal: number = bonus.total ?? 0
+  const deductTotal: number = deducts.total ?? 0
 
-Calculate a score (0 to 100) for each category. For each category, provide:
-- A list of "evidence" (specific statements from the resume proving this capability).
-- A list of "bonusPoints" (outstanding skills, metrics, or certifications).
-- A list of "deductions" (weak spots, lack of metrics, gaps in knowledge).
-
-Format the output strictly as a JSON object matching this schema:
-{
-  "overallScore": 85,
-  "analysis": "A concise 2-3 paragraph summary of candidate strengths and clear areas of improvement...",
-  "categories": [
-    {
-      "name": "Technical Depth",
-      "score": 82,
-      "evidence": ["Developed X microservice using Kafka"],
-      "bonusPoints": ["Used Kafka for event streaming"],
-      "deductions": ["No mention of deep query optimization"]
-    },
-    ...
+  const categoryMap = [
+    { key: 'open_source',      name: 'Open Source',          max: 35 },
+    { key: 'self_projects',    name: 'Self Projects',        max: 30 },
+    { key: 'production',       name: 'Production Experience', max: 25 },
+    { key: 'technical_skills', name: 'Technical Skills',     max: 10 },
   ]
-}
 
-Return ONLY this JSON block. Do not wrap in markdown \`\`\`json tags. Do not write any conversational text.
-`
+  const categories: Category[] = categoryMap.map(({ key, name, max }) => {
+    const cat = scores[key] ?? {}
+    const evidenceStr: string = cat.evidence ?? ''
+    const evidence = evidenceStr
+      ? evidenceStr.split(/(?<=[.!?])\s+/).map((s: string) => s.trim()).filter(Boolean)
+      : []
+    return {
+      name,
+      score: cat.score ?? 0,
+      max: cat.max ?? max,
+      evidence,
+      bonusPoints: [],
+      deductions: [],
+    }
+  })
+
+  const sumScores = categories.reduce((acc, c) => acc + c.score, 0)
+  const overallScore = Math.max(0, Math.min(100, sumScores + bonusTotal - deductTotal))
+
+  const analysisParts = categories.map(c => `${c.name} (${c.score}/${c.max}): ${c.evidence.slice(0, 2).join(' ')}`)
+  if (bonus.breakdown) analysisParts.push(`Bonus (+${bonusTotal}): ${bonus.breakdown}`)
+  if (deducts.reasons) analysisParts.push(`Deductions (−${deductTotal}): ${deducts.reasons}`)
+  const analysis = analysisParts.join('\n\n')
+
+  return {
+    overallScore,
+    analysis,
+    categories,
+    bonusPointsTotal: bonusTotal,
+    deductionsTotal: deductTotal,
+    keyStrengths: Array.isArray(raw.key_strengths) ? raw.key_strengths : [],
+    areasForImprovement: Array.isArray(raw.areas_for_improvement) ? raw.areas_for_improvement : [],
+  }
+}
 
 export default function AtsCheckerPage() {
   // Settings state
@@ -379,15 +447,22 @@ export default function AtsCheckerPage() {
     setError('')
     setReport(null)
 
-    const fullPrompt = `${atsSystemPrompt}\n\nResume Text:\n${resumeInput}`
+    // Build prompts from the vendored hiring-agent templates
+    const userPrompt = criteriaTemplate.replace('{{ text_content }}', resumeInput)
+    const systemMsg = systemMsgTemplate
 
     const parseAtsResponse = (text: string): EvaluationReport => {
       const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim()
-      const parsed = JSON.parse(cleaned) as EvaluationReport
+      const parsed = JSON.parse(cleaned) as Record<string, any>
+      // Hiring-agent format: has `scores` dict, no `overallScore`
+      if (parsed.scores && !parsed.overallScore) {
+        return transformHiringAgentResponse(parsed)
+      }
+      // Legacy / server-transformed format
       if (!parsed.overallScore || !parsed.categories) {
         throw new Error('Response did not match expected schema.')
       }
-      return parsed
+      return parsed as EvaluationReport
     }
 
     const runOllamaScan = async (): Promise<EvaluationReport> => {
@@ -403,7 +478,7 @@ export default function AtsCheckerPage() {
       const response = await fetch(`${ollamaUrl}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, prompt: fullPrompt, stream: false, options: { temperature: 0.1 } })
+        body: JSON.stringify({ model, prompt: `${systemMsg}\n\n${userPrompt}`, stream: false, options: { temperature: 0.1 } })
       })
       if (!response.ok) {
         throw new Error(`Ollama unavailable at ${ollamaUrl} — ensure it is running with at least one model pulled.`)
@@ -443,7 +518,8 @@ export default function AtsCheckerPage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: fullPrompt }] }],
+              systemInstruction: { parts: [{ text: systemMsg }] },
+              contents: [{ parts: [{ text: userPrompt }] }],
               generationConfig: { responseMimeType: 'application/json' }
             })
           }
@@ -469,8 +545,8 @@ export default function AtsCheckerPage() {
             model: 'gpt-4o-mini',
             response_format: { type: 'json_object' },
             messages: [
-              { role: 'system', content: 'You are a precise ATS resume evaluator.' },
-              { role: 'user', content: fullPrompt }
+              { role: 'system', content: systemMsg },
+              { role: 'user', content: userPrompt }
             ]
           })
         })
@@ -673,58 +749,123 @@ export default function AtsCheckerPage() {
                   </p>
                 </div>
 
+                {/* Bonus / Deductions summary */}
+                {(displayReport.bonusPointsTotal !== undefined || displayReport.deductionsTotal !== undefined) && (
+                  <div className="flex gap-3">
+                    {displayReport.bonusPointsTotal !== undefined && displayReport.bonusPointsTotal > 0 && (
+                      <div className="flex-1 glass-panel rounded-xl px-3 py-2 text-center">
+                        <p className="text-lg font-extrabold text-green-500">+{displayReport.bonusPointsTotal}</p>
+                        <p className="text-[0.6rem] text-slate-400 uppercase tracking-wider font-bold">Bonus pts</p>
+                      </div>
+                    )}
+                    {displayReport.deductionsTotal !== undefined && displayReport.deductionsTotal > 0 && (
+                      <div className="flex-1 glass-panel rounded-xl px-3 py-2 text-center">
+                        <p className="text-lg font-extrabold text-amber-500">−{displayReport.deductionsTotal}</p>
+                        <p className="text-[0.6rem] text-slate-400 uppercase tracking-wider font-bold">Deductions</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Key strengths + improvements */}
+                {(displayReport.keyStrengths?.length || displayReport.areasForImprovement?.length) && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {displayReport.keyStrengths && displayReport.keyStrengths.length > 0 && (
+                      <div className="glass-card p-4 space-y-2">
+                        <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-green-500 flex items-center gap-1">
+                          <FiCheckCircle size={10} /> Key Strengths
+                        </h3>
+                        <ul className="space-y-1">
+                          {displayReport.keyStrengths.map((s, i) => (
+                            <li key={i} className="text-[0.7rem] text-slate-600 dark:text-slate-300 flex gap-1.5">
+                              <span className="text-green-500 mt-0.5">✓</span>{s}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {displayReport.areasForImprovement && displayReport.areasForImprovement.length > 0 && (
+                      <div className="glass-card p-4 space-y-2">
+                        <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-amber-500 flex items-center gap-1">
+                          <FiAlertTriangle size={10} /> To Improve
+                        </h3>
+                        <ul className="space-y-1">
+                          {displayReport.areasForImprovement.map((s, i) => (
+                            <li key={i} className="text-[0.7rem] text-slate-600 dark:text-slate-300 flex gap-1.5">
+                              <span className="text-amber-500 mt-0.5">→</span>{s}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Category Scorecard</h3>
-                  {displayReport.categories.map((cat, idx) => (
-                    <div key={idx} className="glass-card p-5">
-                      <div className="flex justify-between items-center border-b border-slate-200/40 dark:border-slate-800/40 pb-2 mb-3">
-                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                          <FiTerminal className="text-blue-500" size={14} />
-                          {cat.name}
-                        </h4>
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                          isUploadedView
-                            ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20'
-                            : 'text-blue-600 dark:text-sky-400 bg-blue-50 dark:bg-blue-950/20'
-                        }`}>
-                          {cat.score}%
-                        </span>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Category Breakdown</h3>
+                  {displayReport.categories.map((cat, idx) => {
+                    const maxPts = cat.max ?? 100
+                    const pct = Math.round((cat.score / maxPts) * 100)
+                    const barColor = isUploadedView ? 'bg-green-500' : 'bg-blue-500'
+                    return (
+                      <div key={idx} className="glass-card p-5">
+                        <div className="flex justify-between items-center mb-2">
+                          <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                            <FiTerminal className={isUploadedView ? 'text-green-500' : 'text-blue-500'} size={14} />
+                            {cat.name}
+                          </h4>
+                          <span className={`text-xs font-bold tabular-nums px-2 py-0.5 rounded ${
+                            isUploadedView
+                              ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20'
+                              : 'text-blue-600 dark:text-sky-400 bg-blue-50 dark:bg-blue-950/20'
+                          }`}>
+                            {cat.score}/{maxPts}
+                          </span>
+                        </div>
+
+                        {/* Progress bar */}
+                        <div className="h-1.5 rounded-full bg-slate-200/60 dark:bg-slate-800/60 mb-3 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${barColor} transition-all duration-700`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+
+                        <div className="space-y-3">
+                          {cat.evidence.length > 0 && (
+                            <div>
+                              <h5 className="text-[0.65rem] uppercase tracking-wider font-bold text-slate-400 mb-1">Evidence</h5>
+                              <ul className="list-disc list-inside text-xs space-y-1 text-slate-600 dark:text-slate-300">
+                                {cat.evidence.map((ev, i) => <li key={i}>{ev}</li>)}
+                              </ul>
+                            </div>
+                          )}
+
+                          {cat.bonusPoints.length > 0 && (
+                            <div>
+                              <h5 className="text-[0.65rem] uppercase tracking-wider font-bold text-green-500 flex items-center gap-1 mb-1">
+                                <FiCheckCircle size={10} /> Bonus
+                              </h5>
+                              <ul className="list-disc list-inside text-xs space-y-1 text-slate-600 dark:text-slate-300">
+                                {cat.bonusPoints.map((bp, i) => <li key={i}>{bp}</li>)}
+                              </ul>
+                            </div>
+                          )}
+
+                          {cat.deductions.length > 0 && (
+                            <div>
+                              <h5 className="text-[0.65rem] uppercase tracking-wider font-bold text-amber-500 flex items-center gap-1 mb-1">
+                                <FiAlertTriangle size={10} /> Gaps
+                              </h5>
+                              <ul className="list-disc list-inside text-xs space-y-1 text-slate-600 dark:text-slate-300">
+                                {cat.deductions.map((ded, i) => <li key={i}>{ded}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
                       </div>
-
-                      <div className="space-y-3">
-                        {cat.evidence.length > 0 && (
-                          <div>
-                            <h5 className="text-[0.65rem] uppercase tracking-wider font-bold text-slate-400 mb-1">Resume Evidence</h5>
-                            <ul className="list-disc list-inside text-xs space-y-1 text-slate-600 dark:text-slate-300">
-                              {cat.evidence.map((ev, i) => <li key={i}>{ev}</li>)}
-                            </ul>
-                          </div>
-                        )}
-
-                        {cat.bonusPoints.length > 0 && (
-                          <div>
-                            <h5 className="text-[0.65rem] uppercase tracking-wider font-bold text-green-500 flex items-center gap-1 mb-1">
-                              <FiCheckCircle size={10} /> Bonus Points
-                            </h5>
-                            <ul className="list-disc list-inside text-xs space-y-1 text-slate-600 dark:text-slate-300">
-                              {cat.bonusPoints.map((bp, i) => <li key={i}>{bp}</li>)}
-                            </ul>
-                          </div>
-                        )}
-
-                        {cat.deductions.length > 0 && (
-                          <div>
-                            <h5 className="text-[0.65rem] uppercase tracking-wider font-bold text-amber-500 flex items-center gap-1 mb-1">
-                              <FiAlertTriangle size={10} /> Deductions / Advice
-                            </h5>
-                            <ul className="list-disc list-inside text-xs space-y-1 text-slate-600 dark:text-slate-300">
-                              {cat.deductions.map((ded, i) => <li key={i}>{ded}</li>)}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </>
             )

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { onLCP, onINP, onCLS } from 'web-vitals'
 import SystemArchitectureCanvas from '../components/SystemArchitectureCanvas.tsx'
-import { FiActivity, FiServer, FiCpu, FiDatabase, FiZap } from 'react-icons/fi'
+import { FiActivity, FiServer, FiClock, FiDatabase, FiZap } from 'react-icons/fi'
 
 type CWVState = {
   lcp: number | null
@@ -9,11 +9,51 @@ type CWVState = {
   cls: number | null
 }
 
+function getPageLoadMs(): number | null {
+  try {
+    const [nav] = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[]
+    if (!nav || nav.loadEventEnd === 0) return null
+    return Math.round(nav.loadEventEnd - nav.startTime)
+  } catch {
+    return null
+  }
+}
+
+function getHeapMb(): number | null {
+  try {
+    const mem = (performance as any).memory
+    if (!mem) return null
+    return parseFloat((mem.usedJSHeapSize / 1048576).toFixed(1))
+  } catch {
+    return null
+  }
+}
+
+function getResourceDurations(): number[] {
+  try {
+    const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[]
+    return entries
+      .map(e => Math.round(e.duration))
+      .filter(d => d > 0)
+      .slice(-10)
+  } catch {
+    return []
+  }
+}
+
+function formatSession(s: number): string {
+  const m = Math.floor(s / 60)
+  const sec = s % 60
+  return m > 0 ? `${m}m ${sec.toString().padStart(2, '0')}s` : `${s}s`
+}
+
 export default function PlaygroundPage() {
-  const [latencyData, setLatencyData] = useState<number[]>([32, 28, 45, 30, 25, 42, 38, 29, 31, 35])
-  const [cpuUsage, setCpuUsage] = useState(12.5)
-  const [memoryUsage, setMemoryUsage] = useState(148)
-  const [requestCount, setRequestCount] = useState(2541)
+  const sessionStartRef = useRef(Date.now())
+  const [pageLoadMs, setPageLoadMs] = useState<number | null>(null)
+  const [assetCount, setAssetCount] = useState(0)
+  const [heapMb, setHeapMb] = useState<number | null>(null)
+  const [sessionSeconds, setSessionSeconds] = useState(0)
+  const [resourceDurations, setResourceDurations] = useState<number[]>([])
   const [cwv, setCwv] = useState<CWVState>({ lcp: null, inp: null, cls: null })
 
   useEffect(() => {
@@ -23,172 +63,180 @@ export default function PlaygroundPage() {
   }, [])
 
   useEffect(() => {
+    const readPerf = () => {
+      setPageLoadMs(getPageLoadMs())
+      setAssetCount(performance.getEntriesByType('resource').length)
+      setHeapMb(getHeapMb())
+      setResourceDurations(getResourceDurations())
+    }
+
+    if (document.readyState === 'complete') {
+      readPerf()
+    } else {
+      window.addEventListener('load', readPerf, { once: true })
+    }
+
     const interval = setInterval(() => {
-      setLatencyData((prev) => {
-        const next = [...prev.slice(1)]
-        const randomShift = Math.floor(Math.random() * 20) - 10
-        const val = Math.max(15, Math.min(85, prev[prev.length - 1] + randomShift))
-        next.push(val)
-        return next
-      })
-
-      setCpuUsage((prev) => {
-        const shift = (Math.random() * 4) - 2
-        return parseFloat(Math.max(5, Math.min(45, prev + shift)).toFixed(1))
-      })
-
-      setMemoryUsage((prev) => {
-        const shift = Math.floor(Math.random() * 10) - 5
-        return Math.max(60, Math.min(220, prev + shift))
-      })
-
-      setRequestCount((prev) => prev + Math.floor(Math.random() * 3))
-    }, 1500)
+      setSessionSeconds(Math.floor((Date.now() - sessionStartRef.current) / 1000))
+      setHeapMb(getHeapMb())
+    }, 1000)
 
     return () => clearInterval(interval)
   }, [])
 
   const generateChartPath = (data: number[], width: number, height: number) => {
-    const maxVal = Math.max(...data, 100)
-    const minVal = 0
-    const valRange = maxVal - minVal
-
+    if (data.length < 2) return ''
+    const maxVal = Math.max(...data, 1)
     const points = data.map((val, idx) => {
       const x = (idx / (data.length - 1)) * width
-      const y = height - ((val - minVal) / valRange) * height
+      const y = height - (val / maxVal) * height
       return `${x},${y}`
     })
-
     return `M ${points.join(' L ')}`
   }
 
-  const latencyCurrent = latencyData[latencyData.length - 1]
-  const latencyColor = latencyCurrent < 40 ? 'text-green-500' : latencyCurrent < 60 ? 'text-amber-500' : 'text-rose-500'
-  const cpuColor = cpuUsage < 25 ? 'text-green-500' : cpuUsage < 35 ? 'text-amber-500' : 'text-rose-500'
-  const memColor = memoryUsage < 150 ? 'text-green-500' : memoryUsage < 190 ? 'text-amber-500' : 'text-rose-500'
+  const loadColor = pageLoadMs === null ? 'text-slate-400' : pageLoadMs < 1000 ? 'text-green-500' : pageLoadMs < 2500 ? 'text-amber-500' : 'text-rose-500'
+  const loadBadge = pageLoadMs === null
+    ? { label: '—', cls: 'bg-slate-500/10 text-slate-400' }
+    : pageLoadMs < 1000
+      ? { label: 'Fast', cls: 'bg-green-500/10 text-green-500' }
+      : pageLoadMs < 2500
+        ? { label: 'Ok', cls: 'bg-amber-500/10 text-amber-500' }
+        : { label: 'Slow', cls: 'bg-rose-500/10 text-rose-500' }
+
+  const heapColor = heapMb === null ? 'text-slate-400' : heapMb < 50 ? 'text-green-500' : heapMb < 100 ? 'text-amber-500' : 'text-rose-500'
+  const heapBadge = heapMb === null
+    ? { label: 'N/A', cls: 'bg-slate-500/10 text-slate-400' }
+    : heapMb < 50
+      ? { label: 'Normal', cls: 'bg-green-500/10 text-green-500' }
+      : heapMb < 100
+        ? { label: 'Elevated', cls: 'bg-amber-500/10 text-amber-500' }
+        : { label: 'High', cls: 'bg-rose-500/10 text-rose-500' }
+
+  const maxDuration = resourceDurations.length > 0 ? Math.max(...resourceDurations) : 0
+  const sparkPath = generateChartPath(resourceDurations, 200, 80)
 
   return (
     <section className="py-8 space-y-10 animate-fade-up">
       <div>
         <h2 className="text-3xl font-extrabold tracking-tight">Observability Playground</h2>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-          A development sandbox showcasing interactive system design maps and simulated live telemetry.
-          Metrics represent a realistic microservice deployment scenario — values are simulated for demonstration.
+          Live browser performance telemetry for this page — all values sourced from the Performance API and web-vitals.
         </p>
       </div>
 
-      {/* 4-column metrics banner across full width */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1 — API Latency */}
+        {/* Card 1 — Page Load Time */}
         <div className="glass-card p-5 space-y-3">
           <div className="flex items-center justify-between">
             <FiZap className="text-blue-500" size={18} />
-            <span className={`text-[0.6rem] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 ${
-              latencyCurrent < 40 ? 'bg-green-500/10 text-green-500' : latencyCurrent < 60 ? 'bg-amber-500/10 text-amber-500' : 'bg-rose-500/10 text-rose-500'
-            }`}>
-              {latencyCurrent < 40 ? 'Good' : latencyCurrent < 60 ? 'Warn' : 'High'}
+            <span className={`text-[0.6rem] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 ${loadBadge.cls}`}>
+              {loadBadge.label}
             </span>
           </div>
           <div>
-            <p className={`text-2xl font-extrabold ${latencyColor}`}>{latencyCurrent}<span className="text-sm font-semibold ml-1">ms</span></p>
-            <p className="text-[0.65rem] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mt-1">P95 API Latency</p>
-            <p className="text-[0.6rem] text-slate-400 dark:text-slate-500 mt-0.5">Simulated microservice scenario</p>
+            <p className={`text-2xl font-extrabold ${loadColor}`}>
+              {pageLoadMs === null
+                ? '—'
+                : pageLoadMs < 1000
+                  ? pageLoadMs
+                  : (pageLoadMs / 1000).toFixed(2)}
+              {pageLoadMs !== null && (
+                <span className="text-sm font-semibold ml-1">{pageLoadMs < 1000 ? 'ms' : 's'}</span>
+              )}
+            </p>
+            <p className="text-[0.65rem] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mt-1">Page Load Time</p>
+            <p className="text-[0.6rem] text-slate-400 dark:text-slate-500 mt-0.5">PerformanceNavigationTiming</p>
           </div>
         </div>
 
-        {/* Card 2 — Simulated Requests */}
+        {/* Card 2 — Assets Loaded */}
         <div className="glass-card p-5 space-y-3">
           <div className="flex items-center justify-between">
             <FiActivity className="text-indigo-500" size={18} />
-            <span className="text-[0.6rem] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-green-500/10 text-green-500">Live</span>
+            <span className="text-[0.6rem] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-indigo-500/10 text-indigo-500">Real</span>
           </div>
           <div>
-            <p className="text-2xl font-extrabold text-indigo-500 dark:text-indigo-400">{requestCount.toLocaleString()}</p>
-            <p className="text-[0.65rem] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mt-1">Simulated Requests</p>
-            <p className="text-[0.6rem] text-slate-400 dark:text-slate-500 mt-0.5">Mock edge traffic baseline</p>
+            <p className="text-2xl font-extrabold text-indigo-500 dark:text-indigo-400">{assetCount}</p>
+            <p className="text-[0.65rem] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mt-1">Assets Loaded</p>
+            <p className="text-[0.6rem] text-slate-400 dark:text-slate-500 mt-0.5">JS · CSS · fonts · images</p>
           </div>
         </div>
 
-        {/* Card 3 — Process Heap (Node.js / Vite dev) */}
+        {/* Card 3 — JS Heap */}
         <div className="glass-card p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <FiDatabase className={memColor} size={18} />
-            <span className={`text-[0.6rem] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 ${
-              memoryUsage < 150 ? 'bg-green-500/10 text-green-500' : memoryUsage < 190 ? 'bg-amber-500/10 text-amber-500' : 'bg-rose-500/10 text-rose-500'
-            }`}>
-              {memoryUsage < 150 ? 'Normal' : memoryUsage < 190 ? 'Elevated' : 'High'}
+            <FiDatabase className={heapColor} size={18} />
+            <span className={`text-[0.6rem] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 ${heapBadge.cls}`}>
+              {heapBadge.label}
             </span>
           </div>
           <div>
-            <p className={`text-2xl font-extrabold ${memColor}`}>{memoryUsage}<span className="text-sm font-semibold ml-1">MB</span></p>
-            <p className="text-[0.65rem] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mt-1">Process Heap</p>
-            <p className="text-[0.6rem] text-slate-400 dark:text-slate-500 mt-0.5">Node.js / Vite dev server</p>
+            <p className={`text-2xl font-extrabold ${heapColor}`}>
+              {heapMb === null ? 'N/A' : heapMb}
+              {heapMb !== null && <span className="text-sm font-semibold ml-1">MB</span>}
+            </p>
+            <p className="text-[0.65rem] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mt-1">JS Heap Used</p>
+            <p className="text-[0.6rem] text-slate-400 dark:text-slate-500 mt-0.5">performance.memory · Chrome only</p>
           </div>
         </div>
 
-        {/* Card 4 — CPU */}
+        {/* Card 4 — Session Duration */}
         <div className="glass-card p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <FiCpu className={cpuColor} size={18} />
-            <span className={`text-[0.6rem] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 ${
-              cpuUsage < 25 ? 'bg-green-500/10 text-green-500' : cpuUsage < 35 ? 'bg-amber-500/10 text-amber-500' : 'bg-rose-500/10 text-rose-500'
-            }`}>
-              {cpuUsage < 25 ? 'Normal' : cpuUsage < 35 ? 'Busy' : 'Spiked'}
-            </span>
+            <FiClock className="text-purple-500" size={18} />
+            <span className="text-[0.6rem] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-purple-500/10 text-purple-500 animate-pulse-slow">Live</span>
           </div>
           <div>
-            <p className={`text-2xl font-extrabold ${cpuColor}`}>{cpuUsage}<span className="text-sm font-semibold ml-1">%</span></p>
-            <p className="text-[0.65rem] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mt-1">CPU Utilisation</p>
-            <p className="text-[0.6rem] text-slate-400 dark:text-slate-500 mt-0.5">Simulated host process</p>
+            <p className="text-2xl font-extrabold text-purple-500 dark:text-purple-400">{formatSession(sessionSeconds)}</p>
+            <p className="text-[0.65rem] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mt-1">Session Duration</p>
+            <p className="text-[0.6rem] text-slate-400 dark:text-slate-500 mt-0.5">Time since page open</p>
           </div>
         </div>
       </div>
 
-      {/* Main two-panel grid: Architecture + Live Charts */}
       <div className="grid gap-8 xl:grid-cols-[1.4fr_0.6fr]">
-        
-        {/* Left: Architecture canvas — takes 60%+ width on large screens */}
         <SystemArchitectureCanvas />
 
-        {/* Right: Charts + CWV stacked */}
         <div className="space-y-6">
-          {/* Latency Sparkline */}
+          {/* Resource Load Sparkline */}
           <div className="glass-card p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold flex items-center gap-2">
                 <FiActivity className="text-blue-500" size={14} />
-                Real-time Latency Stream
+                Resource Load Timings
               </h3>
-              <span className="flex items-center gap-1.5 text-[0.6rem] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full animate-pulse-slow">
-                <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                LIVE
-              </span>
+              <span className="text-[0.6rem] font-bold text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-full">Real</span>
             </div>
             <div className="h-36 glass-panel rounded-2xl p-3 relative overflow-hidden">
               <svg className="w-full h-full" viewBox="0 0 200 80" preserveAspectRatio="none">
-                {/* subtle grid */}
                 {[20, 40, 60].map(y => (
                   <line key={y} x1="0" y1={y} x2="200" y2={y} stroke="currentColor" strokeWidth="0.5" className="text-slate-300/30 dark:text-slate-700/40" />
                 ))}
-                {/* area fill */}
-                <path
-                  d={`${generateChartPath(latencyData, 200, 80)} L 200,80 L 0,80 Z`}
-                  fill="rgba(59,130,246,0.08)"
-                />
-                {/* line */}
-                <path
-                  d={generateChartPath(latencyData, 200, 80)}
-                  fill="none"
-                  stroke="#3b82f6"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  className="transition-all duration-500"
-                />
+                {sparkPath ? (
+                  <>
+                    <path
+                      d={`${sparkPath} L 200,80 L 0,80 Z`}
+                      fill="rgba(59,130,246,0.08)"
+                    />
+                    <path
+                      d={sparkPath}
+                      fill="none"
+                      stroke="#3b82f6"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </>
+                ) : (
+                  <text x="100" y="45" textAnchor="middle" fontSize="8" fill="gray">
+                    Loading…
+                  </text>
+                )}
               </svg>
             </div>
             <div className="flex justify-between text-[0.6rem] text-slate-400 dark:text-slate-500">
-              <span>10 samples · 1.5s interval</span>
-              <span>Target: &lt;50ms</span>
+              <span>{assetCount} resources · last {resourceDurations.length} shown</span>
+              <span>{maxDuration > 0 ? `Max: ${maxDuration}ms` : 'No data'}</span>
             </div>
           </div>
 
@@ -222,7 +270,7 @@ export default function PlaygroundPage() {
               </div>
             </div>
             <p className="text-[0.6rem] text-slate-400 dark:text-slate-500">
-              Real metrics measured live via web-vitals. Latency, CPU & memory are simulated scenarios.
+              All metrics are real — sourced from Performance API and web-vitals.
             </p>
           </div>
         </div>

@@ -10,7 +10,8 @@
     "fetch-projects": "node scripts/fetch-projects.js",
     "lint": "eslint .",
     "preview": "vite preview",
-    "sync-resume": "node scripts/sync-resume.js"
+    "sync-resume": "node scripts/sync-resume.js",
+    "sync:vendor": "git submodule update --remote vendor/hiring-agent"
   },
   "dependencies": {
     "nodemailer": "^9.0.1",
