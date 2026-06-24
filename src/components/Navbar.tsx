@@ -11,96 +11,80 @@ const links = [
   { to: '/playground', label: 'Playground' },
 ]
 
-type ThemeMode = 'light' | 'dark' | 'auto'
+const getTimeBasedTheme = (): 'light' | 'dark' => {
+  const hour = new Date().getHours()
+  return hour >= 18 || hour < 6 ? 'dark' : 'light'
+}
+
+const applyTheme = (active: 'light' | 'dark', animate = false) => {
+  if (animate) {
+    const overlay = document.createElement('div')
+    overlay.style.cssText = `position:fixed;inset:0;z-index:9999;pointer-events:none;background:${active === 'light' ? '#fff' : '#060814'};opacity:0;transition:opacity 0.18s ease`
+    document.body.appendChild(overlay)
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      overlay.style.opacity = '0.14'
+      setTimeout(() => {
+        if (active === 'light') {
+          document.documentElement.classList.add('light-theme')
+          document.documentElement.classList.remove('dark')
+        } else {
+          document.documentElement.classList.remove('light-theme')
+          document.documentElement.classList.add('dark')
+        }
+        window.localStorage.setItem('theme', active)
+        overlay.style.opacity = '0'
+        setTimeout(() => document.body.removeChild(overlay), 300)
+      }, 120)
+    }))
+    return
+  }
+  if (active === 'light') {
+    document.documentElement.classList.add('light-theme')
+    document.documentElement.classList.remove('dark')
+  } else {
+    document.documentElement.classList.remove('light-theme')
+    document.documentElement.classList.add('dark')
+  }
+  window.localStorage.setItem('theme', active)
+}
 
 export default function Navbar() {
-  const [themeMode, setThemeMode] = useState<ThemeMode>('dark')
   const [ollamaStatus, setOllamaStatus] = useState<'checking' | 'connected' | 'offline'>('checking')
   const [ollamaModel, setOllamaModel] = useState<string>('llama3')
   const [isOllamaModalOpen, setIsOllamaModalOpen] = useState(false)
 
   useEffect(() => {
-    let mode = window.localStorage.getItem('themeMode') as ThemeMode | null
-    if (!mode) {
-      const oldTheme = window.localStorage.getItem('theme')
-      mode = (oldTheme as ThemeMode) || 'dark'
-      window.localStorage.setItem('themeMode', mode)
-    }
-    setThemeMode(mode)
-    applyThemeClass(mode)
+    applyTheme(getTimeBasedTheme())
 
-    // Ollama ping setup
     const savedUrl = localStorage.getItem('portfolio_ollama_url') || 'http://localhost:11434'
     const savedModel = localStorage.getItem('portfolio_ollama_model') || 'llama3'
     setOllamaModel(savedModel)
 
     const checkOllama = async () => {
       try {
-        const res = await fetch(`${savedUrl}/api/tags`, { 
+        const res = await fetch(`${savedUrl}/api/tags`, {
           method: 'GET',
           headers: { 'Accept': 'application/json' }
         })
-        if (res.ok) {
-          setOllamaStatus('connected')
-        } else {
-          setOllamaStatus('offline')
-        }
-      } catch (e) {
+        setOllamaStatus(res.ok ? 'connected' : 'offline')
+      } catch {
         setOllamaStatus('offline')
       }
     }
-    
+
     checkOllama()
     const checkInterval = setInterval(checkOllama, 15000)
-
-    const interval = setInterval(() => {
-      const currentMode = window.localStorage.getItem('themeMode') as ThemeMode || 'dark'
-      if (currentMode === 'auto') {
-        applyThemeClass('auto')
-      }
+    const themeInterval = setInterval(() => {
+      const next = getTimeBasedTheme()
+      const current = document.documentElement.classList.contains('light-theme') ? 'light' : 'dark'
+      if (next !== current) applyTheme(next, true)
     }, 60000)
 
     return () => {
-      clearInterval(interval)
       clearInterval(checkInterval)
+      clearInterval(themeInterval)
     }
   }, [])
-
-  const applyThemeClass = (mode: ThemeMode) => {
-    let active: 'light' | 'dark' = 'dark'
-    if (mode === 'light') {
-      active = 'light'
-    } else if (mode === 'dark') {
-      active = 'dark'
-    } else if (mode === 'auto') {
-      const hour = new Date().getHours()
-      active = (hour >= 18 || hour < 6) ? 'dark' : 'light'
-    }
-
-    if (active === 'light') {
-      document.documentElement.classList.add('light-theme')
-      document.documentElement.classList.remove('dark')
-    } else {
-      document.documentElement.classList.remove('light-theme')
-      document.documentElement.classList.add('dark')
-    }
-    window.localStorage.setItem('theme', active)
-  }
-
-  const toggleTheme = () => {
-    let next: ThemeMode = 'dark'
-    if (themeMode === 'light') {
-      next = 'auto'
-    } else if (themeMode === 'auto') {
-      next = 'dark'
-    } else {
-      next = 'light'
-    }
-
-    window.localStorage.setItem('themeMode', next)
-    setThemeMode(next)
-    applyThemeClass(next)
-  }
 
   return (
     <header className="sticky top-0 z-20 glass-panel border-x-0 border-t-0 bg-[var(--bg-surface)]">
@@ -158,15 +142,6 @@ export default function Navbar() {
             </span>
           </button>
 
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label={`Switch theme mode. Current mode: ${themeMode}`}
-            aria-live="polite"
-            className="hidden rounded-full border border-[var(--border-color)] px-3 py-1 text-[0.7rem] text-[var(--color-text)] hover:border-[var(--border-color-hover)] md:inline-block cursor-pointer transition-colors duration-200"
-          >
-            {themeMode === 'light' ? '☀️ Light' : themeMode === 'auto' ? '⏰ Auto' : '🌙 Dark'} Mode
-          </button>
           <NavLink
             to="/chat"
             className={({ isActive }) =>

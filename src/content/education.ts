@@ -16,7 +16,11 @@ export const education: EducationItem[] = [
     "period": "Jul 2020 – Jun 2024",
     "details": [
       "CGPA: 8.9",
-      "Relevant Coursework: Data Structures & Algorithms, Operating Systems, Cloud Computing, Database Management Systems, Object Oriented Programming"
+      "Data Structures & Algorithms",
+      "Operating Systems",
+      "Cloud Computing",
+      "Database Management Systems",
+      "Object Oriented Programming"
     ]
   }
 ]

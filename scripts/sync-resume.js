@@ -1,126 +1,107 @@
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const pdf = require('pdf-parse');
+#!/usr/bin/env node
+/**
+ * sync-resume.js — Resume sync + content generator
+ *
+ * Usage: node scripts/sync-resume.js
+ *
+ * What it does:
+ *   1. Copies Parth_Nautiyal_Resume.pdf → iCloud Drive & Google Drive (if mounted)
+ *   2. Copies PDF to public/ so the site can serve it
+ *   3. Extracts text from the PDF using pdf-parse
+ *   4. Sends text to Gemini (or Ollama fallback) to generate structured JSON
+ *   5. Writes updated src/content/*.ts files so the site reflects the latest resume
+ *
+ * Requires (at least one):
+ *   GEMINI_API_KEY   — Google Gemini API key (recommended, free tier)
+ *   OPENAI_API_KEY   — OpenAI key (fallback)
+ *   Local Ollama     — fully offline fallback (auto-detected)
+ */
 
-// Setup paths
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
-const rootDir = path.resolve(__dirname, '../../');
-const resumeSrcPath = path.join(rootDir, 'Parth_Nautiyal_Resume.pdf');
-const publicDestPath = path.join(rootDir, 'portfolio-frontend/public/Parth_Nautiyal_Resume.pdf');
-const contentDir = path.join(rootDir, 'portfolio-frontend/src/content');
+import fs from 'fs'
+import path from 'path'
+import os from 'os'
+import { createRequire } from 'module'
 
-async function syncAndParse() {
-  console.log('🚀 Starting Resume Sync & Parser...');
-  
-  if (!fs.existsSync(resumeSrcPath)) {
-    console.error(`❌ Error: Resume not found at ${resumeSrcPath}`);
-    process.exit(1);
+const require = createRequire(import.meta.url)
+const pdfParse = require('pdf-parse')
+
+const scriptDir = path.dirname(new URL(import.meta.url).pathname)
+const rootDir = path.resolve(scriptDir, '../')          // /projects/portfolio
+const PDF_SRC = path.join(rootDir, 'Parth_Nautiyal_Resume.pdf')
+const PDF_PUBLIC = path.join(rootDir, 'public', 'Parth_Nautiyal_Resume.pdf')
+const CONTENT_DIR = path.join(rootDir, 'src', 'content')
+
+async function main() {
+  console.log('sync-resume: starting')
+
+  if (!fs.existsSync(PDF_SRC)) {
+    console.error(`ERROR: Resume PDF not found at ${PDF_SRC}`)
+    process.exit(1)
   }
 
-  // 1. Copy to Public Directory
-  console.log('📁 Copying PDF to public assets...');
-  fs.copyFileSync(resumeSrcPath, publicDestPath);
-  console.log('✅ PDF copied to public/Parth_Nautiyal_Resume.pdf');
+  // 1 — Copy to public/
+  fs.mkdirSync(path.dirname(PDF_PUBLIC), { recursive: true })
+  fs.copyFileSync(PDF_SRC, PDF_PUBLIC)
+  console.log(`Copied → public/Parth_Nautiyal_Resume.pdf`)
 
-  // 2. Local iCloud Sync
-  const icloudBase = path.join(os.homedir(), 'Library/Mobile Documents/com~apple~CloudDocs');
+  // 2 — Copy to iCloud (macOS)
+  const icloudBase = path.join(os.homedir(), 'Library', 'Mobile Documents', 'com~apple~CloudDocs')
   if (fs.existsSync(icloudBase)) {
-    const icloudDestDir = path.join(icloudBase, 'Resume');
-    if (!fs.existsSync(icloudDestDir)) {
-      fs.mkdirSync(icloudDestDir, { recursive: true });
-    }
-    const icloudDestPath = path.join(icloudDestDir, 'Parth_Nautiyal_Resume.pdf');
-    fs.copyFileSync(resumeSrcPath, icloudDestPath);
-    console.log(`✅ Synced resume to iCloud Drive: ${icloudDestPath}`);
+    const dest = path.join(icloudBase, 'Resume', 'Parth_Nautiyal_Resume.pdf')
+    fs.mkdirSync(path.dirname(dest), { recursive: true })
+    fs.copyFileSync(PDF_SRC, dest)
+    console.log(`Synced  → iCloud: ${dest}`)
   } else {
-    console.log('ℹ️ iCloud Drive not detected or not running macOS. Skipping iCloud sync.');
+    console.log('iCloud Drive not detected — skipping')
   }
 
-  // 3. Local Google Drive Sync
-  const cloudStoragePath = path.join(os.homedir(), 'Library/CloudStorage');
-  let gdriveSynced = false;
-  if (fs.existsSync(cloudStoragePath)) {
-    try {
-      const folders = fs.readdirSync(cloudStoragePath);
-      const gdriveFolder = folders.find(f => f.toLowerCase().includes('googledrive'));
-      if (gdriveFolder) {
-        const gdriveDestDir = path.join(cloudStoragePath, gdriveFolder, 'My Drive', 'Resume');
-        if (!fs.existsSync(gdriveDestDir)) {
-          fs.mkdirSync(gdriveDestDir, { recursive: true });
-        }
-        const gdriveDestPath = path.join(gdriveDestDir, 'Parth_Nautiyal_Resume.pdf');
-        fs.copyFileSync(resumeSrcPath, gdriveDestPath);
-        console.log(`✅ Synced resume to Google Drive: ${gdriveDestPath}`);
-        gdriveSynced = true;
-      }
-    } catch (e) {
-      console.warn('⚠️ Scan for Google Drive mounted folder failed:', e.message);
+  // 3 — Copy to Google Drive (macOS CloudStorage mount)
+  const cloudStorage = path.join(os.homedir(), 'Library', 'CloudStorage')
+  if (fs.existsSync(cloudStorage)) {
+    const entries = fs.readdirSync(cloudStorage)
+    const gdriveEntry = entries.find((e) => e.toLowerCase().includes('googledrive'))
+    if (gdriveEntry) {
+      const dest = path.join(cloudStorage, gdriveEntry, 'My Drive', 'Resume', 'Parth_Nautiyal_Resume.pdf')
+      fs.mkdirSync(path.dirname(dest), { recursive: true })
+      fs.copyFileSync(PDF_SRC, dest)
+      console.log(`Synced  → Google Drive: ${dest}`)
+    } else {
+      console.log('Google Drive mount not found in ~/Library/CloudStorage — skipping')
     }
-  }
-  
-  if (!gdriveSynced) {
-    console.log('ℹ️ Local Google Drive mount folder not detected. Skipping Google Drive local sync.');
+  } else {
+    console.log('~/Library/CloudStorage not found — skipping Google Drive sync')
   }
 
-  // 4. Parse PDF using LLM
-  console.log('🔍 Extracting text from PDF...');
-  const dataBuffer = fs.readFileSync(resumeSrcPath);
-  
-  let pdfText = '';
-  try {
-    const parser = new pdf.PDFParse({ data: dataBuffer });
-    await parser.load();
-    const result = await parser.getText();
-    pdfText = result.text;
-  } catch (err) {
-    console.error('❌ Failed to read PDF file:', err.message);
-    process.exit(1);
+  // 4 — Extract PDF text
+  console.log('Extracting PDF text...')
+  const buffer = fs.readFileSync(PDF_SRC)
+  const parsed = await pdfParse(buffer)
+  const pdfText = parsed.text
+
+  if (!pdfText || pdfText.trim().length < 50) {
+    console.error('ERROR: Extracted PDF text is too short — check the PDF has a text layer')
+    process.exit(1)
   }
+  console.log(`Extracted ${pdfText.length} chars from PDF`)
 
-  if (!pdfText || pdfText.trim().length === 0) {
-    console.error('❌ Extracted text is empty.');
-    process.exit(1);
-  }
+  // 5 — Choose AI provider
+  const geminiKey = process.env.GEMINI_API_KEY
+  const openaiKey = process.env.OPENAI_API_KEY
+  const ollamaUrl = process.env.OLLAMA_HOST || 'http://localhost:11434'
 
-  const geminiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-  const openaiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
-  const ollamaUrl = process.env.OLLAMA_HOST || 'http://localhost:11434';
-  let ollamaModel = process.env.OLLAMA_MODEL;
+  let jsonText = ''
 
-  if (!geminiKey && !openaiKey && !ollamaModel) {
-    try {
-      const tagsResponse = await fetch(`${ollamaUrl}/api/tags`);
-      if (tagsResponse.ok) {
-        const tagsData = await tagsResponse.json();
-        if (tagsData.models && tagsData.models.length > 0) {
-          ollamaModel = tagsData.models[0].name;
-          console.log(`🔍 Auto-detected local Ollama model: "${ollamaModel}"`);
-        }
-      }
-    } catch (err) {
-      console.warn('⚠️ Could not connect to local Ollama to auto-detect model:', err.message);
-    }
-  }
-
-  if (!ollamaModel) {
-    ollamaModel = 'llama3';
-  }
-
-  console.log('🤖 Contacting AI to parse resume...');
-  
-  const systemPrompt = `
-You are a highly precise resume parser. You will convert the provided raw resume text of Parth Nautiyal into structured JSON matching this exact schema:
+  const SYSTEM_PROMPT = `
+You are a precise resume parser. Convert the provided raw resume text into a single valid JSON object
+matching this exact schema (no markdown fences, no extra text):
 
 {
   "personal": {
     "name": "Parth Nautiyal",
-    "title": "Full-Stack Engineer",
-    "summary": "Brief summary...",
-    "email": "parthnautiyal2002@gmail.com",
-    "phone": "7453886885",
+    "title": "...",
+    "summary": "...",
+    "email": "...",
+    "phone": "...",
     "github": "https://github.com/parthnautiyal",
     "linkedin": "https://www.linkedin.com/in/parth-nautiyal/",
     "leetcode": "https://leetcode.com/u/parth_nautiyal/",
@@ -129,147 +110,126 @@ You are a highly precise resume parser. You will convert the provided raw resume
   "experience": [
     {
       "role": "Job Title",
-      "company": "Company Name",
+      "company": "Company",
       "location": "City, Country",
-      "period": "Start - End",
-      "bullets": [
-        "Responsibility bullet 1",
-        "Responsibility bullet 2"
-      ]
+      "period": "Mon YYYY - Mon YYYY",
+      "bullets": ["Achievement bullet 1 with metrics", "..."]
     }
   ],
   "education": [
     {
       "school": "University Name",
-      "degree": "Degree (e.g. B.Tech)",
-      "field": "Field of Study (e.g. Computer Science)",
+      "degree": "B.Tech",
+      "field": "Computer Science",
       "location": "City, Country",
-      "period": "Start - End",
-      "details": ["GPA/CGPA", "Activities/Honors"]
-    }
-  ],
-  "skills": [
-    {
-      "name": "Skill Name (e.g. React)",
-      "category": "frontend" | "backend" | "devops" | "tools"
+      "period": "YYYY - YYYY",
+      "details": ["CGPA: X.X/10", "..."]
     }
   ]
 }
 
-Ensure:
-1. Every experience bullet is grammatical, professional, and reflects Parth's achievements.
-2. Skills are categorized accurately:
-   - "frontend": React, HTML, CSS, JavaScript, TypeScript, Angular, Tailwind, etc.
-   - "backend": Java, Spring Boot, Microservices, Kafka, SQL, Databases, Temporal, etc.
-   - "devops": Docker, Kubernetes, Jenkins, Ansible, AWS, CI/CD, Helm, Prometheus, Grafana, Datadog, etc.
-   - "tools": Git, Maven, npm, postman, IntelliJ, Jira, etc.
-3. Return ONLY a single valid JSON block. Do not wrap in markdown \`\`\`json tags. Do not write any conversational text.
-  `;
+Rules:
+- Extract ALL experience entries chronologically (newest first).
+- Keep bullet points concise and metric-driven.
+- Return ONLY the JSON object.
+`
 
-  let jsonText = '';
-  
-  try {
-    if (geminiKey) {
-      console.log('✨ Using Google Gemini API (gemini-2.5-flash)...');
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+  if (geminiKey) {
+    console.log('Using Gemini API...')
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: `${systemPrompt}\n\nResume Text:\n${pdfText}` }] }],
-          generationConfig: {
-            responseMimeType: 'application/json'
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Gemini API returned status ${response.status}: ${await response.text()}`);
+          contents: [{ parts: [{ text: `${SYSTEM_PROMPT}\n\nResume Text:\n${pdfText}` }] }],
+          generationConfig: { responseMimeType: 'application/json' },
+        }),
       }
-
-      const result = await response.json();
-      jsonText = result.candidates[0].content.parts[0].text;
-    } else if (openaiKey) {
-      console.log('✨ Using OpenAI API (gpt-4o-mini)...');
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${openaiKey}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          response_format: { type: 'json_object' },
-          messages: [
-            { role: 'system', content: 'You are a precise JSON extractor.' },
-            { role: 'user', content: `${systemPrompt}\n\nResume Text:\n${pdfText}` }
-          ]
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`OpenAI API returned status ${response.status}: ${await response.text()}`);
-      }
-
-      const result = await response.json();
-      jsonText = result.choices[0].message.content;
-    } else {
-      console.log(`✨ No cloud keys. Attempting local Ollama fallback offline at ${ollamaUrl} using model ${ollamaModel}...`);
-      const response = await fetch(`${ollamaUrl}/api/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: ollamaModel,
-          prompt: `${systemPrompt}\n\nResume Text:\n${pdfText}`,
-          stream: false,
-          options: {
-            temperature: 0.1
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Ollama generation failed: make sure Ollama is running at ${ollamaUrl} and model "${ollamaModel}" is pulled.`);
-      }
-
-      const resJson = await response.json();
-      jsonText = resJson.response.replace(/```json/g, '').replace(/```/g, '').trim();
+    )
+    if (!res.ok) {
+      console.error(`Gemini error ${res.status}: ${await res.text()}`)
+      process.exit(1)
     }
+    const result = await res.json()
+    jsonText = result.candidates[0].content.parts[0].text
 
-    console.log('✅ Parsed successfully. Writing changes to source code...');
-    const parsedData = JSON.parse(jsonText.trim());
+  } else if (openaiKey) {
+    console.log('Using OpenAI API...')
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openaiKey}` },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: 'You are a precise JSON extractor.' },
+          { role: 'user', content: `${SYSTEM_PROMPT}\n\nResume Text:\n${pdfText}` },
+        ],
+      }),
+    })
+    if (!res.ok) {
+      console.error(`OpenAI error ${res.status}: ${await res.text()}`)
+      process.exit(1)
+    }
+    const result = await res.json()
+    jsonText = result.choices[0].message.content
 
-    // 5. Write files
-    writeTSFile('personal.ts', 'personal', parsedData.personal);
-    writeTSFile('experience.ts', 'experience', parsedData.experience, 'ExperienceItem[]');
-    writeTSFile('education.ts', 'education', parsedData.education, 'EducationItem[]');
-    writeTSFile('skills.ts', 'skills', parsedData.skills, 'Skill[]');
+  } else {
+    // Auto-detect Ollama model
+    console.log(`Using local Ollama at ${ollamaUrl}...`)
+    let model = process.env.OLLAMA_MODEL || 'llama3'
+    try {
+      const tags = await fetch(`${ollamaUrl}/api/tags`)
+      if (tags.ok) {
+        const data = await tags.json()
+        if (data.models?.length) model = data.models[0].name
+      }
+    } catch { /* use default */ }
 
-    console.log('🎉 Website content updated successfully from PDF!');
-  } catch (error) {
-    console.error('❌ Failed to contact LLM or write files:', error.message);
-    process.exit(1);
+    const res = await fetch(`${ollamaUrl}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        prompt: `${SYSTEM_PROMPT}\n\nResume Text:\n${pdfText}`,
+        stream: false,
+        options: { temperature: 0.1 },
+      }),
+    })
+    if (!res.ok) {
+      console.error(`Ollama error: make sure Ollama is running and model "${model}" is pulled`)
+      process.exit(1)
+    }
+    const data = await res.json()
+    jsonText = data.response.replace(/```json/g, '').replace(/```/g, '').trim()
   }
+
+  // 6 — Parse and write
+  let parsed2
+  try {
+    parsed2 = JSON.parse(jsonText.trim())
+  } catch (e) {
+    console.error('ERROR: Failed to parse AI response as JSON:', e.message)
+    console.error('Raw response:\n', jsonText.slice(0, 500))
+    process.exit(1)
+  }
+
+  if (parsed2.personal) writeTS('personal.ts', 'personal', parsed2.personal)
+  if (parsed2.experience) writeTS('experience.ts', 'experience', parsed2.experience)
+  if (parsed2.education) writeTS('education.ts', 'education', parsed2.education)
+
+  console.log('Done — site content updated. Run `npm run build` and deploy.')
 }
 
-function writeTSFile(filename, variableName, data, typeDeclaration = '') {
-  const filePath = path.join(contentDir, filename);
-  
-  // We need to inject imports or type definitions if needed
-  let content = '';
-  if (filename === 'experience.ts') {
-    content += `export type ExperienceItem = {\n  role: string\n  company: string\n  location: string\n  period: string\n  bullets: string[]\n}\n\n`;
-  } else if (filename === 'education.ts') {
-    content += `export type EducationItem = {\n  school: string\n  degree: string\n  field: string\n  location: string\n  period: string\n  details?: string[]\n}\n\n`;
-  } else if (filename === 'skills.ts') {
-    content += `export type Skill = {\n  name: string\n  category: 'frontend' | 'backend' | 'devops' | 'tools'\n}\n\n`;
-  } else if (filename === 'certifications.ts') {
-    content += `export type Certification = {\n  name: string\n  issuer: string\n  date: string\n  url?: string\n}\n\n`;
-  }
-
-  content += `export const ${variableName}${typeDeclaration ? `: ${typeDeclaration}` : ''} = ${JSON.stringify(data, null, 2)}\n`;
-
-  fs.writeFileSync(filePath, content, 'utf8');
-  console.log(`   📝 Updated src/content/${filename}`);
+function writeTS(filename, varName, data) {
+  const filePath = path.join(CONTENT_DIR, filename)
+  const content = `export const ${varName} = ${JSON.stringify(data, null, 2)}\n`
+  fs.writeFileSync(filePath, content, 'utf8')
+  console.log(`Wrote  → src/content/${filename}`)
 }
 
-syncAndParse();
+main().catch((err) => {
+  console.error('Unexpected error:', err.message)
+  process.exit(1)
+})

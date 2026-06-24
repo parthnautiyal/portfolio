@@ -1,15 +1,27 @@
 import { useState, useEffect } from 'react'
+import { onLCP, onINP, onCLS } from 'web-vitals'
 import SystemArchitectureCanvas from '../components/SystemArchitectureCanvas.tsx'
-import { FiActivity, FiServer, FiAlertCircle, FiCpu, FiDatabase, FiZap } from 'react-icons/fi'
+import { FiActivity, FiServer, FiCpu, FiDatabase, FiZap } from 'react-icons/fi'
+
+type CWVState = {
+  lcp: number | null
+  inp: number | null
+  cls: number | null
+}
 
 export default function PlaygroundPage() {
-  // Telemetry metrics states
   const [latencyData, setLatencyData] = useState<number[]>([32, 28, 45, 30, 25, 42, 38, 29, 31, 35])
   const [cpuUsage, setCpuUsage] = useState(12.5)
-  const [memoryUsage, setMemoryUsage] = useState(148) // MB (Node.js process heap)
+  const [memoryUsage, setMemoryUsage] = useState(148)
   const [requestCount, setRequestCount] = useState(2541)
+  const [cwv, setCwv] = useState<CWVState>({ lcp: null, inp: null, cls: null })
 
-  // Simulate real-time metric updates
+  useEffect(() => {
+    onLCP((m) => setCwv((prev) => ({ ...prev, lcp: m.value })))
+    onINP((m) => setCwv((prev) => ({ ...prev, inp: m.value })))
+    onCLS((m) => setCwv((prev) => ({ ...prev, cls: m.value })))
+  }, [])
+
   useEffect(() => {
     const interval = setInterval(() => {
       setLatencyData((prev) => {
@@ -182,33 +194,35 @@ export default function PlaygroundPage() {
 
           {/* Core Web Vitals */}
           <div className="glass-card p-5 space-y-4">
-            <h3 className="text-sm font-bold flex items-center gap-2">
-              <FiServer className="text-blue-500" size={14} />
-              Core Web Vitals
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold flex items-center gap-2">
+                <FiServer className="text-blue-500" size={14} />
+                Core Web Vitals
+              </h3>
+              <span className="text-[0.6rem] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full">Live</span>
+            </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between p-3 glass-panel rounded-xl">
-                <span className="text-xs font-semibold">LCP (Largest Contentful Paint)</span>
-                <span className="text-xs font-bold text-green-500">1.1s ✓</span>
+                <span className="text-xs font-semibold">LCP</span>
+                <span className={`text-xs font-bold ${cwv.lcp === null ? 'text-slate-400' : cwv.lcp < 2500 ? 'text-green-500' : cwv.lcp < 4000 ? 'text-amber-500' : 'text-rose-500'}`}>
+                  {cwv.lcp === null ? 'Measuring…' : `${(cwv.lcp / 1000).toFixed(2)}s ${cwv.lcp < 2500 ? '✓' : '⚠'}`}
+                </span>
               </div>
               <div className="flex items-center justify-between p-3 glass-panel rounded-xl">
-                <span className="text-xs font-semibold">INP (Interaction to Next Paint)</span>
-                <span className="text-xs font-bold text-green-500">12ms ✓</span>
+                <span className="text-xs font-semibold">INP</span>
+                <span className={`text-xs font-bold ${cwv.inp === null ? 'text-slate-400' : cwv.inp < 200 ? 'text-green-500' : cwv.inp < 500 ? 'text-amber-500' : 'text-rose-500'}`}>
+                  {cwv.inp === null ? 'Interact to measure' : `${cwv.inp.toFixed(0)}ms ${cwv.inp < 200 ? '✓' : '⚠'}`}
+                </span>
               </div>
               <div className="flex items-center justify-between p-3 glass-panel rounded-xl">
-                <span className="text-xs font-semibold">CLS (Cumulative Layout Shift)</span>
-                <span className="text-xs font-bold text-green-500">0.02 ✓</span>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-xl text-amber-500 bg-amber-500/5 border border-amber-500/15">
-                <div className="flex items-center gap-2">
-                  <FiAlertCircle size={12} />
-                  <span className="text-xs font-semibold">Simulated Replica Sync</span>
-                </div>
-                <span className="text-xs font-bold">0.4ms</span>
+                <span className="text-xs font-semibold">CLS</span>
+                <span className={`text-xs font-bold ${cwv.cls === null ? 'text-slate-400' : cwv.cls < 0.1 ? 'text-green-500' : cwv.cls < 0.25 ? 'text-amber-500' : 'text-rose-500'}`}>
+                  {cwv.cls === null ? 'Measuring…' : `${cwv.cls.toFixed(3)} ${cwv.cls < 0.1 ? '✓' : '⚠'}`}
+                </span>
               </div>
             </div>
             <p className="text-[0.6rem] text-slate-400 dark:text-slate-500">
-              CWV sourced from Lighthouse audit. Telemetry metrics are simulated for demonstration purposes.
+              Real metrics measured live via web-vitals. Latency, CPU & memory are simulated scenarios.
             </p>
           </div>
         </div>

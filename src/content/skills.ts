@@ -14,7 +14,7 @@ export const skillCategories: SkillCategory[] = [
   {
     name: 'Programming & Frameworks',
     items: [
-      { name: 'Java', icon: 'SiJava', url: 'https://www.java.com', color: '#ED8B00' },
+      { name: 'Java', icon: 'SiOpenjdk', url: 'https://www.java.com', color: '#ED8B00' },
       { name: 'Spring Boot', icon: 'SiSpringboot', url: 'https://spring.io/projects/spring-boot', color: '#6DB33F' },
       { name: 'Spring Security', icon: 'SiSpringsecurity', url: 'https://spring.io/projects/spring-security', color: '#6DB33F' },
       { name: 'TypeScript', icon: 'SiTypescript', url: 'https://www.typescriptlang.org', color: '#3178C6' },
@@ -64,6 +64,13 @@ export const skillCategories: SkillCategory[] = [
       { name: 'SonarQube', icon: 'SiSonarqube', url: 'https://www.sonarqube.org', color: '#4E9BCD' },
       { name: 'Artifactory', icon: 'SiJfrog', url: 'https://jfrog.com/artifactory/', color: '#40BE46' },
       { name: 'Snyk', icon: 'SiSnyk', url: 'https://snyk.io', color: '#4C4A73' },
+    ]
+  },
+  {
+    name: 'Architecture & CS Fundamentals',
+    items: [
+      { name: 'Design Patterns', icon: 'TbTemplate', url: 'https://refactoring.guru/design-patterns', color: '#9333ea' },
+      { name: 'Concurrency', icon: 'TbCpu', url: 'https://docs.oracle.com/javase/tutorial/essential/concurrency/', color: '#0ea5e9' },
     ]
   }
 ]

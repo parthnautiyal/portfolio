@@ -32,7 +32,6 @@ export default function Contact() {
   ) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
-    // Clear error for this field when user types
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }))
     }
@@ -91,11 +90,17 @@ export default function Contact() {
   }
 
   const handleWhatsAppClick = () => {
-    // Decodes base64 phone number 'NzQ1Mzg4Njg4NQ==' -> '7453886885'
     const decryptedPhone = atob('NzQ1Mzg4Njg4NQ==')
     const url = `https://wa.me/91${decryptedPhone}?text=Hi%20Parth,%20I%20saw%20your%20portfolio...`
     window.open(url, '_blank', 'noopener,noreferrer')
   }
+
+  const inputClass = (hasError: boolean) =>
+    `w-full glass-panel rounded-xl px-4 py-3 text-sm outline-none focus:ring-1 border-none text-[var(--color-text)] placeholder:text-slate-500 dark:placeholder:text-slate-600 transition-all ${
+      hasError
+        ? 'ring-1 ring-rose-500/50'
+        : 'focus:ring-[var(--border-color-hover)]'
+    }`
 
   return (
     <section id="contact" className="py-16">
@@ -108,12 +113,12 @@ export default function Contact() {
       <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <form
           onSubmit={handleSubmit}
-          className="card-elevated space-y-4 p-5 text-sm"
+          className="glass-card p-6 space-y-5 text-sm"
         >
           <div className="space-y-1.5">
             <label
               htmlFor="name"
-              className="text-xs font-medium text-slate-700 dark:text-slate-200"
+              className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider"
             >
               Name <span className="text-rose-500">*</span>
             </label>
@@ -123,25 +128,23 @@ export default function Contact() {
               value={form.name}
               onChange={handleChange}
               required
-              className={`w-full rounded-lg border px-3 py-2 text-sm outline-none ring-offset-1 focus:ring-1 ${
-                errors.name
-                  ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500 dark:border-rose-700'
-                  : 'border-slate-200 focus:border-slate-900 focus:ring-slate-900 dark:border-slate-700 dark:focus:border-slate-100 dark:focus:ring-slate-100'
-              } dark:bg-slate-800 dark:text-slate-100`}
+              placeholder="Your name"
+              className={inputClass(!!errors.name)}
               autoComplete="name"
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? 'name-error' : undefined}
             />
             {errors.name && (
-              <p id="name-error" className="text-xs text-rose-600 dark:text-rose-400">
+              <p id="name-error" className="text-xs text-rose-500">
                 {errors.name}
               </p>
             )}
           </div>
+
           <div className="space-y-1.5">
             <label
               htmlFor="email"
-              className="text-xs font-medium text-slate-700 dark:text-slate-200"
+              className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider"
             >
               Email <span className="text-rose-500">*</span>
             </label>
@@ -152,115 +155,114 @@ export default function Contact() {
               value={form.email}
               onChange={handleChange}
               required
-              className={`w-full rounded-lg border px-3 py-2 text-sm outline-none ring-offset-1 focus:ring-1 ${
-                errors.email
-                  ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500 dark:border-rose-700'
-                  : 'border-slate-200 focus:border-slate-900 focus:ring-slate-900 dark:border-slate-700 dark:focus:border-slate-100 dark:focus:ring-slate-100'
-              } dark:bg-slate-800 dark:text-slate-100`}
+              placeholder="you@example.com"
+              className={inputClass(!!errors.email)}
               autoComplete="email"
               aria-invalid={!!errors.email}
               aria-describedby={errors.email ? 'email-error' : undefined}
             />
             {errors.email && (
-              <p id="email-error" className="text-xs text-rose-600 dark:text-rose-400">
+              <p id="email-error" className="text-xs text-rose-500">
                 {errors.email}
               </p>
             )}
           </div>
+
           <div className="space-y-1.5">
             <label
               htmlFor="message"
-              className="text-xs font-medium text-slate-700 dark:text-slate-200"
+              className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider"
             >
               Message <span className="text-rose-500">*</span>
             </label>
             <textarea
               id="message"
               name="message"
-              rows={4}
+              rows={5}
               value={form.message}
               onChange={handleChange}
               required
-              className={`w-full resize-none rounded-lg border px-3 py-2 text-sm outline-none ring-offset-1 focus:ring-1 ${
-                errors.message
-                  ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500 dark:border-rose-700'
-                  : 'border-slate-200 focus:border-slate-900 focus:ring-slate-900 dark:border-slate-700 dark:focus:border-slate-100 dark:focus:ring-slate-100'
-              } dark:bg-slate-800 dark:text-slate-100`}
+              placeholder="What's on your mind?"
+              className={`${inputClass(!!errors.message)} resize-none`}
               aria-invalid={!!errors.message}
               aria-describedby={errors.message ? 'message-error' : undefined}
             />
             {errors.message && (
-              <p id="message-error" className="text-xs text-rose-600 dark:text-rose-400">
+              <p id="message-error" className="text-xs text-rose-500">
                 {errors.message}
               </p>
             )}
           </div>
+
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-full border border-slate-900 px-4 py-1.5 text-xs font-medium text-slate-900 hover:bg-slate-900 hover:text-white disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400 dark:border-slate-100 dark:text-slate-100 dark:hover:bg-slate-100 dark:hover:text-slate-900 dark:disabled:border-slate-700 dark:disabled:text-slate-600"
+            className="rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white px-6 py-2 text-xs font-semibold shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitting ? 'Sending…' : 'Send message'}
           </button>
+
           {status === 'success' && (
-            <p className="text-xs text-emerald-600">
-              Thanks! Your message has been sent.
+            <p className="text-xs text-emerald-500 font-medium">
+              Message sent successfully!
             </p>
           )}
           {status === 'error' && (
-            <p className="text-xs text-rose-600">
-              Something went wrong. Please check your details or try again
-              later.
+            <p className="text-xs text-rose-500">
+              Something went wrong. Please try again later.
             </p>
           )}
         </form>
 
-        <div className="space-y-3 text-xs text-slate-700 dark:text-slate-300">
-          <p className="font-semibold text-slate-900 dark:text-slate-50">Direct links</p>
-          <div className="space-y-3">
+        <div className="space-y-3 text-xs">
+          <p className="font-semibold text-[var(--color-text-bright)]">Direct links</p>
+          <div className="space-y-2.5">
             <a
               href={`mailto:${personal.email}`}
-              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 transition-all hover:border-blue-400 hover:shadow-sm dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-blue-500"
+              className="flex items-center gap-3 glass-panel rounded-xl p-3.5 transition-all hover:border-blue-500/40 dark:hover:border-sky-400/40 hover:scale-[1.02]"
             >
-              <HiMail className="text-blue-600 dark:text-blue-400" size={18} />
+              <HiMail className="text-blue-500 dark:text-sky-400 shrink-0" size={18} />
               <div className="flex-1 overflow-hidden">
-                <p className="text-[0.65rem] text-slate-500 dark:text-slate-400">Email</p>
-                <p className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">{personal.email}</p>
+                <p className="text-[0.65rem] text-[var(--color-text-muted)]">Email</p>
+                <p className="truncate text-xs font-medium text-[var(--color-text-bright)]">{personal.email}</p>
               </div>
             </a>
+
             <button
               onClick={handleWhatsAppClick}
               type="button"
-              className="flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 text-left transition-all hover:border-green-500 hover:shadow-sm dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-green-400 cursor-pointer"
+              className="flex w-full items-center gap-3 glass-panel rounded-xl p-3.5 text-left transition-all hover:border-green-500/40 hover:scale-[1.02] cursor-pointer"
             >
-              <HiPhone className="text-green-600 dark:text-green-400" size={18} />
+              <HiPhone className="text-green-500 dark:text-green-400 shrink-0" size={18} />
               <div className="flex-1 overflow-hidden">
-                <p className="text-[0.65rem] text-slate-500 dark:text-slate-400">WhatsApp</p>
-                <p className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">Send Instant Message</p>
+                <p className="text-[0.65rem] text-[var(--color-text-muted)]">WhatsApp</p>
+                <p className="truncate text-xs font-medium text-[var(--color-text-bright)]">Send Instant Message</p>
               </div>
             </button>
+
             <a
               href={personal.github}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 transition-all hover:border-slate-900 hover:shadow-sm dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-slate-400"
+              className="flex items-center gap-3 glass-panel rounded-xl p-3.5 transition-all hover:border-slate-500/40 hover:scale-[1.02]"
             >
-              <FiGithub className="text-slate-800 dark:text-slate-200" size={18} />
+              <FiGithub className="text-[var(--color-text-bright)] shrink-0" size={18} />
               <div className="flex-1 overflow-hidden">
-                <p className="text-[0.65rem] text-slate-500 dark:text-slate-400">GitHub</p>
-                <p className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">{personal.github.replace('https://', '')}</p>
+                <p className="text-[0.65rem] text-[var(--color-text-muted)]">GitHub</p>
+                <p className="truncate text-xs font-medium text-[var(--color-text-bright)]">{personal.github.replace('https://', '')}</p>
               </div>
             </a>
+
             <a
               href={personal.linkedin}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 transition-all hover:border-blue-600 hover:shadow-sm dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-blue-500"
+              className="flex items-center gap-3 glass-panel rounded-xl p-3.5 transition-all hover:border-blue-600/40 hover:scale-[1.02]"
             >
-              <FiLinkedin className="text-blue-600 dark:text-blue-400" size={18} />
+              <FiLinkedin className="text-blue-500 dark:text-blue-400 shrink-0" size={18} />
               <div className="flex-1 overflow-hidden">
-                <p className="text-[0.65rem] text-slate-500 dark:text-slate-400">LinkedIn</p>
-                <p className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">{personal.linkedin.replace('https://', '')}</p>
+                <p className="text-[0.65rem] text-[var(--color-text-muted)]">LinkedIn</p>
+                <p className="truncate text-xs font-medium text-[var(--color-text-bright)]">{personal.linkedin.replace('https://', '')}</p>
               </div>
             </a>
           </div>
@@ -269,4 +271,3 @@ export default function Contact() {
     </section>
   )
 }
-

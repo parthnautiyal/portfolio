@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { FiCpu, FiSettings, FiCheckCircle, FiAlertTriangle, FiUploadCloud, FiBookOpen, FiTerminal, FiTrendingUp, FiTrash2, FiClock } from 'react-icons/fi'
+import { FiCpu, FiSettings, FiCheckCircle, FiAlertTriangle, FiUploadCloud, FiBookOpen, FiTerminal, FiTrendingUp, FiTrash2, FiClock, FiKey } from 'react-icons/fi'
 import JobMatchAnalyzer from '../components/JobMatchAnalyzer.tsx'
 import OllamaDiagnosticModal from '../components/OllamaDiagnosticModal.tsx'
 
@@ -19,17 +19,18 @@ type EvaluationReport = {
 
 const parthBenchmark: EvaluationReport = {
   overallScore: 94,
-  analysis: "Parth Nautiyal exhibits a exceptionally strong profile for a Full-Stack and DevOps SDE. His professional experience at ZopSmart contains strong, quantifiable metrics (reducing API latency by 50%, improving code coverage by 45%, reducing rollbacks by 70%) that demonstrate immediate business and engineering impact. His backend technical depth in Spring Boot, Kafka microservices, and distributed architecture is outstanding. To reach a perfect 100, Parth could further expand his public open-source contributions and write deep-dive technical articles about microservice scaling.",
+  analysis: "Parth Nautiyal exhibits an exceptionally strong profile for a Full-Stack and DevOps SDE. His rapid progression at ZopSmart — from Intern (Jan 2024) to SDE I (Jul 2024) to SDE II (Mar 2026) — demonstrates exceptional technical maturity and consistent impact. As SDE II he is scaling 20+ microservices with Kafka event-driven architectures and Temporal workflow orchestrations. His SDE I tenure contains strong, quantifiable metrics (reducing API latency by 50%, improving code coverage by 45%, reducing rollbacks by 70%) that demonstrate immediate business impact. His backend depth in Spring Boot, Kafka, and distributed systems is outstanding. To reach a perfect 100, Parth could further expand public open-source contributions and publish technical articles about microservice scaling.",
   categories: [
     {
       "name": "Production Experience",
-      "score": 96,
+      "score": 97,
       "evidence": [
-        "SDE I at ZopSmart scaling Spring Boot microservices.",
-        "Built CI/CD pipelines cut rollback incidents by 70%.",
-        "Managed containerized releases via Kubernetes and Helm."
+        "SDE II at ZopSmart (Mar 2026–Present): Scaling 20+ microservices with Kafka event-driven architecture and Temporal workflow orchestrations.",
+        "SDE I at ZopSmart (Jul 2024–Mar 2026): Built Spring Boot microservices, reduced API latency by 50%, rollbacks by 70%.",
+        "Managed containerized releases via Kubernetes and Helm across environments."
       ],
       "bonusPoints": [
+        "Rapid career progression: Intern → SDE I → SDE II within 2 years.",
         "Quantified business results (99.9% uptime, latency reduced by 50%).",
         "Experience in high-throughput messaging (Kafka) and distributed architecture."
       ],
@@ -430,6 +431,25 @@ export default function AtsCheckerPage() {
             >
               Save Settings
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Gemini API Key Banner */}
+      {!customKey && provider !== 'ollama' && (
+        <div className="mt-4 flex items-start gap-3 p-4 glass-card border-l-4 border-l-amber-500">
+          <FiKey className="text-amber-500 shrink-0 mt-0.5" size={16} />
+          <div className="flex-1">
+            <p className="text-xs font-semibold text-amber-500">Gemini API Key Required for AI Features</p>
+            <p className="text-[0.7rem] text-slate-500 dark:text-slate-400 mt-0.5">
+              No server-side key is configured. The Recruiter ATS Sandbox needs a free Gemini API Key to run.{' '}
+              <button
+                onClick={() => setShowSettings(true)}
+                className="text-blue-500 dark:text-sky-400 underline cursor-pointer"
+              >
+                Add your key in Settings →
+              </button>
+            </p>
           </div>
         </div>
       )}
