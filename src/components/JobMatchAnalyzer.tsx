@@ -1,29 +1,49 @@
 import { useState, useEffect } from 'react'
-import { FiSliders, FiCheck, FiMinus, FiAward, FiAlertCircle, FiChevronRight } from 'react-icons/fi'
+import { FiSliders, FiCheck, FiMinus, FiAward, FiAlertCircle, FiChevronRight, FiKey } from 'react-icons/fi'
 import { getPersonal, getExperience, getSkills } from '../utils/contentLoader.ts'
 
 const jobMatchSystemPrompt = `
-You are an expert recruitment advisor.
-You are given a candidate profile (Parth Nautiyal) and a target Job Description (JD).
-Evaluate the match quality between Parth's profile and the JD.
+You are a senior technical recruiter and calibrated resume-scoring expert. Hiring managers rely on your scores to make decisions — do NOT inflate. Be honest, evidence-based, and penalise gaps explicitly.
 
-Provide a structured evaluation containing:
-1. matchPercentage: An integer from 0 to 100 representing the fit score.
-2. customPitch: A short, compelling 2-3 sentence elevator pitch written directly to the hiring manager explaining why Parth is a great fit (referencing his specific accomplishments like latency reduction or coverage improvement if relevant).
-3. matchingSkills: Array of specific key skills requested in the JD that Parth possesses.
-4. missingSkills: Array of key skills requested in the JD that Parth does not explicitly mention in his profile (things he might need to learn or cover).
-5. relevantProjects: Array of strings matching the names of the most relevant projects Parth has worked on that align with their stack.
+## Scoring Rubric (100 points total)
 
-Format the output strictly as a JSON object matching this schema:
+### 1. Required Skills Match — 40 pts
+Award points for each must-have technical skill from the JD that the candidate explicitly has. Partial credit for adjacent/similar skills (e.g., MySQL when PostgreSQL is required). Zero credit for skills the candidate does not mention.
+
+### 2. Experience Depth — 25 pts
+Compare the years of relevant experience EXPLICITLY required in the JD against the candidate's actual tenure in directly relevant roles.
+- Full 25 pts: candidate meets or exceeds required years.
+- Proportional penalty: if JD requires N years and candidate has M years, award (M/N) × 25 pts, capped at 25.
+- HARD RULE: A candidate with ≤2 years total experience MUST NOT score above 70 total regardless of other factors.
+- HARD RULE: A candidate with ~2.5 years for a role requiring 5+ years MUST NOT score above 75 total.
+
+### 3. Seniority Alignment — 15 pts
+- Full 15 pts: level matches (e.g., mid-level JD, mid-level candidate).
+- 8–10 pts: one level gap (e.g., JD wants Senior, candidate is Mid-level SDE II).
+- 0–5 pts: significant gap (e.g., JD wants Staff/Principal/Lead, candidate is junior/mid).
+
+### 4. Measurable Impact & Achievements — 10 pts
+Quantified metrics (latency reduction %, uptime, coverage improvement, throughput numbers) that are directly relevant to what the role requires. More relevant metrics = more points.
+
+### 5. Nice-to-Have Skills — 10 pts
+Good-to-have or bonus skills from the JD that the candidate possesses.
+
+## Rules
+- Be STRICT. A 92% score means the candidate is nearly perfect for the role. Reserve 85+ for genuine strong fits.
+- If there is an experience or seniority gap, the customPitch MUST honestly acknowledge it (e.g., "Parth brings strong fundamentals but is ~2 years short of the 5 years this role requires").
+- missingSkills MUST include an experience gap entry formatted as "X+ years experience (candidate has ~Y years)" when a shortfall exists.
+- matchingSkills must be limited to skills EXPLICITLY present in the candidate profile — do not infer.
+- relevantProjects must match actual project names from the candidate's profile.
+
+## Output Format
+Return ONLY a valid JSON object. No markdown fences. No prose.
 {
-  "matchPercentage": 85,
+  "matchPercentage": 72,
   "customPitch": "...",
-  "matchingSkills": ["Java", "Spring Boot"],
-  "missingSkills": ["AWS CloudFront"],
-  "relevantProjects": ["training-upskilling-v2"]
+  "matchingSkills": ["Java", "Spring Boot", "Kafka"],
+  "missingSkills": ["5+ years experience (candidate has ~2.5 years)", "AWS CloudFront"],
+  "relevantProjects": ["project-name"]
 }
-
-Return ONLY this JSON block. Do not wrap in markdown \`\`\`json tags. Do not write any conversational text.
 `
 
 type MatchReport = {
@@ -88,71 +108,121 @@ Skills:
 ${skillsData.map((cat: any) => cat.items.map((item: any) => `- ${item.name} (${cat.name})`).join('\n')).join('\n')}
 `
 
-    const runOllamaAnalysis = async () => {
-      const response = await fetch(`${ollamaUrl}/api/generate`, {
+    const fullPrompt = `${jobMatchSystemPrompt}\n\nCandidate Profile:\n${parthProfileText}\n\nTarget Job Description:\n${jobDescription}`
+
+    const parseJsonResponse = (text: string): MatchReport => {
+      const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim()
+      const parsed = JSON.parse(cleaned) as MatchReport
+      if (parsed.matchPercentage === undefined || !parsed.customPitch) {
+        throw new Error('Response did not match expected schema.')
+      }
+      return parsed
+    }
+
+    const runOllama = async (): Promise<MatchReport> => {
+      // Auto-detect first available model; fall back to configured name
+      let model = ollamaModel
+      try {
+        const tags = await fetch(`${ollamaUrl}/api/tags`)
+        if (tags.ok) {
+          const { models } = await tags.json()
+          if (Array.isArray(models) && models.length > 0) model = models[0].name
+        }
+      } catch { /* keep configured model */ }
+
+      const res = await fetch(`${ollamaUrl}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: ollamaModel,
-          prompt: `${jobMatchSystemPrompt}\n\nCandidate Profile:\n${parthProfileText}\n\nTarget Job Description:\n${jobDescription}`,
-          stream: false,
-          options: {
-            temperature: 0.1
-          }
-        })
+        body: JSON.stringify({ model, prompt: fullPrompt, stream: false, options: { temperature: 0.1 } })
       })
+      if (!res.ok) throw new Error(`Ollama unavailable at ${ollamaUrl} — ensure it is running with at least one model pulled.`)
+      const data = await res.json()
+      return parseJsonResponse(data.response)
+    }
 
-      if (!response.ok) {
-        throw new Error(`Ollama generation failed: make sure Ollama is running at ${ollamaUrl} and model "${ollamaModel}" is pulled.`)
+    const tryOllamaFallback = async (primaryErr: string) => {
+      setError(`Primary provider failed (${primaryErr}) — trying local Ollama…`)
+      try {
+        setReport(await runOllama())
+        setError('')
+      } catch (ollamaErr: any) {
+        setError(`${primaryErr} | Ollama fallback: ${ollamaErr.message}`)
       }
-
-      const resJson = await response.json()
-      const jsonResponseText = resJson.response.replace(/```json/g, '').replace(/```/g, '').trim()
-      const parsedData = JSON.parse(jsonResponseText) as MatchReport
-      
-      if (parsedData.matchPercentage === undefined || !parsedData.customPitch) {
-        throw new Error('Ollama parsed output did not match expected schema format.')
-      }
-      return parsedData
     }
 
     try {
+      // Ollama — direct, no fallback
       if (provider === 'ollama') {
-        const data = await runOllamaAnalysis()
-        setReport(data)
-      } else {
-        const response = await fetch('/api/job-match', {
+        setReport(await runOllama())
+        return
+      }
+
+      // Custom Gemini key — call directly from client
+      if (customKey && provider === 'gemini') {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${customKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: fullPrompt }] }],
+              generationConfig: { responseMimeType: 'application/json' }
+            })
+          }
+        )
+        if (!res.ok) {
+          const msg = await res.text()
+          await tryOllamaFallback(`Gemini ${res.status}`)
+          console.warn('Gemini error detail:', msg.slice(0, 300))
+          return
+        }
+        const result = await res.json()
+        setReport(parseJsonResponse(result.candidates[0].content.parts[0].text))
+        return
+      }
+
+      // Custom OpenAI key — call directly from client
+      if (customKey && provider === 'openai') {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${customKey}` },
           body: JSON.stringify({
-            jobDescription,
-            customApiKey: customKey || undefined,
-            apiProvider: provider
+            model: 'gpt-4o-mini',
+            response_format: { type: 'json_object' },
+            messages: [
+              { role: 'system', content: 'You are a precise job match evaluator.' },
+              { role: 'user', content: fullPrompt }
+            ]
           })
         })
-
-        if (!response.ok) {
-          const errData = await response.json()
-          throw new Error(errData.error || 'Failed to analyze job description')
+        if (!res.ok) {
+          const msg = await res.text()
+          await tryOllamaFallback(`OpenAI ${res.status}`)
+          console.warn('OpenAI error detail:', msg.slice(0, 300))
+          return
         }
-
-        const data = await response.json() as MatchReport
-        setReport(data)
+        const result = await res.json()
+        setReport(parseJsonResponse(result.choices[0].message.content))
+        return
       }
+
+      // No custom key — proxy through serverless (uses server-side env key)
+      const response = await fetch('/api/job-match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobDescription, apiProvider: provider })
+      })
+      if (!response.ok) {
+        const errText = await response.text()
+        let errMsg = 'No API key configured. Add your Gemini key in Settings.'
+        try { errMsg = JSON.parse(errText).error || errMsg } catch {}
+        await tryOllamaFallback(errMsg)
+        return
+      }
+      setReport(await response.json() as MatchReport)
+
     } catch (err: any) {
-      if (provider !== 'ollama') {
-        console.warn('Backend job match failed, trying client-side Ollama fallback:', err.message)
-        setError('Backend failed/keyless. Running client-side fallback via local Ollama...')
-        try {
-          const data = await runOllamaAnalysis()
-          setReport(data)
-          setError('') // clear fallback message
-        } catch (ollamaErr: any) {
-          setError(`Analysis failed: ${err.message}. (Ollama Fallback also failed: ${ollamaErr.message})`)
-        }
-      } else {
-        setError(err.message || 'Something went wrong during Ollama analysis.')
-      }
+      setError(err.message || 'Analysis failed.')
     } finally {
       setLoading(false)
     }
@@ -167,6 +237,16 @@ ${skillsData.map((cat: any) => cat.items.map((item: any) => `- ${item.name} (${c
       <p className="text-xs text-slate-500 leading-relaxed">
         Paste a job description from your company below. The AI will map Parth's microservices and DevOps skills against your stack and explain why he is a fit.
       </p>
+
+      {!customKey && provider !== 'ollama' && (
+        <div className="flex items-start gap-3 p-3 glass-panel rounded-xl border-l-4 border-l-amber-500">
+          <FiKey className="text-amber-500 shrink-0 mt-0.5" size={14} />
+          <p className="text-[0.7rem] text-slate-500 dark:text-slate-400">
+            No API key set — analysis uses the server key (may be unavailable in dev).{' '}
+            Add your Gemini key in the <strong>Settings</strong> panel above for direct client-side analysis.
+          </p>
+        </div>
+      )}
 
       <div className="space-y-2">
         <textarea

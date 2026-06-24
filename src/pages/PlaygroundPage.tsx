@@ -92,7 +92,7 @@ export default function PlaygroundPage() {
           <div>
             <p className={`text-2xl font-extrabold ${latencyColor}`}>{latencyCurrent}<span className="text-sm font-semibold ml-1">ms</span></p>
             <p className="text-[0.65rem] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mt-1">P95 API Latency</p>
-            <p className="text-[0.6rem] text-slate-400 dark:text-slate-500 mt-0.5">Spring Boot REST endpoints</p>
+            <p className="text-[0.6rem] text-slate-400 dark:text-slate-500 mt-0.5">Simulated microservice scenario</p>
           </div>
         </div>
 

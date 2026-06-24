@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { personal } from '../content/personal.ts'
 import { HiMail, HiPhone } from 'react-icons/hi'
-import { FiGithub, FiLinkedin } from 'react-icons/fi'
+import { FiGithub, FiLinkedin, FiPaperclip, FiX, FiUploadCloud } from 'react-icons/fi'
 
 type FormState = {
   name: string
@@ -13,6 +13,12 @@ type FormErrors = {
   name?: string
   email?: string
   message?: string
+  attachment?: string
+}
+
+type Attachment = {
+  file: File
+  base64: string
 }
 
 const initialState: FormState = {
@@ -21,11 +27,36 @@ const initialState: FormState = {
   message: '',
 }
 
+const MAX_FILE_BYTES = 3 * 1024 * 1024  // 3 MB
+const ACCEPTED_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/png',
+]
+const ACCEPTED_EXT = '.pdf,.doc,.docx,.jpg,.jpeg,.png'
+
+const readAsBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      // strip "data:...;base64," prefix
+      resolve(result.split(',')[1])
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+
 export default function Contact() {
   const [form, setForm] = useState<FormState>(initialState)
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [attachment, setAttachment] = useState<Attachment | null>(null)
+  const [dragActive, setDragActive] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -35,6 +66,27 @@ export default function Contact() {
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }))
     }
+  }
+
+  const handleFileSelect = async (file: File) => {
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setErrors(prev => ({ ...prev, attachment: 'Only PDF, DOC, DOCX, JPG, or PNG allowed.' }))
+      return
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      setErrors(prev => ({ ...prev, attachment: `File too large — max 3 MB (got ${(file.size / 1024 / 1024).toFixed(1)} MB).` }))
+      return
+    }
+    setErrors(prev => ({ ...prev, attachment: undefined }))
+    const base64 = await readAsBase64(file)
+    setAttachment({ file, base64 })
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragActive(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) await handleFileSelect(file)
   }
 
   const validateForm = (): boolean => {
@@ -70,10 +122,18 @@ export default function Contact() {
 
     try {
       setSubmitting(true)
+      const body: Record<string, unknown> = { ...form }
+      if (attachment) {
+        body.attachment = {
+          name: attachment.file.name,
+          mimeType: attachment.file.type,
+          data: attachment.base64,
+        }
+      }
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(body),
       })
 
       if (!res.ok) {
@@ -82,6 +142,7 @@ export default function Contact() {
 
       setStatus('success')
       setForm(initialState)
+      setAttachment(null)
     } catch {
       setStatus('error')
     } finally {
@@ -191,6 +252,63 @@ export default function Contact() {
               <p id="message-error" className="text-xs text-rose-500">
                 {errors.message}
               </p>
+            )}
+          </div>
+
+          {/* Attachment */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider flex items-center gap-1.5">
+              <FiPaperclip size={12} />
+              Attachment <span className="normal-case font-normal text-slate-400">(optional · PDF, DOC, DOCX, JPG, PNG · max 3 MB)</span>
+            </label>
+
+            {attachment ? (
+              <div className="flex items-center gap-3 glass-panel rounded-xl px-4 py-3">
+                <FiPaperclip className="text-blue-500 shrink-0" size={14} />
+                <span className="text-xs text-[var(--color-text)] truncate flex-1">{attachment.file.name}</span>
+                <span className="text-[0.65rem] text-slate-400 shrink-0">
+                  {(attachment.file.size / 1024).toFixed(0)} KB
+                </span>
+                <button
+                  type="button"
+                  onClick={() => { setAttachment(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+                  className="p-1 rounded-full hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+                  aria-label="Remove attachment"
+                >
+                  <FiX size={13} />
+                </button>
+              </div>
+            ) : (
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragActive(true) }}
+                onDragLeave={(e) => { e.preventDefault(); setDragActive(false) }}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`relative flex items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 cursor-pointer transition-colors ${
+                  dragActive
+                    ? 'border-blue-500 bg-blue-500/5'
+                    : 'border-slate-200/60 dark:border-slate-800/60 hover:border-blue-500/50 dark:hover:border-sky-400/50'
+                }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ACCEPTED_EXT}
+                  className="sr-only"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (file) await handleFileSelect(file)
+                  }}
+                />
+                <FiUploadCloud className="text-slate-400 shrink-0" size={16} />
+                <span className="text-xs text-slate-500">
+                  {dragActive ? 'Drop file here…' : 'Drag & drop or click to attach a file'}
+                </span>
+              </div>
+            )}
+
+            {errors.attachment && (
+              <p className="text-xs text-rose-500">{errors.attachment}</p>
             )}
           </div>
 

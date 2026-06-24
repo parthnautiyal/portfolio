@@ -1,6 +1,6 @@
 import { personal } from '../src/content/personal.ts';
 import { experience } from '../src/content/experience.ts';
-import { skills } from '../src/content/skills.ts';
+import { skillCategories } from '../src/content/skills.ts';
 
 export default async function handler(req, res) {
   // Handle CORS
@@ -47,7 +47,7 @@ Experience:
 ${experience.map(exp => `- ${exp.role} at ${exp.company} (${exp.period}):\n  ${exp.bullets.join('\n  ')}`).join('\n\n')}
 
 Skills:
-${skills.map(s => `- ${s.name} (${s.category})`).join('\n')}
+${skillCategories.map(cat => cat.items.map(s => `- ${s.name} (${cat.name})`).join('\n')).join('\n')}
   `;
 
   // 2. Prepare the recruitment system prompt

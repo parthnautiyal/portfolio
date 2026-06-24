@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { name, email, message } = req.body || {}
+  const { name, email, message, attachment } = req.body || {}
 
   if (!name?.trim() || !email?.trim() || !message?.trim()) {
     return res.status(400).json({ error: 'Missing required fields' })
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       auth: { user: emailUser, pass: emailPass },
     })
 
-    await transporter.sendMail({
+    const mailOptions = {
       from: `"Portfolio Contact" <${emailUser}>`,
       to: emailUser,
       replyTo: email,
@@ -45,8 +45,25 @@ export default async function handler(req, res) {
         <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
         <hr/>
         <p>${message.replace(/\n/g, '<br/>')}</p>
+        ${attachment ? `<p><em>Attachment: ${attachment.name}</em></p>` : ''}
       `,
-    })
+      attachments: [],
+    }
+
+    if (attachment?.data && attachment?.name) {
+      const buf = Buffer.from(attachment.data, 'base64')
+      // Basic sanity: reject if buffer is huge (shouldn't happen given client limit)
+      if (buf.byteLength > 4 * 1024 * 1024) {
+        return res.status(413).json({ error: 'Attachment too large.' })
+      }
+      mailOptions.attachments.push({
+        filename: attachment.name,
+        content: buf,
+        contentType: attachment.mimeType || 'application/octet-stream',
+      })
+    }
+
+    await transporter.sendMail(mailOptions)
 
     return res.status(200).json({ ok: true })
   } catch (err) {

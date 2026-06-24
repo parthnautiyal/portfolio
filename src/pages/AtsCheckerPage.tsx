@@ -140,6 +140,10 @@ export default function AtsCheckerPage() {
   const [history, setHistory] = useState<any[]>([])
   const [isDiagnosticModalOpen, setIsDiagnosticModalOpen] = useState(false)
 
+  // Uploaded candidate report — session-only (resets on page refresh)
+  const [uploadedReport, setUploadedReport] = useState<EvaluationReport | null>(null)
+  const [candidateName, setCandidateName] = useState<string | null>(null)
+
   // Load custom settings
   useEffect(() => {
     const savedKey = localStorage.getItem('portfolio_custom_api_key') || ''
@@ -196,6 +200,19 @@ export default function AtsCheckerPage() {
     localStorage.setItem('portfolio_ats_history', JSON.stringify(updated))
   }
 
+  const nameFromFile = (file: File | null): string => {
+    if (!file) return 'Uploaded Candidate'
+    return file.name
+      .replace(/\.[^.]+$/, '')          // drop extension
+      .replace(/[-_\.]/g, ' ')          // separators → spaces
+      .replace(/\b(resume|cv|curriculum|vitae|r)\b/gi, '')  // strip common suffixes
+      .replace(/\s{2,}/g, ' ')
+      .trim()
+      .split(' ')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ') || 'Uploaded Candidate'
+  }
+
   // Client-Side PDF Text Extractor
   const extractTextFromPdf = async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -229,28 +246,121 @@ export default function AtsCheckerPage() {
 
   const parsePdfBytes = async (pdfjsLib: any, bytes: Uint8Array): Promise<string> => {
     const pdf = await pdfjsLib.getDocument({ data: bytes }).promise
-    let text = ''
-    for (let i = 1; i <= pdf.numPages; i++) {
-      setPdfStatusMessage(`Extracting text from page ${i} of ${pdf.numPages}...`)
-      const page = await pdf.getPage(i)
+    const pageTexts: string[] = []
+
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      setPdfStatusMessage(`Parsing page ${pageNum} of ${pdf.numPages}…`)
+      const page = await pdf.getPage(pageNum)
       const textContent = await page.getTextContent()
-      const pageText = textContent.items.map((item: any) => item.str).join(' ')
-      text += pageText + '\n'
+
+      type TextItem = {
+        str: string
+        transform: number[]  // [a, b, c, d, x, y] — x=transform[4], y=transform[5]
+        height: number
+        width: number
+        hasEOL?: boolean
+      }
+
+      // Filter to real text items only (pdfjs can emit markedContent objects with no str)
+      const items = textContent.items.filter((it: any) => typeof it.str === 'string') as TextItem[]
+      if (items.length === 0) continue
+
+      // Group items into visual lines by Y coordinate.
+      // PDF Y-axis: 0 = bottom, increases upward → descending Y = reading order top-to-bottom.
+      const Y_TOLERANCE = 3  // pts — items within this range share a line
+
+      type Line = { y: number; maxHeight: number; items: TextItem[] }
+      const lines: Line[] = []
+
+      // Pre-sort: top-to-bottom (desc Y), then left-to-right (asc X) so grouping is stable
+      const sorted = [...items].sort((a, b) => {
+        const dy = b.transform[5] - a.transform[5]
+        if (Math.abs(dy) > Y_TOLERANCE) return dy
+        return a.transform[4] - b.transform[4]
+      })
+
+      for (const item of sorted) {
+        if (!item.str) continue
+        const y = item.transform[5]
+        const existing = lines.find(l => Math.abs(l.y - y) <= Y_TOLERANCE)
+        if (existing) {
+          existing.items.push(item)
+          existing.maxHeight = Math.max(existing.maxHeight, item.height || 10)
+        } else {
+          lines.push({ y, maxHeight: item.height || 10, items: [item] })
+        }
+      }
+
+      // Ensure lines are top-to-bottom and items within each line are left-to-right
+      lines.sort((a, b) => b.y - a.y)
+      lines.forEach(l => l.items.sort((a, b) => a.transform[4] - b.transform[4]))
+
+      let pageText = ''
+      let prevY: number | null = null
+      let prevMaxHeight = 12
+
+      for (const line of lines) {
+        // Decide separator from previous line based on vertical gap
+        if (prevY !== null) {
+          const yGap = prevY - line.y                      // positive = downward movement
+          const normalized = yGap / (prevMaxHeight || 12)  // gap in units of line height
+
+          // Gap > ~1.8 line-heights = section/paragraph break
+          pageText += normalized > 1.8 ? '\n\n' : '\n'
+        }
+
+        // Reconstruct line text, inserting spaces/tabs based on horizontal gaps
+        let lineStr = ''
+        let prevEndX = 0
+
+        for (const item of line.items) {
+          const x = item.transform[4]
+
+          if (lineStr.length > 0) {
+            const gap = x - prevEndX
+            if (gap > 30) lineStr += '\t'       // column-level gap (e.g., two-column resume)
+            else if (gap > 1) lineStr += ' '    // word-level gap
+          }
+
+          lineStr += item.str
+          prevEndX = x + (item.width || 0)
+
+          // hasEOL: some PDFs explicitly mark line ends; treat as a space to avoid merging words
+          if (item.hasEOL) lineStr += ' '
+        }
+
+        const trimmed = lineStr.trim()
+        if (trimmed) {
+          pageText += trimmed
+          prevY = line.y
+          prevMaxHeight = line.maxHeight
+        }
+      }
+
+      if (pageText.trim()) pageTexts.push(pageText.trim())
     }
-    return text
+
+    if (pageTexts.length === 0) {
+      throw new Error(
+        'No text layer found in this PDF. It may be a scanned image — try copying the text manually.'
+      )
+    }
+
+    // Join pages with a clear break so section headings near page boundaries aren't merged
+    return pageTexts.join('\n\n')
   }
 
   const handlePdfExtract = async (file: File) => {
     setIsPdfParsing(true)
-    setPdfStatusMessage('Reading PDF file...')
+    setPdfStatusMessage('Reading PDF file…')
     setError('')
     try {
       const extractedText = await extractTextFromPdf(file)
-      if (!extractedText || extractedText.trim().length === 0) {
-        throw new Error('Extracted text is empty. Make sure the PDF has a text layer.')
+      if (!extractedText || extractedText.trim().length < 50) {
+        throw new Error('Extracted text is too short. PDF may be image-only — copy text manually.')
       }
       setResumeInput(extractedText)
-      setPdfStatusMessage('Text successfully extracted!')
+      setPdfStatusMessage(`Extracted ${extractedText.length.toLocaleString()} chars across ${extractedText.split('\n').length} lines`)
       setPdfFile(file)
     } catch (err: any) {
       setError(`PDF Extraction failed: ${err.message}`)
@@ -269,74 +379,134 @@ export default function AtsCheckerPage() {
     setError('')
     setReport(null)
 
-    const runOllamaScan = async () => {
+    const fullPrompt = `${atsSystemPrompt}\n\nResume Text:\n${resumeInput}`
+
+    const parseAtsResponse = (text: string): EvaluationReport => {
+      const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim()
+      const parsed = JSON.parse(cleaned) as EvaluationReport
+      if (!parsed.overallScore || !parsed.categories) {
+        throw new Error('Response did not match expected schema.')
+      }
+      return parsed
+    }
+
+    const runOllamaScan = async (): Promise<EvaluationReport> => {
+      let model = ollamaModel
+      try {
+        const tags = await fetch(`${ollamaUrl}/api/tags`)
+        if (tags.ok) {
+          const { models } = await tags.json()
+          if (Array.isArray(models) && models.length > 0) model = models[0].name
+        }
+      } catch { /* keep configured model */ }
+
       const response = await fetch(`${ollamaUrl}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: ollamaModel,
-          prompt: `${atsSystemPrompt}\n\nResume Text:\n${resumeInput}`,
-          stream: false,
-          options: {
-            temperature: 0.1
-          }
-        })
+        body: JSON.stringify({ model, prompt: fullPrompt, stream: false, options: { temperature: 0.1 } })
       })
-
       if (!response.ok) {
-        throw new Error(`Ollama generation failed: make sure Ollama is running at ${ollamaUrl} and model "${ollamaModel}" is pulled.`)
+        throw new Error(`Ollama unavailable at ${ollamaUrl} — ensure it is running with at least one model pulled.`)
       }
-
       const resJson = await response.json()
-      const jsonResponseText = resJson.response.replace(/```json/g, '').replace(/```/g, '').trim()
-      const parsedData = JSON.parse(jsonResponseText) as EvaluationReport
-      
-      if (!parsedData.overallScore || !parsedData.categories) {
-        throw new Error('Ollama parsed output did not match expected schema format.')
+      return parseAtsResponse(resJson.response)
+    }
+
+    const tryOllamaFallback = async (primaryErr: string) => {
+      setError(`Primary provider failed (${primaryErr}) — trying local Ollama…`)
+      try {
+        const data = await runOllamaScan()
+        setReport(data)
+        setUploadedReport(data)
+        setCandidateName(nameFromFile(pdfFile))
+        saveToHistory(data, pdfFile)
+        setError('')
+      } catch (ollamaErr: any) {
+        setError(`Evaluation failed: ${primaryErr} | Ollama fallback: ${ollamaErr.message}`)
       }
-      return parsedData
     }
 
     try {
       if (provider === 'ollama') {
         const data = await runOllamaScan()
         setReport(data)
+        setUploadedReport(data)
+        setCandidateName(nameFromFile(pdfFile))
         saveToHistory(data, pdfFile)
-      } else {
-        const response = await fetch('/api/ats-scan', {
+        return
+      }
+
+      if (customKey && provider === 'gemini') {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${customKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: fullPrompt }] }],
+              generationConfig: { responseMimeType: 'application/json' }
+            })
+          }
+        )
+        if (!res.ok) {
+          await tryOllamaFallback(`Gemini ${res.status}`)
+          return
+        }
+        const result = await res.json()
+        const data = parseAtsResponse(result.candidates[0].content.parts[0].text)
+        setReport(data)
+        setUploadedReport(data)
+        setCandidateName(nameFromFile(pdfFile))
+        saveToHistory(data, pdfFile)
+        return
+      }
+
+      if (customKey && provider === 'openai') {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${customKey}` },
           body: JSON.stringify({
-            resumeText: resumeInput,
-            customApiKey: customKey || undefined,
-            apiProvider: provider
+            model: 'gpt-4o-mini',
+            response_format: { type: 'json_object' },
+            messages: [
+              { role: 'system', content: 'You are a precise ATS resume evaluator.' },
+              { role: 'user', content: fullPrompt }
+            ]
           })
         })
-
-        if (!response.ok) {
-          const errData = await response.json()
-          throw new Error(errData.error || 'Failed to scan resume')
+        if (!res.ok) {
+          await tryOllamaFallback(`OpenAI ${res.status}`)
+          return
         }
-
-        const data = await response.json() as EvaluationReport
+        const result = await res.json()
+        const data = parseAtsResponse(result.choices[0].message.content)
         setReport(data)
+        setUploadedReport(data)
+        setCandidateName(nameFromFile(pdfFile))
         saveToHistory(data, pdfFile)
+        return
       }
+
+      // No custom key — proxy through serverless
+      const response = await fetch('/api/ats-scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeText: resumeInput, apiProvider: provider })
+      })
+      if (!response.ok) {
+        const errText = await response.text()
+        let errMsg = 'No API key configured. Add your key in Settings.'
+        try { errMsg = JSON.parse(errText).error || errMsg } catch {}
+        await tryOllamaFallback(errMsg)
+        return
+      }
+      const data = await response.json() as EvaluationReport
+      setReport(data)
+      setUploadedReport(data)
+      saveToHistory(data, pdfFile)
+
     } catch (err: any) {
-      if (provider !== 'ollama') {
-        console.warn('Backend ATS scan failed, trying client-side Ollama fallback:', err.message)
-        setError('Backend failed/keyless. Running client-side fallback via local Ollama...')
-        try {
-          const data = await runOllamaScan()
-          setReport(data)
-          saveToHistory(data, pdfFile)
-          setError('') // clear fallback message
-        } catch (ollamaErr: any) {
-          setError(`Evaluation failed: ${err.message}. (Ollama Fallback also failed: ${ollamaErr.message})`)
-        }
-      } else {
-        setError(err.message || 'Something went wrong during Ollama evaluation.')
-      }
+      setError(err.message || 'Something went wrong during evaluation.')
     } finally {
       setLoading(false)
     }
@@ -457,75 +627,108 @@ export default function AtsCheckerPage() {
       {/* Main Grid Layout */}
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.2fr_1fr]">
         
-        {/* Left Side: Parth's Benchmark Report */}
+        {/* Left Side: Benchmark / Uploaded Candidate Report */}
         <div className="space-y-6">
-          <div className="glass-card p-6 border-l-4 border-l-blue-600 dark:border-l-sky-400">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[0.65rem] font-bold tracking-widest uppercase bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-sky-400 px-2.5 py-1 rounded-full">
-                Parth's Benchmark Score
-              </span>
-              <div className="flex items-end gap-1">
-                <span className="text-4xl font-extrabold text-blue-600 dark:text-sky-400 leading-none">
-                  {parthBenchmark.overallScore}
-                </span>
-                <span className="text-xs text-slate-400 mb-1">/100</span>
-              </div>
-            </div>
-            
-            <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-              {parthBenchmark.analysis}
-            </p>
-          </div>
+          {(() => {
+            const displayReport = uploadedReport ?? parthBenchmark
+            const isUploadedView = uploadedReport !== null
+            const accentClass = isUploadedView ? 'border-l-green-500' : 'border-l-blue-600 dark:border-l-sky-400'
+            const scoreClass = isUploadedView ? 'text-green-500' : 'text-blue-600 dark:text-sky-400'
+            const badgeClass = isUploadedView
+              ? 'bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400'
+              : 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-sky-400'
+            return (
+              <>
+                <div className={`glass-card p-6 border-l-4 ${accentClass}`}>
+                  {/* Name + score row */}
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="min-w-0">
+                      <p className={`text-2xl font-extrabold leading-tight tracking-tight truncate ${scoreClass}`}>
+                        {isUploadedView ? (candidateName ?? 'Uploaded Candidate') : 'Parth Nautiyal'}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`text-[0.6rem] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full ${badgeClass}`}>
+                          {isUploadedView ? 'ATS Scan Results' : 'Benchmark Score'}
+                        </span>
+                        {isUploadedView && (
+                          <button
+                            onClick={() => { setUploadedReport(null); setCandidateName(null) }}
+                            className="text-[0.6rem] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 underline cursor-pointer bg-transparent border-none whitespace-nowrap"
+                          >
+                            ← Reset to Parth
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-end gap-0.5 shrink-0">
+                      <span className={`text-4xl font-extrabold leading-none ${scoreClass}`}>
+                        {displayReport.overallScore}
+                      </span>
+                      <span className="text-sm text-slate-400 mb-0.5">/100</span>
+                    </div>
+                  </div>
 
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Category Scorecard</h3>
-            {parthBenchmark.categories.map((cat, idx) => (
-              <div key={idx} className="glass-card p-5">
-                <div className="flex justify-between items-center border-b border-slate-200/40 dark:border-slate-800/40 pb-2 mb-3">
-                  <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                    <FiTerminal className="text-blue-500" size={14} />
-                    {cat.name}
-                  </h4>
-                  <span className="text-xs font-bold text-blue-600 dark:text-sky-400 bg-blue-50 dark:bg-blue-950/20 px-2 py-0.5 rounded">
-                    {cat.score}%
-                  </span>
+                  <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                    {displayReport.analysis}
+                  </p>
                 </div>
-                
-                <div className="space-y-3">
-                  {cat.evidence.length > 0 && (
-                    <div>
-                      <h5 className="text-[0.65rem] uppercase tracking-wider font-bold text-slate-400 mb-1">Resume Evidence</h5>
-                      <ul className="list-disc list-inside text-xs space-y-1 text-slate-600 dark:text-slate-300">
-                        {cat.evidence.map((ev, i) => <li key={i}>{ev}</li>)}
-                      </ul>
-                    </div>
-                  )}
 
-                  {cat.bonusPoints.length > 0 && (
-                    <div>
-                      <h5 className="text-[0.65rem] uppercase tracking-wider font-bold text-green-500 flex items-center gap-1 mb-1">
-                        <FiCheckCircle size={10} /> Bonus Points
-                      </h5>
-                      <ul className="list-disc list-inside text-xs space-y-1 text-slate-600 dark:text-slate-300">
-                        {cat.bonusPoints.map((bp, i) => <li key={i}>{bp}</li>)}
-                      </ul>
-                    </div>
-                  )}
+                <div className="space-y-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Category Scorecard</h3>
+                  {displayReport.categories.map((cat, idx) => (
+                    <div key={idx} className="glass-card p-5">
+                      <div className="flex justify-between items-center border-b border-slate-200/40 dark:border-slate-800/40 pb-2 mb-3">
+                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                          <FiTerminal className="text-blue-500" size={14} />
+                          {cat.name}
+                        </h4>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                          isUploadedView
+                            ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20'
+                            : 'text-blue-600 dark:text-sky-400 bg-blue-50 dark:bg-blue-950/20'
+                        }`}>
+                          {cat.score}%
+                        </span>
+                      </div>
 
-                  {cat.deductions.length > 0 && (
-                    <div>
-                      <h5 className="text-[0.65rem] uppercase tracking-wider font-bold text-amber-500 flex items-center gap-1 mb-1">
-                        <FiAlertTriangle size={10} /> Deductions / Advice
-                      </h5>
-                      <ul className="list-disc list-inside text-xs space-y-1 text-slate-600 dark:text-slate-300">
-                        {cat.deductions.map((ded, i) => <li key={i}>{ded}</li>)}
-                      </ul>
+                      <div className="space-y-3">
+                        {cat.evidence.length > 0 && (
+                          <div>
+                            <h5 className="text-[0.65rem] uppercase tracking-wider font-bold text-slate-400 mb-1">Resume Evidence</h5>
+                            <ul className="list-disc list-inside text-xs space-y-1 text-slate-600 dark:text-slate-300">
+                              {cat.evidence.map((ev, i) => <li key={i}>{ev}</li>)}
+                            </ul>
+                          </div>
+                        )}
+
+                        {cat.bonusPoints.length > 0 && (
+                          <div>
+                            <h5 className="text-[0.65rem] uppercase tracking-wider font-bold text-green-500 flex items-center gap-1 mb-1">
+                              <FiCheckCircle size={10} /> Bonus Points
+                            </h5>
+                            <ul className="list-disc list-inside text-xs space-y-1 text-slate-600 dark:text-slate-300">
+                              {cat.bonusPoints.map((bp, i) => <li key={i}>{bp}</li>)}
+                            </ul>
+                          </div>
+                        )}
+
+                        {cat.deductions.length > 0 && (
+                          <div>
+                            <h5 className="text-[0.65rem] uppercase tracking-wider font-bold text-amber-500 flex items-center gap-1 mb-1">
+                              <FiAlertTriangle size={10} /> Deductions / Advice
+                            </h5>
+                            <ul className="list-disc list-inside text-xs space-y-1 text-slate-600 dark:text-slate-300">
+                              {cat.deductions.map((ded, i) => <li key={i}>{ded}</li>)}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
+              </>
+            )
+          })()}
         </div>
 
         {/* Right Side: Recruiter Sandbox & Analyzer Tools */}
@@ -687,10 +890,16 @@ export default function AtsCheckerPage() {
                   
                   <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
                     {history.map((item) => (
-                      <div 
+                      <div
                         key={item.id}
                         onClick={() => {
                           setReport(item.report)
+                          setUploadedReport(item.report)
+                          setCandidateName(
+                            item.resumeName && !item.resumeName.startsWith('"')
+                              ? item.resumeName.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ')
+                              : item.resumeName ?? 'Uploaded Candidate'
+                          )
                           setError('')
                         }}
                         className={`p-3 glass-panel rounded-xl flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors border ${

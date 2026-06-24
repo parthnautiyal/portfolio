@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { personal } from '../content/personal.ts'
 import OllamaDiagnosticModal from './OllamaDiagnosticModal.tsx'
+import { FiSun, FiMoon, FiClock } from 'react-icons/fi'
 
 const links = [
   { to: '/', label: 'Home' },
@@ -10,6 +11,8 @@ const links = [
   { to: '/ats-checker', label: 'ATS Checker' },
   { to: '/playground', label: 'Playground' },
 ]
+
+type ThemeMode = 'auto' | 'light' | 'dark'
 
 const getTimeBasedTheme = (): 'light' | 'dark' => {
   const hour = new Date().getHours()
@@ -49,12 +52,15 @@ const applyTheme = (active: 'light' | 'dark', animate = false) => {
 }
 
 export default function Navbar() {
+  const [themeMode, setThemeMode] = useState<ThemeMode>('auto')
   const [ollamaStatus, setOllamaStatus] = useState<'checking' | 'connected' | 'offline'>('checking')
   const [ollamaModel, setOllamaModel] = useState<string>('llama3')
   const [isOllamaModalOpen, setIsOllamaModalOpen] = useState(false)
 
   useEffect(() => {
-    applyTheme(getTimeBasedTheme())
+    const saved = (localStorage.getItem('portfolio_theme_mode') as ThemeMode) || 'auto'
+    setThemeMode(saved)
+    applyTheme(saved === 'auto' ? getTimeBasedTheme() : saved)
 
     const savedUrl = localStorage.getItem('portfolio_ollama_url') || 'http://localhost:11434'
     const savedModel = localStorage.getItem('portfolio_ollama_model') || 'llama3'
@@ -62,10 +68,7 @@ export default function Navbar() {
 
     const checkOllama = async () => {
       try {
-        const res = await fetch(`${savedUrl}/api/tags`, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' }
-        })
+        const res = await fetch(`${savedUrl}/api/tags`, { method: 'GET', headers: { 'Accept': 'application/json' } })
         setOllamaStatus(res.ok ? 'connected' : 'offline')
       } catch {
         setOllamaStatus('offline')
@@ -74,10 +77,15 @@ export default function Navbar() {
 
     checkOllama()
     const checkInterval = setInterval(checkOllama, 15000)
+
+    // Auto-theme interval — only fires when mode is 'auto'
     const themeInterval = setInterval(() => {
-      const next = getTimeBasedTheme()
-      const current = document.documentElement.classList.contains('light-theme') ? 'light' : 'dark'
-      if (next !== current) applyTheme(next, true)
+      const mode = (localStorage.getItem('portfolio_theme_mode') as ThemeMode) || 'auto'
+      if (mode === 'auto') {
+        const next = getTimeBasedTheme()
+        const current = document.documentElement.classList.contains('light-theme') ? 'light' : 'dark'
+        if (next !== current) applyTheme(next, true)
+      }
     }, 60000)
 
     return () => {
@@ -86,9 +94,19 @@ export default function Navbar() {
     }
   }, [])
 
+  const cycleTheme = () => {
+    const order: ThemeMode[] = ['auto', 'light', 'dark']
+    const next = order[(order.indexOf(themeMode) + 1) % 3]
+    setThemeMode(next)
+    localStorage.setItem('portfolio_theme_mode', next)
+    const active = next === 'auto' ? getTimeBasedTheme() : next
+    applyTheme(active, true)
+  }
+
+  const ThemeIcon = themeMode === 'dark' ? FiMoon : themeMode === 'light' ? FiSun : FiClock
+
   return (
     <header className="sticky top-0 z-20 glass-panel border-x-0 border-t-0 bg-[var(--bg-surface)]">
-      {/* Skip to main content link for accessibility */}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-slate-900 focus:px-4 focus:py-2 focus:text-sm focus:text-white focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:bg-slate-100 dark:focus:text-slate-900"
@@ -124,7 +142,18 @@ export default function Navbar() {
             </li>
           ))}
         </ul>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {/* Theme toggle */}
+          <button
+            type="button"
+            onClick={cycleTheme}
+            title={`Theme: ${themeMode} — click to cycle`}
+            className="flex items-center gap-1.5 rounded-full border border-[var(--border-color)] px-2.5 py-1 text-[0.7rem] hover:border-[var(--border-color-hover)] cursor-pointer transition-colors duration-200 text-[var(--color-text)]"
+          >
+            <ThemeIcon size={13} />
+            <span className="hidden lg:inline font-medium capitalize">{themeMode}</span>
+          </button>
+
           {/* Local AI status badge */}
           <button
             type="button"
@@ -173,4 +202,3 @@ export default function Navbar() {
     </header>
   )
 }
-
