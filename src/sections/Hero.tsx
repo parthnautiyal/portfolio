@@ -1,15 +1,17 @@
 import { Link } from 'react-router-dom'
 import { getPersonal } from '../utils/contentLoader.ts'
-import { SiSpringboot, SiKubernetes, SiDocker, SiGithubactions } from 'react-icons/si'
+import { SiSpringboot, SiKubernetes, SiDocker, SiGithubactions, SiOpenjdk } from 'react-icons/si'
 
 export default function Hero() {
   const personal = getPersonal()
   return (
     <section id="top" className="relative py-24 md:py-32">
-      <div className="pointer-events-none absolute inset-x-0 -top-32 -z-10 h-96 bg-gradient-to-b from-amber-50/60 via-orange-50/30 to-transparent dark:from-slate-800/50 dark:via-slate-900/30" />
-      {/* Decorative glows */}
-      <div className="pointer-events-none absolute right-0 top-10 -z-10 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl dark:bg-blue-400/20" />
-      <div className="pointer-events-none absolute left-0 bottom-10 -z-10 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl dark:bg-purple-400/15" />
+      {/* Seamless decorative glows — no banding */}
+      <div className="pointer-events-none absolute -inset-x-16 inset-y-0 -z-10 overflow-hidden">
+        <div className="absolute right-0 top-0 h-[500px] w-[600px] rounded-full bg-blue-500/8 blur-[120px] dark:bg-blue-400/12" />
+        <div className="absolute left-0 bottom-0 h-[400px] w-[500px] rounded-full bg-purple-500/8 blur-[120px] dark:bg-purple-400/10" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/10 to-transparent dark:via-blue-400/15" />
+      </div>
       
       <div className="grid gap-12 md:grid-cols-[1.3fr_0.7fr] md:items-center">
         <div className="space-y-8 animate-fade-up">
@@ -66,6 +68,10 @@ export default function Hero() {
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-2 pt-2">
+              <span className="pill flex items-center gap-1">
+                <SiOpenjdk className="text-orange-600 dark:text-orange-400" size={12} />
+                Java
+              </span>
               <span className="pill flex items-center gap-1">
                 <SiSpringboot className="text-green-600 dark:text-green-400" size={12} />
                 Spring Boot

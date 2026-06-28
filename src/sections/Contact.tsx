@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { personal } from '../content/personal.ts'
 import { HiMail, HiPhone } from 'react-icons/hi'
-import { FiGithub, FiLinkedin } from 'react-icons/fi'
+import { FiGithub, FiLinkedin, FiPaperclip, FiX, FiUploadCloud } from 'react-icons/fi'
 
 type FormState = {
   name: string
@@ -13,6 +13,12 @@ type FormErrors = {
   name?: string
   email?: string
   message?: string
+  attachment?: string
+}
+
+type Attachment = {
+  file: File
+  base64: string
 }
 
 const initialState: FormState = {
@@ -21,21 +27,66 @@ const initialState: FormState = {
   message: '',
 }
 
+const MAX_FILE_BYTES = 3 * 1024 * 1024  // 3 MB
+const ACCEPTED_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/png',
+]
+const ACCEPTED_EXT = '.pdf,.doc,.docx,.jpg,.jpeg,.png'
+
+const readAsBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      // strip "data:...;base64," prefix
+      resolve(result.split(',')[1])
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+
 export default function Contact() {
   const [form, setForm] = useState<FormState>(initialState)
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [attachment, setAttachment] = useState<Attachment | null>(null)
+  const [dragActive, setDragActive] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
-    // Clear error for this field when user types
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }))
     }
+  }
+
+  const handleFileSelect = async (file: File) => {
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setErrors(prev => ({ ...prev, attachment: 'Only PDF, DOC, DOCX, JPG, or PNG allowed.' }))
+      return
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      setErrors(prev => ({ ...prev, attachment: `File too large — max 3 MB (got ${(file.size / 1024 / 1024).toFixed(1)} MB).` }))
+      return
+    }
+    setErrors(prev => ({ ...prev, attachment: undefined }))
+    const base64 = await readAsBase64(file)
+    setAttachment({ file, base64 })
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragActive(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) await handleFileSelect(file)
   }
 
   const validateForm = (): boolean => {
@@ -71,10 +122,18 @@ export default function Contact() {
 
     try {
       setSubmitting(true)
+      const body: Record<string, unknown> = { ...form }
+      if (attachment) {
+        body.attachment = {
+          name: attachment.file.name,
+          mimeType: attachment.file.type,
+          data: attachment.base64,
+        }
+      }
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(body),
       })
 
       if (!res.ok) {
@@ -83,6 +142,7 @@ export default function Contact() {
 
       setStatus('success')
       setForm(initialState)
+      setAttachment(null)
     } catch {
       setStatus('error')
     } finally {
@@ -91,11 +151,17 @@ export default function Contact() {
   }
 
   const handleWhatsAppClick = () => {
-    // Decodes base64 phone number 'NzQ1Mzg4Njg4NQ==' -> '7453886885'
     const decryptedPhone = atob('NzQ1Mzg4Njg4NQ==')
     const url = `https://wa.me/91${decryptedPhone}?text=Hi%20Parth,%20I%20saw%20your%20portfolio...`
     window.open(url, '_blank', 'noopener,noreferrer')
   }
+
+  const inputClass = (hasError: boolean) =>
+    `w-full glass-panel rounded-xl px-4 py-3 text-sm outline-none focus:ring-1 border-none text-[var(--color-text)] placeholder:text-slate-500 dark:placeholder:text-slate-600 transition-all ${
+      hasError
+        ? 'ring-1 ring-rose-500/50'
+        : 'focus:ring-[var(--border-color-hover)]'
+    }`
 
   return (
     <section id="contact" className="py-16">
@@ -108,12 +174,12 @@ export default function Contact() {
       <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <form
           onSubmit={handleSubmit}
-          className="card-elevated space-y-4 p-5 text-sm"
+          className="glass-card p-6 space-y-5 text-sm"
         >
           <div className="space-y-1.5">
             <label
               htmlFor="name"
-              className="text-xs font-medium text-slate-700 dark:text-slate-200"
+              className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider"
             >
               Name <span className="text-rose-500">*</span>
             </label>
@@ -123,25 +189,23 @@ export default function Contact() {
               value={form.name}
               onChange={handleChange}
               required
-              className={`w-full rounded-lg border px-3 py-2 text-sm outline-none ring-offset-1 focus:ring-1 ${
-                errors.name
-                  ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500 dark:border-rose-700'
-                  : 'border-slate-200 focus:border-slate-900 focus:ring-slate-900 dark:border-slate-700 dark:focus:border-slate-100 dark:focus:ring-slate-100'
-              } dark:bg-slate-800 dark:text-slate-100`}
+              placeholder="Your name"
+              className={inputClass(!!errors.name)}
               autoComplete="name"
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? 'name-error' : undefined}
             />
             {errors.name && (
-              <p id="name-error" className="text-xs text-rose-600 dark:text-rose-400">
+              <p id="name-error" className="text-xs text-rose-500">
                 {errors.name}
               </p>
             )}
           </div>
+
           <div className="space-y-1.5">
             <label
               htmlFor="email"
-              className="text-xs font-medium text-slate-700 dark:text-slate-200"
+              className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider"
             >
               Email <span className="text-rose-500">*</span>
             </label>
@@ -152,115 +216,171 @@ export default function Contact() {
               value={form.email}
               onChange={handleChange}
               required
-              className={`w-full rounded-lg border px-3 py-2 text-sm outline-none ring-offset-1 focus:ring-1 ${
-                errors.email
-                  ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500 dark:border-rose-700'
-                  : 'border-slate-200 focus:border-slate-900 focus:ring-slate-900 dark:border-slate-700 dark:focus:border-slate-100 dark:focus:ring-slate-100'
-              } dark:bg-slate-800 dark:text-slate-100`}
+              placeholder="you@example.com"
+              className={inputClass(!!errors.email)}
               autoComplete="email"
               aria-invalid={!!errors.email}
               aria-describedby={errors.email ? 'email-error' : undefined}
             />
             {errors.email && (
-              <p id="email-error" className="text-xs text-rose-600 dark:text-rose-400">
+              <p id="email-error" className="text-xs text-rose-500">
                 {errors.email}
               </p>
             )}
           </div>
+
           <div className="space-y-1.5">
             <label
               htmlFor="message"
-              className="text-xs font-medium text-slate-700 dark:text-slate-200"
+              className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider"
             >
               Message <span className="text-rose-500">*</span>
             </label>
             <textarea
               id="message"
               name="message"
-              rows={4}
+              rows={5}
               value={form.message}
               onChange={handleChange}
               required
-              className={`w-full resize-none rounded-lg border px-3 py-2 text-sm outline-none ring-offset-1 focus:ring-1 ${
-                errors.message
-                  ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500 dark:border-rose-700'
-                  : 'border-slate-200 focus:border-slate-900 focus:ring-slate-900 dark:border-slate-700 dark:focus:border-slate-100 dark:focus:ring-slate-100'
-              } dark:bg-slate-800 dark:text-slate-100`}
+              placeholder="What's on your mind?"
+              className={`${inputClass(!!errors.message)} resize-none`}
               aria-invalid={!!errors.message}
               aria-describedby={errors.message ? 'message-error' : undefined}
             />
             {errors.message && (
-              <p id="message-error" className="text-xs text-rose-600 dark:text-rose-400">
+              <p id="message-error" className="text-xs text-rose-500">
                 {errors.message}
               </p>
             )}
           </div>
+
+          {/* Attachment */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider flex items-center gap-1.5">
+              <FiPaperclip size={12} />
+              Attachment <span className="normal-case font-normal text-slate-400">(optional · PDF, DOC, DOCX, JPG, PNG · max 3 MB)</span>
+            </label>
+
+            {attachment ? (
+              <div className="flex items-center gap-3 glass-panel rounded-xl px-4 py-3">
+                <FiPaperclip className="text-blue-500 shrink-0" size={14} />
+                <span className="text-xs text-[var(--color-text)] truncate flex-1">{attachment.file.name}</span>
+                <span className="text-[0.65rem] text-slate-400 shrink-0">
+                  {(attachment.file.size / 1024).toFixed(0)} KB
+                </span>
+                <button
+                  type="button"
+                  onClick={() => { setAttachment(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+                  className="p-1 rounded-full hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+                  aria-label="Remove attachment"
+                >
+                  <FiX size={13} />
+                </button>
+              </div>
+            ) : (
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragActive(true) }}
+                onDragLeave={(e) => { e.preventDefault(); setDragActive(false) }}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`relative flex items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 cursor-pointer transition-colors ${
+                  dragActive
+                    ? 'border-blue-500 bg-blue-500/5'
+                    : 'border-slate-200/60 dark:border-slate-800/60 hover:border-blue-500/50 dark:hover:border-sky-400/50'
+                }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ACCEPTED_EXT}
+                  className="sr-only"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (file) await handleFileSelect(file)
+                  }}
+                />
+                <FiUploadCloud className="text-slate-400 shrink-0" size={16} />
+                <span className="text-xs text-slate-500">
+                  {dragActive ? 'Drop file here…' : 'Drag & drop or click to attach a file'}
+                </span>
+              </div>
+            )}
+
+            {errors.attachment && (
+              <p className="text-xs text-rose-500">{errors.attachment}</p>
+            )}
+          </div>
+
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-full border border-slate-900 px-4 py-1.5 text-xs font-medium text-slate-900 hover:bg-slate-900 hover:text-white disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400 dark:border-slate-100 dark:text-slate-100 dark:hover:bg-slate-100 dark:hover:text-slate-900 dark:disabled:border-slate-700 dark:disabled:text-slate-600"
+            className="rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white px-6 py-2 text-xs font-semibold shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitting ? 'Sending…' : 'Send message'}
           </button>
+
           {status === 'success' && (
-            <p className="text-xs text-emerald-600">
-              Thanks! Your message has been sent.
+            <p className="text-xs text-emerald-500 font-medium">
+              Message sent successfully!
             </p>
           )}
           {status === 'error' && (
-            <p className="text-xs text-rose-600">
-              Something went wrong. Please check your details or try again
-              later.
+            <p className="text-xs text-rose-500">
+              Something went wrong. Please try again later.
             </p>
           )}
         </form>
 
-        <div className="space-y-3 text-xs text-slate-700 dark:text-slate-300">
-          <p className="font-semibold text-slate-900 dark:text-slate-50">Direct links</p>
-          <div className="space-y-3">
+        <div className="space-y-3 text-xs">
+          <p className="font-semibold text-[var(--color-text-bright)]">Direct links</p>
+          <div className="space-y-2.5">
             <a
               href={`mailto:${personal.email}`}
-              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 transition-all hover:border-blue-400 hover:shadow-sm dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-blue-500"
+              className="flex items-center gap-3 glass-panel rounded-xl p-3.5 transition-all hover:border-blue-500/40 dark:hover:border-sky-400/40 hover:scale-[1.02]"
             >
-              <HiMail className="text-blue-600 dark:text-blue-400" size={18} />
+              <HiMail className="text-blue-500 dark:text-sky-400 shrink-0" size={18} />
               <div className="flex-1 overflow-hidden">
-                <p className="text-[0.65rem] text-slate-500 dark:text-slate-400">Email</p>
-                <p className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">{personal.email}</p>
+                <p className="text-[0.65rem] text-[var(--color-text-muted)]">Email</p>
+                <p className="truncate text-xs font-medium text-[var(--color-text-bright)]">{personal.email}</p>
               </div>
             </a>
+
             <button
               onClick={handleWhatsAppClick}
               type="button"
-              className="flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 text-left transition-all hover:border-green-500 hover:shadow-sm dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-green-400 cursor-pointer"
+              className="flex w-full items-center gap-3 glass-panel rounded-xl p-3.5 text-left transition-all hover:border-green-500/40 hover:scale-[1.02] cursor-pointer"
             >
-              <HiPhone className="text-green-600 dark:text-green-400" size={18} />
+              <HiPhone className="text-green-500 dark:text-green-400 shrink-0" size={18} />
               <div className="flex-1 overflow-hidden">
-                <p className="text-[0.65rem] text-slate-500 dark:text-slate-400">WhatsApp</p>
-                <p className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">Send Instant Message</p>
+                <p className="text-[0.65rem] text-[var(--color-text-muted)]">WhatsApp</p>
+                <p className="truncate text-xs font-medium text-[var(--color-text-bright)]">Send Instant Message</p>
               </div>
             </button>
+
             <a
               href={personal.github}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 transition-all hover:border-slate-900 hover:shadow-sm dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-slate-400"
+              className="flex items-center gap-3 glass-panel rounded-xl p-3.5 transition-all hover:border-slate-500/40 hover:scale-[1.02]"
             >
-              <FiGithub className="text-slate-800 dark:text-slate-200" size={18} />
+              <FiGithub className="text-[var(--color-text-bright)] shrink-0" size={18} />
               <div className="flex-1 overflow-hidden">
-                <p className="text-[0.65rem] text-slate-500 dark:text-slate-400">GitHub</p>
-                <p className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">{personal.github.replace('https://', '')}</p>
+                <p className="text-[0.65rem] text-[var(--color-text-muted)]">GitHub</p>
+                <p className="truncate text-xs font-medium text-[var(--color-text-bright)]">{personal.github.replace('https://', '')}</p>
               </div>
             </a>
+
             <a
               href={personal.linkedin}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 transition-all hover:border-blue-600 hover:shadow-sm dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-blue-500"
+              className="flex items-center gap-3 glass-panel rounded-xl p-3.5 transition-all hover:border-blue-600/40 hover:scale-[1.02]"
             >
-              <FiLinkedin className="text-blue-600 dark:text-blue-400" size={18} />
+              <FiLinkedin className="text-blue-500 dark:text-blue-400 shrink-0" size={18} />
               <div className="flex-1 overflow-hidden">
-                <p className="text-[0.65rem] text-slate-500 dark:text-slate-400">LinkedIn</p>
-                <p className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">{personal.linkedin.replace('https://', '')}</p>
+                <p className="text-[0.65rem] text-[var(--color-text-muted)]">LinkedIn</p>
+                <p className="truncate text-xs font-medium text-[var(--color-text-bright)]">{personal.linkedin.replace('https://', '')}</p>
               </div>
             </a>
           </div>
@@ -269,4 +389,3 @@ export default function Contact() {
     </section>
   )
 }
-

@@ -75,7 +75,7 @@ export default function Projects() {
             return {
               id: key,
               name: r.name,
-              description: override.description || r.description || 'Professional software repository.',
+              description: override.description || r.description || '',
               url: r.html_url,
               stack: override.stack ?? (r.topics?.length ? r.topics : r.language ? [r.language] : ['Software Engineering']),
               stars: r.stargazers_count,
@@ -171,9 +171,11 @@ export default function Projects() {
                     <FiGithub className="text-slate-400 group-hover:text-blue-500 dark:group-hover:text-sky-400 transition-colors" size={16} />
                   </div>
                 </div>
-                <p className="text-[0.7rem] leading-relaxed text-slate-600 dark:text-slate-300 min-h-[50px] line-clamp-3">
-                  {project.description}
-                </p>
+                {project.description && (
+                  <p className="text-[0.7rem] leading-relaxed text-slate-600 dark:text-slate-300 line-clamp-3">
+                    {project.description}
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-1">
                   {project.stack.slice(0, 5).map((tech) => (
                     <span

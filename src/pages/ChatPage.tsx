@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { FiMessageSquare, FiBook, FiUploadCloud, FiTrash2, FiFileText, FiInfo, FiType } from 'react-icons/fi'
+import { FiMessageSquare, FiBook, FiUploadCloud, FiTrash2, FiFileText, FiInfo, FiType, FiKey, FiSettings } from 'react-icons/fi'
 
 type ChatMessage = {
   role: 'user' | 'assistant'
@@ -27,6 +27,12 @@ export default function ChatPage() {
   const [textContextSaved, setTextContextSaved] = useState('')
   const [kbTab, setKbTab] = useState<'file' | 'text'>('file')
 
+  const [showSettings, setShowSettings] = useState(false)
+  const [customKey, setCustomKey] = useState('')
+  const [provider, setProvider] = useState<'gemini' | 'openai' | 'ollama'>('gemini')
+  const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434')
+  const [ollamaModel, setOllamaModel] = useState('llama3')
+
   // Track if the model-fallback note has already been shown this session
   const modelNoteShownRef = useRef(false)
 
@@ -43,7 +49,19 @@ export default function ChatPage() {
       setTextContext(savedText)
       setTextContextSaved(savedText)
     }
+    setCustomKey(localStorage.getItem('portfolio_custom_api_key') || '')
+    setProvider((localStorage.getItem('portfolio_api_provider') as 'gemini' | 'openai' | 'ollama') || 'gemini')
+    setOllamaUrl(localStorage.getItem('portfolio_ollama_url') || 'http://localhost:11434')
+    setOllamaModel(localStorage.getItem('portfolio_ollama_model') || 'llama3')
   }, [])
+
+  const saveSettings = () => {
+    localStorage.setItem('portfolio_custom_api_key', customKey)
+    localStorage.setItem('portfolio_api_provider', provider)
+    localStorage.setItem('portfolio_ollama_url', ollamaUrl)
+    localStorage.setItem('portfolio_ollama_model', ollamaModel)
+    setShowSettings(false)
+  }
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -297,12 +315,87 @@ Base answers on the above facts. Be concise, developer-friendly, and polite.
 
   return (
     <section className="py-8 space-y-8 animate-fade-up">
-      <div>
-        <h2 className="text-3xl font-extrabold tracking-tight">AI Agent Sandbox</h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Chat with Parth&apos;s AI Agent, query his profile, and inject custom context into the knowledge base.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-3xl font-extrabold tracking-tight">AI Agent Sandbox</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Chat with Parth&apos;s AI Agent, query his profile, and inject custom context into the knowledge base.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className="p-2 rounded-full glass-panel hover:bg-slate-200/50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 transition-colors"
+          title="API Key Settings"
+        >
+          <FiSettings size={18} />
+        </button>
       </div>
+
+      {/* Settings Panel */}
+      {showSettings && (
+        <div className="p-5 glass-card space-y-4">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <FiKey className="text-blue-500" />
+            API Key Settings
+          </h3>
+          <p className="text-xs text-slate-500">Stored locally in your browser. Provider choice applies to ATS Checker too.</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 mb-1">Provider</label>
+              <select
+                value={provider}
+                onChange={(e) => setProvider(e.target.value as 'gemini' | 'openai' | 'ollama')}
+                className="w-full text-xs rounded-lg glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none text-[var(--color-text)]"
+              >
+                <option value="gemini">Google Gemini (Recommended)</option>
+                <option value="openai">OpenAI (ChatGPT)</option>
+                <option value="ollama">Ollama (Local Offline)</option>
+              </select>
+            </div>
+            {provider === 'ollama' ? (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 mb-1">Ollama URL</label>
+                  <input type="text" value={ollamaUrl} onChange={(e) => setOllamaUrl(e.target.value)}
+                    className="w-full text-xs rounded-lg glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none text-[var(--color-text)]" />
+                </div>
+                <div>
+                  <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 mb-1">Model</label>
+                  <input type="text" value={ollamaModel} onChange={(e) => setOllamaModel(e.target.value)}
+                    className="w-full text-xs rounded-lg glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none text-[var(--color-text)]" />
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 mb-1">API Key</label>
+                <input type="password" value={customKey} onChange={(e) => setCustomKey(e.target.value)}
+                  placeholder={provider === 'gemini' ? 'AIzaSy...' : 'sk-proj-...'}
+                  className="w-full text-xs rounded-lg glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none text-[var(--color-text)]" />
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button onClick={() => setShowSettings(false)} className="px-3 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800">Cancel</button>
+            <button onClick={saveSettings} className="px-3 py-1.5 rounded-lg text-xs bg-blue-600 text-white font-medium hover:bg-blue-700">Save</button>
+          </div>
+        </div>
+      )}
+
+      {/* Gemini key banner */}
+      {!customKey && provider !== 'ollama' && (
+        <div className="flex items-start gap-3 p-4 glass-card border-l-4 border-l-amber-500">
+          <FiKey className="text-amber-500 shrink-0 mt-0.5" size={16} />
+          <div>
+            <p className="text-xs font-semibold text-amber-500">API Key Required</p>
+            <p className="text-[0.7rem] text-slate-500 dark:text-slate-400 mt-0.5">
+              No server-side Gemini key is configured. The chatbot will respond with a static fallback.{' '}
+              <button onClick={() => setShowSettings(true)} className="text-blue-500 dark:text-sky-400 underline cursor-pointer">
+                Add your free Gemini key →
+              </button>
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 md:grid-cols-[1.3fr_0.7fr]">
         {/* Chat Console Area */}

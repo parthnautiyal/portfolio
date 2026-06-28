@@ -1,4 +1,5 @@
 import { personal } from '../content/personal.ts'
+import { trackLinkClick } from '../utils/analytics.ts'
 
 export default function Footer() {
   return (
@@ -13,6 +14,7 @@ export default function Footer() {
             target="_blank"
             rel="noreferrer"
             className="hover:text-slate-700 dark:hover:text-slate-200"
+            onClick={() => trackLinkClick('GitHub', personal.github)}
           >
             GitHub
           </a>
@@ -21,6 +23,7 @@ export default function Footer() {
             target="_blank"
             rel="noreferrer"
             className="hover:text-slate-700 dark:hover:text-slate-200"
+            onClick={() => trackLinkClick('LinkedIn', personal.linkedin)}
           >
             LinkedIn
           </a>
@@ -29,6 +32,7 @@ export default function Footer() {
             target="_blank"
             rel="noreferrer"
             className="hover:text-slate-700 dark:hover:text-slate-200"
+            onClick={() => trackLinkClick('LeetCode', personal.leetcode)}
           >
             LeetCode
           </a>

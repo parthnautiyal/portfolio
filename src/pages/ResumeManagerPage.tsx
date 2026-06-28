@@ -1,7 +1,65 @@
 import { useState, useEffect } from 'react'
-import { FiSliders, FiCheckCircle, FiFileText, FiCloud, FiInfo, FiKey, FiUploadCloud, FiAlertTriangle, FiRefreshCw } from 'react-icons/fi'
+import { FiSliders, FiCheckCircle, FiFileText, FiCloud, FiInfo, FiKey, FiUploadCloud, FiAlertTriangle, FiRefreshCw, FiLock } from 'react-icons/fi'
+
+// Set VITE_ADMIN_PIN in Vercel env vars to override. Defaults to 'parth'.
+const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || 'parth'
+
+function PinGate({ onUnlock }: { onUnlock: () => void }) {
+  const [pin, setPin] = useState('')
+  const [error, setError] = useState(false)
+
+  const attempt = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (pin === ADMIN_PIN) {
+      onUnlock()
+    } else {
+      setError(true)
+      setPin('')
+      setTimeout(() => setError(false), 2000)
+    }
+  }
+
+  return (
+    <section className="py-24 flex flex-col items-center justify-center animate-fade-up">
+      <div className="glass-card p-8 w-full max-w-sm space-y-5 text-center">
+        <div className="flex justify-center">
+          <span className="p-3 rounded-2xl bg-blue-500/10">
+            <FiLock className="text-blue-500" size={24} />
+          </span>
+        </div>
+        <div>
+          <h2 className="text-lg font-extrabold tracking-tight">Admin Access</h2>
+          <p className="text-xs text-slate-500 mt-1">Resume Manager is PIN-protected.</p>
+        </div>
+        <form onSubmit={attempt} className="space-y-3">
+          <input
+            type="password"
+            value={pin}
+            onChange={e => setPin(e.target.value)}
+            placeholder="Enter PIN"
+            autoFocus
+            className={`w-full glass-panel rounded-xl px-4 py-3 text-sm text-center tracking-[0.3em] outline-none border-none transition-all ${
+              error ? 'ring-1 ring-rose-500/50' : 'focus:ring-1 focus:ring-blue-500/50'
+            }`}
+          />
+          {error && <p className="text-xs text-rose-500">Incorrect PIN.</p>}
+          <button
+            type="submit"
+            className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors cursor-pointer"
+          >
+            Unlock
+          </button>
+        </form>
+        <p className="text-[0.6rem] text-slate-400">
+          Set <code className="font-mono">VITE_ADMIN_PIN</code> in Vercel env vars to change the PIN.
+        </p>
+      </div>
+    </section>
+  )
+}
 
 export default function ResumeManagerPage() {
+  const [unlocked, setUnlocked] = useState(false)
   const [customKey, setCustomKey] = useState('')
   const [provider, setProvider] = useState<'gemini' | 'openai' | 'ollama'>('gemini')
   const [isSaved, setIsSaved] = useState(false)
@@ -280,6 +338,8 @@ Ensure:
   }
 
   const hasOverride = !!localStorage.getItem('portfolio_resume_data')
+
+  if (!unlocked) return <PinGate onUnlock={() => setUnlocked(true)} />
 
   return (
     <section className="py-8 space-y-8 animate-fade-up">

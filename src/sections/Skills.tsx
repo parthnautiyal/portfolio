@@ -1,4 +1,5 @@
 import * as SimpleIcons from 'react-icons/si'
+import * as TablerIcons from 'react-icons/tb'
 import { getSkills } from '../utils/contentLoader.ts'
 
 export default function Skills() {
@@ -9,12 +10,13 @@ export default function Skills() {
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         {skillCategories.map((category) => (
           <div key={category.name} className="card-elevated p-4">
-            <h3 className="text-sm font-medium text-slate-800 dark:text-slate-100">
+            <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100">
               {category.name}
             </h3>
             <div className="mt-3 flex flex-wrap gap-2">
               {category.items.map((skill) => {
-                const IconComponent = SimpleIcons[skill.icon as keyof typeof SimpleIcons]
+                const IconComponent =
+                  (SimpleIcons as any)[skill.icon] ?? (TablerIcons as any)[skill.icon]
                 return (
                   <a
                     key={skill.name}

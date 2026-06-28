@@ -10,9 +10,11 @@
     "fetch-projects": "node scripts/fetch-projects.js",
     "lint": "eslint .",
     "preview": "vite preview",
-    "sync-resume": "node scripts/sync-resume.js"
+    "sync-resume": "node scripts/sync-resume.js",
+    "sync:vendor": "git submodule update --remote vendor/hiring-agent"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "nodemailer": "^9.0.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

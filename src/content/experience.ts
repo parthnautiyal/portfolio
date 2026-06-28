@@ -8,7 +8,7 @@ export type ExperienceItem = {
 
 export const experience: ExperienceItem[] = [
   {
-    "role": "Software Development Engineer II (Promoted)",
+    "role": "Software Development Engineer II",
     "company": "ZopSmart",
     "location": "Bangalore, India",
     "period": "Mar 2026 – Present",

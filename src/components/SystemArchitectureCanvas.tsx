@@ -29,10 +29,10 @@ const systemNodes: SystemNode[] = [
     id: 'sync-script',
     label: 'Sync Script (Node CLI)',
     icon: FiCpu,
-    description: 'A developer CLI script run locally. It parses PDF text using pdf-parse, contacts Gemini API to generate structured content JSON, and syncs the PDF to iCloud/GDrive.',
-    tradeOffs: 'Eliminates server overhead by shifting compiling tasks to build time (Static Site Generation); requires developer execution.',
+    description: 'A Node.js CLI script (scripts/sync-resume.js) run locally by the developer. It copies the resume PDF to iCloud/GDrive cloud directories, then re-generates src/content/*.ts files from PDF text via Gemini API so the site always reflects the latest resume data.',
+    tradeOffs: 'Eliminates server overhead by shifting all compilation to build time (SSG); requires a one-time developer execution whenever the resume is updated.',
     pattern: 'Build-Time Pipeline (SSG)',
-    codeSnippet: 'npm run sync-resume\n// Extracts PDF text -> Gemini API -> Updates src/content/*.ts',
+    codeSnippet: '# Run from project root after updating resume PDF:\nnode scripts/sync-resume.js\n\n# What it does:\n# 1. Copy PDF -> iCloud & Google Drive paths\n# 2. Extract text via pdf-parse\n# 3. Call Gemini API to generate structured JSON\n# 4. Overwrite src/content/*.ts with updated data',
     x: 150,
     y: 220
   },
@@ -40,10 +40,10 @@ const systemNodes: SystemNode[] = [
     id: 'icloud-gdrive',
     label: 'iCloud & GDrive',
     icon: FiFolder,
-    description: 'Native macOS CloudStorage directories. The local script copies the PDF here, automatically syncing it to Parth’s personal cloud backups.',
-    tradeOffs: 'Requires zero external API keys by utilizing macOS local folder mount paths; requires mac environment.',
+    description: 'Native macOS CloudStorage mount paths. The sync script copies the PDF here automatically — iCloud at ~/Library/Mobile Documents/com~apple~CloudDocs/ and Google Drive at ~/Google Drive/My Drive/. Both auto-sync to cloud on save, requiring zero external API keys.',
+    tradeOffs: 'Zero-config cloud backup leveraging macOS folder mounts; requires Mac environment with both services signed in.',
     pattern: 'File System Sync (NIO)',
-    codeSnippet: 'fs.copyFileSync(src, "~/Library/Mobile Documents/com~apple~CloudDocs/Resume/...")',
+    codeSnippet: "const ICLOUD = path.join(os.homedir(),\n  'Library/Mobile Documents/com~apple~CloudDocs/Resume'\n)\nconst GDRIVE = path.join(os.homedir(), 'Google Drive/My Drive/Resume')\n\nfor (const dest of [ICLOUD, GDRIVE]) {\n  fs.mkdirSync(dest, { recursive: true })\n  fs.copyFileSync(PDF_PATH, path.join(dest, 'resume.pdf'))\n}",
     x: 380,
     y: 80
   },
@@ -62,7 +62,7 @@ const systemNodes: SystemNode[] = [
     id: 'visitor-browser',
     label: 'Visitor Browser',
     icon: FiNavigation,
-    description: 'Renders the glassmorphic React site. Automatically computes auto dark mode based on the user’s local hour and manages API keys in localStorage.',
+    description: "Renders the glassmorphic React site. Automatically computes auto dark mode based on the user's local hour and manages API keys in localStorage.",
     tradeOffs: 'Maximizes client-side performance; relies on the visitor\'s machine resources.',
     pattern: 'Client-Side Rendering (CSR)',
     codeSnippet: 'const hour = new Date().getHours();\nconst isNight = hour >= 18 || hour < 6;',
@@ -207,37 +207,39 @@ export default function SystemArchitectureCanvas() {
       </div>
 
       {/* Selected Node Details */}
-      <div className="glass-panel p-5 rounded-2xl space-y-4 animate-fade-up">
-        <div className="flex justify-between items-start">
-          <div>
+      <div className="glass-panel p-5 rounded-2xl space-y-4 animate-fade-up relative z-10">
+        <div className="flex justify-between items-start gap-3">
+          <div className="min-w-0">
             <span className="text-[0.65rem] font-bold uppercase tracking-wider text-blue-600 dark:text-sky-400 bg-blue-50 dark:bg-blue-950/20 px-2 py-0.5 rounded">
               Pattern: {activeNode.pattern}
             </span>
-            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-1">{activeNode.label}</h4>
+            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-1 truncate">{activeNode.label}</h4>
           </div>
           <button
             onClick={() => setShowCode(!showCode)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[0.65rem] font-semibold bg-slate-900 text-slate-50 dark:bg-slate-50 dark:text-slate-900 hover:opacity-90 transition-opacity cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[0.65rem] font-semibold bg-slate-900 text-slate-50 dark:bg-slate-50 dark:text-slate-900 hover:opacity-90 transition-opacity cursor-pointer shrink-0"
           >
             <FiCode size={12} />
-            {showCode ? 'Show Description' : 'Show Code'}
+            {showCode ? 'Description' : 'Show Code'}
           </button>
         </div>
 
-        {!showCode ? (
-          <div className="space-y-2 text-xs">
-            <p className="leading-relaxed text-slate-600 dark:text-slate-300">
-              {activeNode.description}
-            </p>
-            <div className="border-t border-slate-200/40 dark:border-slate-800/40 pt-2 text-[0.7rem] text-slate-500 dark:text-slate-400">
-              <strong className="text-slate-700 dark:text-slate-300">Architectural Trade-Off:</strong> {activeNode.tradeOffs}
+        <div className="text-xs">
+          {!showCode ? (
+            <div className="space-y-2">
+              <p className="leading-relaxed text-slate-600 dark:text-slate-300">
+                {activeNode.description}
+              </p>
+              <div className="border-t border-slate-200/40 dark:border-slate-800/40 pt-2 text-[0.7rem] text-slate-500 dark:text-slate-400">
+                <strong className="text-slate-700 dark:text-slate-300">Architectural Trade-Off:</strong> {activeNode.tradeOffs}
+              </div>
             </div>
-          </div>
-        ) : (
-          <pre className="p-4 rounded-xl bg-slate-950 text-green-400 text-[0.65rem] font-mono overflow-x-auto leading-relaxed max-h-[150px]">
-            {activeNode.codeSnippet}
-          </pre>
-        )}
+          ) : (
+            <pre className="p-4 rounded-xl bg-slate-950 text-green-400 text-[0.65rem] font-mono overflow-x-auto overflow-y-auto leading-relaxed max-h-[180px] w-full">
+              {activeNode.codeSnippet}
+            </pre>
+          )}
+        </div>
       </div>
     </div>
   )

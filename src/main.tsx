@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
+import { Analytics } from '@vercel/analytics/react'
 import './index.css'
 import RootLayout from './routes/RootLayout.tsx'
 import HomePage from './pages/HomePage.tsx'
@@ -21,7 +22,8 @@ createRoot(document.getElementById('root')!).render(
     <HelmetProvider>
       <ErrorBoundary>
         <BrowserRouter>
-        <Routes>
+          <Analytics />
+          <Routes>
           <Route path="/" element={<RootLayout />}>
             <Route index element={<HomePage />} />
             <Route path="experience" element={<ExperiencePage />} />
