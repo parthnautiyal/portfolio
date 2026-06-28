@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { personal } from '../content/personal.ts'
 import OllamaDiagnosticModal from './OllamaDiagnosticModal.tsx'
 import { FiSun, FiMoon, FiClock } from 'react-icons/fi'
+import { trackLinkClick } from '../utils/analytics.ts'
 
 const links = [
   { to: '/', label: 'Home' },
@@ -120,6 +121,7 @@ export default function Navbar() {
           rel="noreferrer"
           aria-label="LinkedIn Profile"
           className="text-sm font-semibold tracking-tight text-[var(--color-text-bright)] hover:text-blue-600 dark:hover:text-sky-400 transition-colors"
+          onClick={() => trackLinkClick('LinkedIn Profile', personal.linkedin)}
         >
           {personal.name}
         </a>
@@ -181,12 +183,14 @@ export default function Navbar() {
                   : 'bg-blue-600/90 text-white hover:bg-blue-700 dark:bg-sky-500/90 dark:hover:bg-sky-500',
               ].join(' ')
             }
+            onClick={() => trackLinkClick('Chatbot CTA')}
           >
             💬 Chatbot
           </NavLink>
           <NavLink
             to="/contact"
             className="hidden rounded-full border border-slate-900 px-4 py-1.5 text-xs font-medium text-slate-900 hover:bg-slate-900 hover:text-white dark:border-slate-100 dark:text-slate-50 dark:hover:bg-slate-50 dark:hover:text-slate-900 md:inline-block"
+            onClick={() => trackLinkClick('Contact CTA')}
           >
             Contact
           </NavLink>

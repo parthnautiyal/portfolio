@@ -1,4 +1,5 @@
 import { onCLS, onFCP, onINP, onLCP, onTTFB, type Metric } from 'web-vitals'
+import { trackEvent } from './analytics.ts'
 
 function sendToAnalytics(metric: Metric) {
   // Log to console in development
@@ -6,17 +7,13 @@ function sendToAnalytics(metric: Metric) {
     console.log(metric)
   }
 
-  // Send to analytics service in production
+  // Send to Vercel Analytics in production
   if (import.meta.env.PROD) {
-    // Example: Send to Google Analytics, Plausible, or custom analytics
-    // navigator.sendBeacon('/analytics', JSON.stringify(metric))
-
-    // Or send to console for now
-    console.log('[Web Vitals]', {
+    trackEvent('web_vital', {
       name: metric.name,
-      value: metric.value,
+      value: Math.round(metric.name === 'CLS' ? metric.value * 1000 : metric.value),
       rating: metric.rating,
-      delta: metric.delta,
+      delta: Math.round(metric.delta),
     })
   }
 }
