@@ -23,9 +23,9 @@ createRoot(document.getElementById('root')!).render(
       <ErrorBoundary>
         <BrowserRouter>
           <Analytics
-            scriptSrc="/_metrics/s.js"
-            viewEndpoint="/_metrics/v"
-            eventEndpoint="/_metrics/e"
+            scriptSrc={import.meta.env.PROD ? "/_metrics/s.js" : undefined}
+            viewEndpoint={import.meta.env.PROD ? "/_metrics/v" : undefined}
+            eventEndpoint={import.meta.env.PROD ? "/_metrics/e" : undefined}
           />
           <Routes>
           <Route path="/" element={<RootLayout />}>

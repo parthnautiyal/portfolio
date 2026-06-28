@@ -11,6 +11,10 @@
     {
       "source": "/_metrics/e",
       "destination": "/_vercel/insights/event"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
