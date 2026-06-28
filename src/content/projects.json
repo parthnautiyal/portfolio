@@ -1,18 +1,5 @@
 [
   {
-    "id": "parthnautiyal",
-    "name": "parthnautiyal",
-    "description": "Professional software repository showcasing scalable systems implementation.",
-    "url": "https://github.com/parthnautiyal/parthnautiyal",
-    "stack": [
-      "Software Engineering"
-    ],
-    "stars": 0,
-    "forks": 0,
-    "lastUpdated": "2026-06-26T18:31:15Z",
-    "isResumeProject": false
-  },
-  {
     "id": "portfolio",
     "name": "portfolio",
     "description": "Personal portfolio website featuring AI-powered chatbot, ATS resume analyzer, observability playground, and glassmorphic design system.",
@@ -25,8 +12,21 @@
     ],
     "stars": 0,
     "forks": 0,
-    "lastUpdated": "2026-06-24T18:43:41Z",
+    "lastUpdated": "2026-06-28T05:54:16Z",
     "isResumeProject": true
+  },
+  {
+    "id": "parthnautiyal",
+    "name": "parthnautiyal",
+    "description": "Professional software repository showcasing scalable systems implementation.",
+    "url": "https://github.com/parthnautiyal/parthnautiyal",
+    "stack": [
+      "Software Engineering"
+    ],
+    "stars": 0,
+    "forks": 0,
+    "lastUpdated": "2026-06-26T18:31:15Z",
+    "isResumeProject": false
   },
   {
     "id": "angularskillup",

@@ -22,7 +22,11 @@ createRoot(document.getElementById('root')!).render(
     <HelmetProvider>
       <ErrorBoundary>
         <BrowserRouter>
-          <Analytics />
+          <Analytics
+            scriptSrc="/_metrics/s.js"
+            viewEndpoint="/_metrics/v"
+            eventEndpoint="/_metrics/e"
+          />
           <Routes>
           <Route path="/" element={<RootLayout />}>
             <Route index element={<HomePage />} />

@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/_metrics/s.js",
+      "destination": "/_vercel/insights/script.js"
+    },
+    {
+      "source": "/_metrics/v",
+      "destination": "/_vercel/insights/view"
+    },
+    {
+      "source": "/_metrics/e",
+      "destination": "/_vercel/insights/event"
+    }
+  ]
+}
