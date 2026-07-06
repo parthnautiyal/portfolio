@@ -32,14 +32,12 @@ export default function Hero() {
           </p>
           
           <div className="flex flex-wrap gap-4 pt-4 text-sm">
-            <a
-              href={personal.resumeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white px-7 py-3 font-semibold shadow-lg hover:shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            <Link
+              to="/resume"
+              className="rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-white px-7 py-3 font-semibold shadow-lg hover:shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer text-center"
             >
               View Resume
-            </a>
+            </Link>
             <Link
               to="/projects"
               className="rounded-full border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-[var(--color-text-bright)] px-7 py-3 font-semibold shadow-sm transition-all hover:border-[var(--border-color-hover)] hover:scale-[1.02] active:scale-[0.98]"

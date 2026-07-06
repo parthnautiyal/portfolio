@@ -23,7 +23,7 @@ const RESUME_PROJECT_OVERRIDES = {
     isResumeProject: true,
   },
   portfolio: {
-    description: 'Personal portfolio website featuring AI-powered chatbot, ATS resume analyzer, observability playground, and glassmorphic design system.',
+    description: 'Personal portfolio website featuring an interactive resume viewer, a real-time system observability cockpit, an AI-powered chatbot, and a glassmorphic design system.',
     stack: ['React', 'TypeScript', 'TailwindCSS', 'Vite'],
     isResumeProject: true,
   },

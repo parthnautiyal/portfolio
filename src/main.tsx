@@ -9,9 +9,9 @@ import HomePage from './pages/HomePage.tsx'
 import ExperiencePage from './pages/ExperiencePage.tsx'
 import ProjectsPage from './pages/ProjectsPage.tsx'
 import ContactPage from './pages/ContactPage.tsx'
-import PlaygroundPage from './pages/PlaygroundPage.tsx'
+import ResumeViewerPage from './pages/ResumeViewerPage.tsx'
+import SystemCockpitPage from './pages/SystemCockpitPage.tsx'
 import ChatPage from './pages/ChatPage.tsx'
-import AtsCheckerPage from './pages/AtsCheckerPage.tsx'
 import ResumeManagerPage from './pages/ResumeManagerPage.tsx'
 import NotFoundPage from './pages/NotFoundPage.tsx'
 import ErrorBoundary from './components/ErrorBoundary.tsx'
@@ -33,9 +33,9 @@ createRoot(document.getElementById('root')!).render(
             <Route path="experience" element={<ExperiencePage />} />
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="contact" element={<ContactPage />} />
-            <Route path="playground" element={<PlaygroundPage />} />
+            <Route path="resume" element={<ResumeViewerPage />} />
+            <Route path="system" element={<SystemCockpitPage />} />
             <Route path="chat" element={<ChatPage />} />
-            <Route path="ats-checker" element={<AtsCheckerPage />} />
             <Route path="resume-manager" element={<ResumeManagerPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>

@@ -9,8 +9,8 @@ const links = [
   { to: '/', label: 'Home' },
   { to: '/experience', label: 'Experience' },
   { to: '/projects', label: 'Projects' },
-  { to: '/ats-checker', label: 'ATS Checker' },
-  { to: '/playground', label: 'Playground' },
+  { to: '/resume', label: 'Resume' },
+  { to: '/system', label: 'System Cockpit' },
 ]
 
 type ThemeMode = 'auto' | 'light' | 'dark'
