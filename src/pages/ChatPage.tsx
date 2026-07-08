@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { FiMessageSquare, FiBook, FiUploadCloud, FiTrash2, FiFileText, FiInfo, FiType, FiKey, FiSettings } from 'react-icons/fi'
+import { useQuest } from '../context/QuestContext.tsx'
 
 type ChatMessage = {
   role: 'user' | 'assistant'
@@ -13,6 +14,7 @@ type KBDocument = {
 }
 
 export default function ChatPage() {
+  const { unlockAchievement } = useQuest()
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
@@ -116,6 +118,7 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, userMessage])
     setInput('')
     setLoading(true)
+    unlockAchievement('CHAT_QUERY')
 
     // Build knowledge base context from both files and text input
     const parts: string[] = []
@@ -376,7 +379,7 @@ Base answers on the above facts. Be concise, developer-friendly, and polite.
           </div>
           <div className="flex gap-2 justify-end">
             <button onClick={() => setShowSettings(false)} className="px-3 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800">Cancel</button>
-            <button onClick={saveSettings} className="px-3 py-1.5 rounded-lg text-xs bg-blue-600 text-white font-medium hover:bg-blue-700">Save</button>
+            <button onClick={saveSettings} className="px-3 py-1.5 rounded-lg text-xs btn-gradient font-medium">Save</button>
           </div>
         </div>
       )}
@@ -402,10 +405,10 @@ Base answers on the above facts. Be concise, developer-friendly, and polite.
         <div className="glass-card flex h-[560px] flex-col p-5 justify-between">
           <div className="border-b border-slate-200/40 dark:border-slate-800/40 pb-3 flex items-center justify-between">
             <h3 className="text-sm font-bold flex items-center gap-2">
-              <FiMessageSquare className="text-blue-500" />
+              <FiMessageSquare className="text-orange-500 dark:text-indigo-400" />
               Chatbot Console
             </h3>
-            <span className="flex items-center gap-1.5 text-[0.6rem] font-bold text-blue-500 bg-blue-500/10 px-2.5 py-0.5 rounded-full">
+            <span className="flex items-center gap-1.5 text-[0.6rem] font-bold text-orange-600 bg-orange-500/10 dark:text-indigo-400 dark:bg-indigo-500/10 px-2.5 py-0.5 rounded-full">
               GEMINI / OLLAMA ACTIVE
             </span>
           </div>
@@ -419,7 +422,7 @@ Base answers on the above facts. Be concise, developer-friendly, and polite.
                 <div
                   className={`max-w-[82%] rounded-2xl px-4 py-2.5 leading-relaxed shadow-sm whitespace-pre-wrap ${
                     m.role === 'user'
-                      ? 'bg-blue-600 text-white rounded-tr-none'
+                      ? 'btn-gradient rounded-tr-none'
                       : 'glass-panel text-[var(--color-text)] rounded-tl-none border-[var(--border-color)]'
                   }`}
                 >
@@ -429,7 +432,7 @@ Base answers on the above facts. Be concise, developer-friendly, and polite.
             ))}
             {loading && (
               <div className="flex gap-1 items-center text-[0.65rem] text-slate-400 font-medium">
-                <svg className="animate-spin h-3.5 w-3.5 text-blue-500" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-3.5 w-3.5 text-orange-500 dark:text-indigo-400" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
@@ -447,12 +450,12 @@ Base answers on the above facts. Be concise, developer-friendly, and polite.
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about Spring Boot, system architecture, observability, Docker..."
-              className="flex-1 rounded-xl glass-panel px-4 py-2.5 text-xs outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-900 border-none text-[var(--color-text)]"
+              className="flex-1 rounded-xl glass-panel px-4 py-2.5 text-xs outline-none focus:ring-1 focus:ring-orange-500 dark:focus:ring-indigo-500 dark:bg-slate-900 border-none text-[var(--color-text)]"
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-md"
+              className="rounded-xl btn-gradient px-5 py-2.5 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-md"
             >
               Send
             </button>
@@ -463,10 +466,10 @@ Base answers on the above facts. Be concise, developer-friendly, and polite.
         <div className="glass-card p-5 space-y-4 flex flex-col h-[560px]">
           <div>
             <h3 className="text-sm font-semibold flex items-center gap-2 border-b border-slate-200/40 dark:border-slate-800/40 pb-3">
-              <FiBook className="text-blue-500" />
+              <FiBook className="text-orange-500 dark:text-indigo-400" />
               Document Knowledge Base
               {totalKbItems > 0 && (
-                <span className="ml-auto text-[0.6rem] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500">
+                <span className="ml-auto text-[0.6rem] font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-600 dark:bg-indigo-500/10 dark:text-indigo-400">
                   {totalKbItems} active
                 </span>
               )}
@@ -482,7 +485,7 @@ Base answers on the above facts. Be concise, developer-friendly, and polite.
               onClick={() => setKbTab('file')}
               className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 transition-colors cursor-pointer ${
                 kbTab === 'file'
-                  ? 'bg-blue-600 text-white'
+                  ? 'btn-gradient font-bold'
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
               }`}
             >
@@ -493,7 +496,7 @@ Base answers on the above facts. Be concise, developer-friendly, and polite.
               onClick={() => setKbTab('text')}
               className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 transition-colors cursor-pointer ${
                 kbTab === 'text'
-                  ? 'bg-blue-600 text-white'
+                  ? 'btn-gradient font-bold'
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
               }`}
             >
@@ -534,7 +537,7 @@ Base answers on the above facts. Be concise, developer-friendly, and polite.
                       {documents.map((doc) => (
                         <div key={doc.name} className="flex items-center justify-between p-2 glass-panel rounded-xl text-[0.65rem]">
                           <div className="flex items-center gap-1.5 overflow-hidden">
-                            <FiFileText className="text-blue-500 shrink-0" />
+                            <FiFileText className="text-orange-500 dark:text-indigo-400 shrink-0" />
                             <span className="truncate font-semibold text-[var(--color-text)]">{doc.name}</span>
                             <span className="text-slate-400 shrink-0">{(doc.size / 1024).toFixed(1)}KB</span>
                           </div>
@@ -562,13 +565,13 @@ Base answers on the above facts. Be concise, developer-friendly, and polite.
                   onChange={(e) => setTextContext(e.target.value)}
                   placeholder="Paste a job description, requirements, or any custom context here..."
                   rows={8}
-                  className="flex-1 w-full rounded-xl glass-panel px-3 py-2.5 text-[0.7rem] leading-relaxed outline-none focus:ring-1 focus:ring-blue-500 border-none text-[var(--color-text)] resize-none dark:bg-slate-900/50"
+                  className="flex-1 w-full rounded-xl glass-panel px-3 py-2.5 text-[0.7rem] leading-relaxed outline-none focus:ring-1 focus:ring-orange-500 dark:focus:ring-indigo-500 border-none text-[var(--color-text)] resize-none dark:bg-slate-900/50"
                 />
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleSaveTextContext}
                     disabled={!textContext.trim() || textContext === textContextSaved}
-                    className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white px-3 py-2 text-[0.65rem] font-bold transition-all cursor-pointer"
+                    className="flex-1 rounded-xl btn-gradient disabled:opacity-40 px-3 py-2 text-[0.65rem] font-bold transition-all cursor-pointer"
                   >
                     {textContextSaved && textContext === textContextSaved ? '✓ Saved to Context' : 'Save & Inject'}
                   </button>

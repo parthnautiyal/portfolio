@@ -23,8 +23,8 @@ function PinGate({ onUnlock }: { onUnlock: () => void }) {
     <section className="py-24 flex flex-col items-center justify-center animate-fade-up">
       <div className="glass-card p-8 w-full max-w-sm space-y-5 text-center">
         <div className="flex justify-center">
-          <span className="p-3 rounded-2xl bg-blue-500/10">
-            <FiLock className="text-blue-500" size={24} />
+          <span className="p-3 rounded-2xl bg-orange-500/10 dark:bg-indigo-500/10">
+            <FiLock className="text-orange-600 dark:text-indigo-400" size={24} />
           </span>
         </div>
         <div>
@@ -39,13 +39,13 @@ function PinGate({ onUnlock }: { onUnlock: () => void }) {
             placeholder="Enter PIN"
             autoFocus
             className={`w-full glass-panel rounded-xl px-4 py-3 text-sm text-center tracking-[0.3em] outline-none border-none transition-all ${
-              error ? 'ring-1 ring-rose-500/50' : 'focus:ring-1 focus:ring-blue-500/50'
+              error ? 'ring-1 ring-rose-500/50' : 'focus:ring-1 focus:ring-orange-500/50 dark:focus:ring-indigo-500/50'
             }`}
           />
           {error && <p className="text-xs text-rose-500">Incorrect PIN.</p>}
           <button
             type="submit"
-            className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors cursor-pointer"
+            className="w-full py-2.5 rounded-xl btn-gradient text-xs font-semibold cursor-pointer"
           >
             Unlock
           </button>
@@ -355,7 +355,7 @@ Ensure:
         <form onSubmit={handleSave} className="glass-card p-6 space-y-4 flex flex-col justify-between">
           <div className="space-y-4">
             <h3 className="text-sm font-semibold flex items-center gap-2">
-              <FiKey className="text-blue-500" />
+              <FiKey className="text-orange-500 dark:text-indigo-400" />
               Developer API Key Overrides
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed">
@@ -422,7 +422,7 @@ Ensure:
 
           <button
             type="submit"
-            className="w-full mt-6 py-2.5 rounded-xl bg-blue-600 text-white font-medium text-xs hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            className="w-full mt-6 py-2.5 rounded-xl btn-gradient font-medium text-xs flex items-center justify-center gap-1.5 cursor-pointer"
           >
             {isSaved ? (
               <>
@@ -438,7 +438,7 @@ Ensure:
         {/* Right Side: Local CLI Script Documentation */}
         <div className="glass-card p-6 space-y-4">
           <h3 className="text-sm font-semibold flex items-center gap-2">
-            <FiCloud className="text-blue-500" />
+            <FiCloud className="text-orange-500 dark:text-indigo-400" />
             Local Cloud-Sync Automation
           </h3>
           <p className="text-xs text-slate-500 leading-relaxed">
@@ -447,18 +447,18 @@ Ensure:
 
           <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
             <div className="flex items-start gap-2 p-3 glass-panel rounded-xl">
-              <FiFileText className="text-blue-500 mt-0.5" size={14} />
+              <FiFileText className="text-orange-500 dark:text-indigo-400 mt-0.5" size={14} />
               <div>
                 <strong className="text-slate-800 dark:text-slate-100">Step 1: Replace PDF</strong>
                 <p className="text-[0.65rem] text-slate-500 mt-0.5">
                   Overwrite the file at the project root: <br />
-                  <code className="text-blue-600 dark:text-sky-400 font-mono">./Parth_Nautiyal_Resume.pdf</code>
+                  <code className="text-orange-600 dark:text-indigo-400 font-mono">./Parth_Nautiyal_Resume.pdf</code>
                 </p>
               </div>
             </div>
 
             <div className="flex items-start gap-2 p-3 glass-panel rounded-xl">
-              <FiSliders className="text-blue-500 mt-0.5" size={14} />
+              <FiSliders className="text-orange-500 dark:text-indigo-400 mt-0.5" size={14} />
               <div>
                 <strong className="text-slate-800 dark:text-slate-100">Step 2: Run CLI Sync Tool</strong>
                 <p className="text-[0.65rem] text-slate-500 mt-0.5">
@@ -478,7 +478,7 @@ Ensure:
         <div className="border-b border-slate-200/40 dark:border-slate-800/40 pb-3 flex justify-between items-center">
           <div>
             <h3 className="text-sm font-semibold flex items-center gap-2">
-              <FiSliders className="text-blue-500" />
+              <FiSliders className="text-orange-500 dark:text-indigo-400" />
               In-Browser Resume Parser & Auto-Populator
             </h3>
             <p className="text-xs text-slate-500 mt-1">
@@ -527,7 +527,7 @@ Ensure:
             <button
               onClick={handleParseResume}
               disabled={!pdfFile || parsingStatus === 'extracting' || parsingStatus === 'calling_ai' || parsingStatus === 'syncing'}
-              className="w-full py-2.5 rounded-xl bg-blue-600 text-white font-medium text-xs hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+              className="w-full py-2.5 rounded-xl btn-gradient font-medium text-xs disabled:opacity-50 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
             >
               {['extracting', 'calling_ai', 'syncing'].includes(parsingStatus) ? (
                 <>
@@ -566,7 +566,7 @@ Ensure:
 
               {['extracting', 'calling_ai', 'syncing'].includes(parsingStatus) && (
                 <div className="space-y-3 animate-fade-up">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-blue-500">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-orange-600 dark:text-indigo-400">
                     <FiRefreshCw className="animate-spin" />
                     Processing Resume
                   </div>

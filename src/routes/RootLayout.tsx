@@ -5,9 +5,25 @@ import Footer from '../components/Footer.tsx'
 import StructuredData from '../components/StructuredData.tsx'
 import DevConsolePanel from '../components/DevConsolePanel.tsx'
 import { trackEvent } from '../utils/analytics.ts'
+import { QuestProvider, useQuest } from '../context/QuestContext.tsx'
+import QuestHUD from '../components/QuestHUD.tsx'
 
 export default function RootLayout() {
+  return (
+    <QuestProvider>
+      <RootLayoutContent />
+    </QuestProvider>
+  )
+}
+
+function RootLayoutContent() {
   const location = useLocation()
+  const { unlockAchievement } = useQuest()
+
+  useEffect(() => {
+    // Unlock initial landing achievement on arrival
+    unlockAchievement('LAND_ON_PORTFOLIO')
+  }, [unlockAchievement])
 
   useEffect(() => {
     // Track client-side page views dynamically on route shifts
@@ -27,6 +43,7 @@ export default function RootLayout() {
       </main>
       <Footer />
       <DevConsolePanel />
+      <QuestHUD />
     </div>
   )
 }
