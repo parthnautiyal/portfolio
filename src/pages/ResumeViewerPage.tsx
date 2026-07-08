@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useQuest } from '../context/QuestContext.tsx'
 import { Link } from 'react-router-dom'
 import { getPersonal, getExperience, getEducation, getSkills } from '../utils/contentLoader.ts'
-import { FiDownload, FiPrinter, FiCopy, FiCheck, FiSliders, FiEye, FiFileText, FiMaximize, FiMinimize, FiChevronUp, FiChevronDown, FiExternalLink } from 'react-icons/fi'
+import { FiDownload, FiCopy, FiCheck, FiSliders, FiEye, FiFileText, FiMaximize, FiMinimize, FiChevronUp, FiChevronDown, FiExternalLink } from 'react-icons/fi'
 import * as SimpleIcons from 'react-icons/si'
 import * as TablerIcons from 'react-icons/tb'
 
@@ -21,6 +22,13 @@ export default function ResumeViewerPage() {
   const [isPdfFullscreen, setIsPdfFullscreen] = useState(false)
   const [isPdfFullscreenClosing, setIsPdfFullscreenClosing] = useState(false)
   const [activeMatchIndex, setActiveMatchIndex] = useState(0)
+  
+  const { unlockAchievement } = useQuest()
+
+  // Track initial resume landing page view quest
+  useEffect(() => {
+    unlockAchievement('VIEW_RESUME')
+  }, [unlockAchievement])
 
   let matchGlobalCounter = 0
 
@@ -91,6 +99,7 @@ export default function ResumeViewerPage() {
   const handleOpenPdfFullscreen = () => {
     setIsPdfFullscreenClosing(false)
     setIsPdfFullscreen(true)
+    unlockAchievement('FULLSCREEN_PDF')
   }
 
   const handleClosePdfFullscreen = () => {
@@ -145,10 +154,6 @@ ${skillsText}
     }
   }
 
-  // Print resume (opens system print dialog focused on the interactive container)
-  const handlePrint = () => {
-    window.print()
-  }
 
   // Check if a skill or bullet should be highlighted based on focus filter
   const isHighlighted = (text: string, category?: string): boolean => {
@@ -374,12 +379,7 @@ ${skillsText}
               </>
             )}
           </button>
-          <button
-            onClick={handlePrint}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-xs font-semibold text-[var(--color-text-bright)] transition-all cursor-pointer"
-          >
-            <FiPrinter /> Print Resume
-          </button>
+
           <a
             href={personal.resumeUrl}
             target="_blank"
@@ -391,7 +391,7 @@ ${skillsText}
           <a
             href={personal.resumeUrl}
             download="Parth_Nautiyal_Resume.pdf"
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-xs font-bold text-white shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl btn-gradient text-xs font-bold shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
             <FiDownload /> Download PDF
           </a>
@@ -401,7 +401,7 @@ ${skillsText}
       {/* Recruiter Controls Block */}
       <div className="glass-panel p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between print:hidden">
         <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
-          <span className="p-2 rounded-lg bg-blue-500/10 text-blue-500 dark:text-sky-400 shrink-0">
+          <span className="p-2 rounded-lg bg-orange-500/10 text-orange-600 dark:bg-indigo-500/10 dark:text-indigo-400 shrink-0">
             <FiSliders size={16} />
           </span>
           <div>
@@ -417,7 +417,7 @@ ${skillsText}
               onClick={() => setRecruiterFocus(focus)}
               className={`px-3 py-1.5 rounded-full text-[0.65rem] font-bold tracking-wide capitalize transition-all cursor-pointer ${
                 recruiterFocus === focus
-                  ? 'bg-blue-600 text-white dark:bg-sky-500'
+                  ? 'btn-gradient'
                   : 'bg-slate-200/50 hover:bg-slate-200 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 text-[var(--color-text)]'
               }`}
             >
@@ -473,7 +473,7 @@ ${skillsText}
           onClick={() => setActiveTab('interactive')}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold transition-all ${
             activeTab === 'interactive'
-              ? 'bg-blue-600 text-white dark:bg-sky-500'
+              ? 'btn-gradient font-bold'
               : 'text-[var(--color-text)]'
           }`}
         >
@@ -483,7 +483,7 @@ ${skillsText}
           onClick={() => setActiveTab('pdf')}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold transition-all ${
             activeTab === 'pdf'
-              ? 'bg-blue-600 text-white dark:bg-sky-500'
+              ? 'btn-gradient font-bold'
               : 'text-[var(--color-text)]'
           }`}
         >
@@ -558,7 +558,7 @@ ${skillsText}
                           key={bullet}
                           className={`text-sm leading-relaxed transition-all duration-300 rounded-lg p-1 -ml-1 ${
                             shouldHighlight
-                              ? 'bg-blue-600/10 text-[var(--color-text-bright)] font-medium border-l-2 border-blue-500 pl-2'
+                              ? 'bg-orange-600/10 dark:bg-indigo-600/10 text-[var(--color-text-bright)] font-medium border-l-2 border-orange-500 dark:border-indigo-500 pl-2'
                               : 'text-[var(--color-text)] dark:text-slate-300 print:text-slate-800'
                           }`}
                         >
@@ -624,7 +624,7 @@ ${skillsText}
                           key={skill.name}
                           className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[0.65rem] font-medium border transition-all ${
                             shouldHighlight
-                              ? 'bg-blue-600/10 border-blue-500 text-blue-500 font-bold scale-105'
+                              ? 'bg-orange-600/10 dark:bg-indigo-600/10 border-orange-500 dark:border-indigo-500 text-orange-600 dark:text-indigo-400 font-bold scale-105'
                               : 'bg-slate-100 dark:bg-slate-800/40 text-[var(--color-text)] border-[var(--border-color)] print:border-slate-200'
                           }`}
                         >
@@ -644,35 +644,35 @@ ${skillsText}
 
         {/* Right Side: Authentic PDF frame embed */}
         <div
-          className={`glass-card p-3 print:hidden md:sticky md:top-24 h-[calc(100vh-8.5rem)] ${
+          className={`glass-card p-4 print:hidden md:sticky md:top-2 self-start w-full ${
             activeTab === 'pdf' ? 'block' : 'hidden md:block'
           }`}
         >
-          <div className="flex items-center justify-between pb-2 px-1 text-slate-400 select-none h-10">
-            <span className="text-[0.6rem] font-bold uppercase tracking-wider">Authentic PDF Layout</span>
+          <div className="flex items-center justify-between pb-3 px-1 text-slate-400 select-none h-10 border-b border-slate-200/60 dark:border-slate-800/80">
+            <span className="text-xs font-black uppercase tracking-wider text-[var(--color-text-bright)]">Authentic PDF Layout</span>
             <div className="flex items-center gap-2">
               <a
                 href={personal.resumeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-[0.6rem] font-bold text-white border border-slate-700 cursor-pointer shadow transition-transform active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-[0.65rem] font-bold text-[var(--color-text-bright)] cursor-pointer shadow transition-all active:scale-95"
               >
-                <FiExternalLink size={10} /> Open in New Tab
+                <FiExternalLink size={12} /> Open in New Tab
               </a>
               <button
                 onClick={handleOpenPdfFullscreen}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-[0.6rem] font-bold text-white border border-slate-700 cursor-pointer shadow transition-transform active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-[0.65rem] font-bold text-[var(--color-text-bright)] cursor-pointer shadow transition-all active:scale-95"
               >
-                <FiMaximize size={10} /> Fullscreen
+                <FiMaximize size={12} /> Fullscreen
               </button>
             </div>
           </div>
-          <div className="w-full h-[calc(100%-2.5rem)] flex justify-center items-center">
-            <div className="h-full aspect-[8.5/11] max-w-full relative rounded-xl overflow-hidden border border-[var(--border-color)]">
+          <div className="w-full mt-4">
+            <div className="w-full aspect-[210/297] relative rounded-xl overflow-hidden bg-transparent">
               <object
-                data={`${personal.resumeUrl}#toolbar=1&navpanes=0&zoom=page-fit`}
+                data={`${personal.resumeUrl}#toolbar=0&navpanes=0&zoom=page-width`}
                 type="application/pdf"
-                className="absolute inset-0 w-full h-full"
+                className="absolute inset-0 w-full h-full pointer-events-none border-none border-0 scale-[1.06] origin-center"
               >
                 <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-4">
                   <FiEye size={40} className="text-slate-400" />
@@ -685,12 +685,18 @@ ${skillsText}
                   <a
                     href={personal.resumeUrl}
                     download="Parth_Nautiyal_Resume.pdf"
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-md transition-colors"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl btn-gradient text-xs font-bold shadow-md transition-colors"
                   >
                     <FiDownload /> Download Resume
                   </a>
                 </div>
               </object>
+              {/* Transparent overlay to lock all editing and selection interactions and trigger fullscreen view on click */}
+              <div
+                onClick={handleOpenPdfFullscreen}
+                className="absolute inset-0 bg-transparent z-10 cursor-pointer select-none"
+                title="Click to view fullscreen"
+              />
             </div>
           </div>
         </div>
@@ -705,7 +711,7 @@ ${skillsText}
           onClick={handleClosePdfFullscreen}
         >
           <div
-            className={`h-[96vh] w-[74vh] max-w-[95vw] bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-800 rounded-2xl p-4 flex flex-col cursor-default shadow-2xl relative ${
+            className={`h-[96vh] w-[68vh] max-w-[95vw] bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-800 rounded-2xl p-4 flex flex-col cursor-default shadow-2xl relative ${
               isPdfFullscreenClosing ? 'animate-mac-zoom-out' : 'animate-mac-zoom'
             }`}
             onClick={(e) => e.stopPropagation()}
@@ -733,29 +739,31 @@ ${skillsText}
               </div>
             </div>
             {/* PDF Render Container */}
-            <div className="flex-1 mt-4 relative w-full rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-850/50">
-              <object
-                data={`${personal.resumeUrl}#toolbar=1&navpanes=0&zoom=page-fit`}
-                type="application/pdf"
-                className="absolute inset-0 w-full h-full"
-              >
-                <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-4">
-                  <FiEye size={40} className="text-slate-400" />
-                  <div>
-                    <p className="text-xs font-bold text-slate-700 dark:text-slate-200">PDF rendering is not supported by your browser.</p>
-                    <p className="text-[0.65rem] text-slate-500 mt-1">
-                      You can click below to download the PDF directly to view.
-                    </p>
+            <div className="flex-1 mt-4 flex justify-center items-center overflow-hidden">
+              <div className="h-full aspect-[210/297] max-w-full relative rounded-xl overflow-hidden bg-transparent">
+                <object
+                  data={`${personal.resumeUrl}#toolbar=1&navpanes=0&zoom=page-fit`}
+                  type="application/pdf"
+                  className="absolute inset-0 w-full h-full border-none border-0 scale-[1.06] origin-center"
+                >
+                  <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-4">
+                    <FiEye size={40} className="text-slate-400" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-200">PDF rendering is not supported by your browser.</p>
+                      <p className="text-[0.65rem] text-slate-500 mt-1">
+                        You can click below to download the PDF directly to view.
+                      </p>
+                    </div>
+                    <a
+                      href={personal.resumeUrl}
+                      download="Parth_Nautiyal_Resume.pdf"
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl btn-gradient text-xs font-bold shadow-md transition-colors"
+                    >
+                      <FiDownload /> Download Resume
+                    </a>
                   </div>
-                  <a
-                    href={personal.resumeUrl}
-                    download="Parth_Nautiyal_Resume.pdf"
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-md transition-colors"
-                  >
-                    <FiDownload /> Download Resume
-                  </a>
-                </div>
-              </object>
+                </object>
+              </div>
             </div>
           </div>
         </div>,

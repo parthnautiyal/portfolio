@@ -206,7 +206,74 @@ body {
 
 .animate-fade-out {
   animation: fade-out 0.22s ease-in forwards;
+}/* Print Layout Adjustments */
+@media print {
+  /* Hide headers, navigation, footers, buttons, and floating HUD widgets */
+  nav, footer, header, .print\:hidden, [class*="print:hidden"], #quest-hud-trigger, .fixed {
+    display: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+  
+  /* Reset layout grids and dimensions for natural vertical page flow */
+  body, html, #root, main, .grid {
+    display: block !important;
+    background: white !important;
+    color: black !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  /* Expand the interactive resume sheet to fill the paper page borderless */
+  #printable-resume-area {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+    color: black !important;
+  }
 }
 
+/* Embedded Media Reset to hide default user-agent borders/outlines */
+object, iframe, embed {
+  border: 0 !important;
+  outline: none !important;
+}
+
+/* Minimalist Theme Gradient Buttons */
+@utility btn-gradient {
+  background-image: linear-gradient(135deg, #d6570e 0%, #e67e22 100%);
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(214, 93, 14, 0.15);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    opacity: 0.95;
+    transform: translateY(-0.5px);
+    box-shadow: 0 4px 12px rgba(214, 93, 14, 0.25);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  @variant dark {
+    background-image: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+    }
+  }
+}
 
 

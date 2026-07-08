@@ -1,5 +1,6 @@
 import { FiAlertOctagon, FiActivity, FiDatabase, FiLayers } from 'react-icons/fi'
 import type { FailureState } from '../pages/SystemCockpitPage.tsx'
+import { useQuest } from '../context/QuestContext.tsx'
 
 type Props = {
   state: FailureState
@@ -7,6 +8,13 @@ type Props = {
 }
 
 export default function FailureSimulator({ state, onToggle }: Props) {
+  const { unlockAchievement } = useQuest()
+
+  const handleToggle = (key: keyof FailureState) => {
+    onToggle(key)
+    unlockAchievement('TRIGGER_CHAOS')
+  }
+
   return (
     <div className="glass-card p-5 space-y-4">
       <div className="border-b border-slate-200/40 dark:border-slate-800/40 pb-2">
@@ -22,7 +30,7 @@ export default function FailureSimulator({ state, onToggle }: Props) {
       <div className="grid gap-3">
         {/* Kafka Broker Outage */}
         <button
-          onClick={() => onToggle('kafkaDown')}
+          onClick={() => handleToggle('kafkaDown')}
           className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all hover:scale-[1.02] cursor-pointer ${
             state.kafkaDown
               ? 'bg-rose-500/10 border-rose-500/40 text-rose-500'
@@ -49,7 +57,7 @@ export default function FailureSimulator({ state, onToggle }: Props) {
 
         {/* Payment Circuit Breaker */}
         <button
-          onClick={() => onToggle('circuitBreakerTripped')}
+          onClick={() => handleToggle('circuitBreakerTripped')}
           className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all hover:scale-[1.02] cursor-pointer ${
             state.circuitBreakerTripped
               ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
@@ -76,7 +84,7 @@ export default function FailureSimulator({ state, onToggle }: Props) {
 
         {/* Database Connection Exhaustion */}
         <button
-          onClick={() => onToggle('dbExhausted')}
+          onClick={() => handleToggle('dbExhausted')}
           className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all hover:scale-[1.02] cursor-pointer ${
             state.dbExhausted
               ? 'bg-red-500/10 border-red-500/40 text-red-500'
@@ -103,7 +111,7 @@ export default function FailureSimulator({ state, onToggle }: Props) {
 
         {/* Kubernetes Pod Crash */}
         <button
-          onClick={() => onToggle('podCrashed')}
+          onClick={() => handleToggle('podCrashed')}
           className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all hover:scale-[1.02] cursor-pointer ${
             state.podCrashed
               ? 'bg-rose-500/10 border-rose-500/40 text-rose-500'

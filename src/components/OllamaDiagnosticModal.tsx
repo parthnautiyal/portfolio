@@ -105,7 +105,7 @@ export default function OllamaDiagnosticModal({
           <button
             onClick={testConnection}
             disabled={pingStatus === 'checking'}
-            className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold disabled:opacity-50 transition-colors cursor-pointer self-start sm:self-auto"
+            className="px-4 py-1.5 rounded-xl btn-gradient text-xs font-semibold disabled:opacity-50 cursor-pointer self-start sm:self-auto"
           >
             {pingStatus === 'checking' ? 'Testing...' : 'Test Connection'}
           </button>
@@ -117,7 +117,7 @@ export default function OllamaDiagnosticModal({
             onClick={() => setActiveTab('cloud')}
             className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
               activeTab === 'cloud'
-                ? 'border-blue-500 text-blue-600 dark:text-sky-400'
+                ? 'border-orange-500 text-orange-600 dark:border-indigo-400 dark:text-indigo-400'
                 : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
             }`}
           >
@@ -127,7 +127,7 @@ export default function OllamaDiagnosticModal({
             onClick={() => setActiveTab('local')}
             className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
               activeTab === 'local'
-                ? 'border-blue-500 text-blue-600 dark:text-sky-400'
+                ? 'border-orange-500 text-orange-600 dark:border-indigo-400 dark:text-indigo-400'
                 : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
             }`}
           >
@@ -142,7 +142,7 @@ export default function OllamaDiagnosticModal({
             <div className="space-y-4 animate-fade-up">
               <div>
                 <h3 className="text-sm font-bold text-[var(--color-text-bright)] flex items-center gap-1.5 mb-1.5">
-                  <FiBookOpen className="text-blue-500" size={14} />
+                  <FiBookOpen className="text-orange-500 dark:text-indigo-400" size={14} />
                   Google Gemini Setup (No Install Required)
                 </h3>
                 <p>
@@ -152,19 +152,19 @@ export default function OllamaDiagnosticModal({
 
               <div className="space-y-2.5">
                 <div className="flex gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-blue-600 dark:text-sky-400 font-bold text-[0.65rem]">1</span>
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-500/10 text-orange-600 dark:bg-indigo-500/10 dark:text-indigo-400 font-bold text-[0.65rem]">1</span>
                   <p>
-                    Go to <strong><a href="https://aistudio.google.com/" target="_blank" rel="noreferrer" className="text-blue-600 dark:text-sky-400 hover:underline">Google AI Studio</a></strong> and sign in with your Google account.
+                    Go to <strong><a href="https://aistudio.google.com/" target="_blank" rel="noreferrer" className="text-orange-600 dark:text-indigo-400 hover:underline">Google AI Studio</a></strong> and sign in with your Google account.
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-blue-600 dark:text-sky-400 font-bold text-[0.65rem]">2</span>
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-500/10 text-orange-600 dark:bg-indigo-500/10 dark:text-indigo-400 font-bold text-[0.65rem]">2</span>
                   <p>
                     Click <strong>Create API Key</strong>, copy the generated key string (starts with <code>AIzaSy</code>).
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-blue-600 dark:text-sky-400 font-bold text-[0.65rem]">3</span>
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-500/10 text-orange-600 dark:bg-indigo-500/10 dark:text-indigo-400 font-bold text-[0.65rem]">3</span>
                   <p>
                     Open the <strong>Developer API Settings panel</strong> (gear icon in ATS Checker page header or Settings menu) and paste your key. It is stored securely in your browser's local storage and never sent to any server.
                   </p>
@@ -177,7 +177,7 @@ export default function OllamaDiagnosticModal({
             <div className="space-y-4 animate-fade-up">
               <div>
                 <h3 className="text-sm font-bold text-[var(--color-text-bright)] flex items-center gap-1.5 mb-1.5">
-                  <FiServer className="text-blue-500" size={14} />
+                  <FiServer className="text-orange-500 dark:text-indigo-400" size={14} />
                   Running Local Ollama (100% Offline & Private)
                 </h3>
                 <p>
@@ -215,17 +215,17 @@ export default function OllamaDiagnosticModal({
               <div className="space-y-3">
                 <div>
                   <h4 className="font-bold text-[var(--color-text-bright)] flex items-center gap-1">
-                    <FiTerminal size={12} className="text-blue-500" />
+                    <FiTerminal size={12} className="text-orange-500 dark:text-indigo-400" />
                     Step 1: Install Ollama
                   </h4>
                   <p className="mt-0.5 text-slate-500">
-                    Download and install the app from <strong><a href="https://ollama.com" target="_blank" rel="noreferrer" className="text-blue-600 dark:text-sky-400 hover:underline">ollama.com</a></strong>.
+                    Download and install the app from <strong><a href="https://ollama.com" target="_blank" rel="noreferrer" className="text-orange-600 dark:text-indigo-400 hover:underline">ollama.com</a></strong>.
                   </p>
                 </div>
 
                 <div>
                   <h4 className="font-bold text-[var(--color-text-bright)] flex items-center gap-1">
-                    <FiTerminal size={12} className="text-blue-500" />
+                    <FiTerminal size={12} className="text-orange-500 dark:text-indigo-400" />
                     Step 2: Enable Browser CORS Origins (Crucial)
                   </h4>
                   <p className="mt-0.5 text-slate-500">
@@ -268,7 +268,7 @@ export default function OllamaDiagnosticModal({
 
                 <div>
                   <h4 className="font-bold text-[var(--color-text-bright)] flex items-center gap-1">
-                    <FiTerminal size={12} className="text-blue-500" />
+                    <FiTerminal size={12} className="text-orange-500 dark:text-indigo-400" />
                     Step 3: Pull the Model
                   </h4>
                   <p className="mt-0.5 text-slate-500">

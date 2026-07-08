@@ -416,7 +416,7 @@ export default function ObservabilityLogs({ failureState }: Props) {
           
           <button
             onClick={triggerTransaction}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 dark:bg-sky-500 dark:hover:bg-sky-600 text-[0.65rem] font-bold text-white shadow transition-transform active:scale-95 cursor-pointer"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg btn-gradient text-[0.65rem] font-bold shadow transition-transform active:scale-95 cursor-pointer"
           >
             <FiPlay size={10} /> Submit Transaction
           </button>
