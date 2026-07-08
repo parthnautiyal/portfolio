@@ -127,10 +127,15 @@ export default function Navbar() {
           target="_blank"
           rel="noreferrer"
           aria-label="LinkedIn Profile"
-          className="text-base font-extrabold tracking-tight text-[var(--color-text-bright)] hover:text-[var(--color-primary)] transition-colors duration-200"
+          className="flex items-center gap-3 text-xl md:text-2xl font-semibold tracking-tight text-[var(--color-text-bright)] hover:text-[var(--color-primary)] transition-colors duration-200"
           onClick={() => trackLinkClick('LinkedIn Profile', personal.linkedin)}
         >
-          {personal.name}
+          <img
+            src="/parth_avatar.jpg"
+            alt=""
+            className="h-8 w-8 rounded-full object-cover border border-[var(--border-color)] shadow-sm shrink-0"
+          />
+          <span>{personal.name.split(' ')[0]}</span>
         </a>
 
         {/* Central spacious links menu */}

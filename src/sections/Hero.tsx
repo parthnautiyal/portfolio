@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { getPersonal } from '../utils/contentLoader.ts'
 import { SiSpringboot, SiKubernetes, SiDocker, SiGithubactions, SiOpenjdk } from 'react-icons/si'
+import { trackLinkClick } from '../utils/analytics.ts'
 
 export default function Hero() {
   const personal = getPersonal()
@@ -55,15 +56,21 @@ export default function Hero() {
  
         <div className="animate-fade-up md:delay-100 flex justify-center">
           <div className="card-elevated flex flex-col items-center gap-6 p-8 text-sm w-full max-w-sm">
-            <div className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-[var(--color-primary)] shadow-md group">
+            <a
+              href={personal.linkedin}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => trackLinkClick('Cover Avatar Click', personal.linkedin)}
+              className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-[var(--color-primary)] shadow-md group cursor-pointer block"
+            >
               <img
                 src="/parth_avatar.jpg"
                 alt="Parth Nautiyal"
                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-            </div>
+            </a>
             <div className="text-center space-y-2">
-              <p className="font-semibold text-[var(--color-text-bright)] text-base">Parth Nautiyal</p>
+              <p className="font-semibold text-[var(--color-text-bright)] text-base">SDE II @ ZopSmart</p>
               <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
                 Building reliable backend systems, automating deployments, and
                 improving developer experience through clean tooling.
