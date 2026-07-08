@@ -16,17 +16,17 @@ import ResumeManagerPage from './pages/ResumeManagerPage.tsx'
 import NotFoundPage from './pages/NotFoundPage.tsx'
 import ErrorBoundary from './components/ErrorBoundary.tsx'
 import { reportWebVitals } from './utils/reportWebVitals.ts'
+import { initGA } from './utils/analytics.ts'
+
+// Start Google Analytics (GA4) tracker instance
+initGA()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <HelmetProvider>
       <ErrorBoundary>
         <BrowserRouter>
-          <Analytics
-            scriptSrc={import.meta.env.PROD ? "/_metrics/s.js" : undefined}
-            viewEndpoint={import.meta.env.PROD ? "/_metrics/v" : undefined}
-            eventEndpoint={import.meta.env.PROD ? "/_metrics/e" : undefined}
-          />
+          <Analytics />
           <Routes>
           <Route path="/" element={<RootLayout />}>
             <Route index element={<HomePage />} />
