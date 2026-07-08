@@ -49,7 +49,8 @@ export default function DevConsolePanel() {
           { text: '  about      - Display bio details', type: 'output' },
           { text: '  skills     - List technical capabilities', type: 'output' },
           { text: '  projects   - Navigate to projects page', type: 'output' },
-          { text: '  ats        - Launch HackerRank ATS scanner', type: 'output' },
+          { text: '  resume     - Launch interactive resume viewer', type: 'output' },
+          { text: '  system     - Launch system observability cockpit', type: 'output' },
           { text: '  joke       - Print a developer joke', type: 'output' },
           { text: '  sudo       - Elevate privileges', type: 'output' },
           { text: '  clear      - Clear screen logs', type: 'output' }
@@ -78,10 +79,17 @@ export default function DevConsolePanel() {
           setIsOpen(false)
         }, 1000)
         break
-      case 'ats':
-        newEntries.push({ text: 'Navigating to HackerRank ATS Section /ats-checker...', type: 'success' })
+      case 'resume':
+        newEntries.push({ text: 'Navigating to Resume Section /resume...', type: 'success' })
         setTimeout(() => {
-          navigate('/ats-checker')
+          navigate('/resume')
+          setIsOpen(false)
+        }, 1000)
+        break
+      case 'system':
+        newEntries.push({ text: 'Navigating to System Cockpit Section /system...', type: 'success' })
+        setTimeout(() => {
+          navigate('/system')
           setIsOpen(false)
         }, 1000)
         break

@@ -12,7 +12,7 @@ function App() {
   return (
     <div className="min-h-screen text-[var(--color-text)]">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-6 pb-16">
+      <main className="max-w-[1600px] mx-auto px-6 md:px-12 xl:px-16 pb-16">
         <Hero />
         <About />
         <Skills />

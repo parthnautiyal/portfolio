@@ -4,7 +4,7 @@ import Skills from '../sections/Skills.tsx'
 
 export default function HomePage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-scale-in">
       <Hero />
       <About />
       <Skills />
