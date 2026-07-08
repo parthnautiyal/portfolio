@@ -1,10 +1,26 @@
+/**
+ * QuestContext.tsx
+ *
+ * Gamified achievement and levelling system for the portfolio.
+ *
+ * SOLID Principles applied:
+ *  - Single Responsibility: XP/level calculation is a pure function, script
+ *    loading is isolated, and the provider only orchestrates state.
+ *  - Open-Closed: new AchievementKeys can be added to ACHIEVEMENTS without
+ *    changing provider logic.
+ */
+
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react'
 
 declare global {
   interface Window {
-    confetti?: (options?: any) => void
+    confetti?: (options?: object) => void
   }
 }
+
+// ---------------------------------------------------------------------------
+// Domain types
+// ---------------------------------------------------------------------------
 
 export type AchievementKey =
   | 'LAND_ON_PORTFOLIO'
@@ -24,7 +40,7 @@ export type Achievement = {
 export const ACHIEVEMENTS: Record<AchievementKey, Omit<Achievement, 'key'>> = {
   LAND_ON_PORTFOLIO: {
     title: 'Hello World!',
-    description: 'Land on Parth\'s portfolio website.',
+    description: "Land on Parth's portfolio website.",
     xp: 100,
   },
   VIEW_RESUME: {
@@ -72,42 +88,100 @@ type QuestContextType = {
   resetQuests: () => void
 }
 
+// ---------------------------------------------------------------------------
+// Pure helpers (Single Responsibility – no side-effects)
+// ---------------------------------------------------------------------------
+
+/** Level threshold in XP required to advance one level. */
+export const XP_PER_LEVEL = 500
+
+/** Maximum attainable level. */
+export const MAX_LEVEL = 5
+
+/** Class names indexed by level (1-based). */
+export const LEVEL_CLASS_NAMES = [
+  'Novice Reviewer',
+  'Observer',
+  'Reliability Inspector',
+  'Systems Analyst',
+  'Lead System Evaluator',
+]
+
+/**
+ * Pure function: computes the new XP total and level after adding a reward.
+ * Returns { newXp, newLevel, leveledUp }.
+ */
+export function calculateLevelAndXp(
+  currentXp: number,
+  currentLevel: number,
+  rewardXp: number,
+): { newXp: number; newLevel: number; leveledUp: boolean } {
+  const total = currentXp + rewardXp
+  if (total >= XP_PER_LEVEL && currentLevel < MAX_LEVEL) {
+    return {
+      newXp: total - XP_PER_LEVEL,
+      newLevel: currentLevel + 1,
+      leveledUp: true,
+    }
+  }
+  return { newXp: total, newLevel: currentLevel, leveledUp: false }
+}
+
+/** Builds the initial (all-false) unlocked achievements map. */
+export function buildInitialUnlocked(): Record<AchievementKey, boolean> {
+  return {
+    LAND_ON_PORTFOLIO: false,
+    VIEW_RESUME: false,
+    FULLSCREEN_PDF: false,
+    TRIGGER_CHAOS: false,
+    CHAT_QUERY: false,
+    EXPAND_PROMOTION: false,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Script loader helper (Single Responsibility)
+// ---------------------------------------------------------------------------
+
+/**
+ * Dynamically appends a <script> tag to <head> if it hasn't been loaded yet.
+ * Returns the script element, or null if the guard check prevented loading.
+ */
+export function loadScriptOnce(src: string, guard: () => boolean): HTMLScriptElement | null {
+  if (typeof window === 'undefined' || guard()) return null
+  const script = document.createElement('script')
+  script.src = src
+  script.async = true
+  document.head.appendChild(script)
+  return script
+}
+
+// ---------------------------------------------------------------------------
+// Context
+// ---------------------------------------------------------------------------
+
 const QuestContext = createContext<QuestContextType | undefined>(undefined)
 
 export function QuestProvider({ children }: { children: React.ReactNode }) {
   const [level, setLevel] = useState<number>(1)
   const [xp, setXp] = useState<number>(0)
-  const [unlockedAchievements, setUnlockedAchievements] = useState<Record<AchievementKey, boolean>>({
-    LAND_ON_PORTFOLIO: false,
-    VIEW_RESUME: false,
-    FULLSCREEN_PDF: false,
-    TRIGGER_CHAOS: false,
-    CHAT_QUERY: false,
-    EXPAND_PROMOTION: false,
-  })
+  const [unlockedAchievements, setUnlockedAchievements] =
+    useState<Record<AchievementKey, boolean>>(buildInitialUnlocked())
   const [toasts, setToasts] = useState<QuestToast[]>([])
 
-  // Mutable ref to handle instant synchronous check & locking, preventing StrictMode double toasts
-  const unlockedRef = useRef<Record<AchievementKey, boolean>>({
-    LAND_ON_PORTFOLIO: false,
-    VIEW_RESUME: false,
-    FULLSCREEN_PDF: false,
-    TRIGGER_CHAOS: false,
-    CHAT_QUERY: false,
-    EXPAND_PROMOTION: false,
-  })
+  // Ref used for synchronous "already unlocked?" check, preventing double
+  // toasts in React StrictMode.
+  const unlockedRef = useRef<Record<AchievementKey, boolean>>(buildInitialUnlocked())
 
-  // Load confetti script dynamically on mount
+  // Load canvas-confetti once for level-up celebrations.
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (window.confetti) return
-    const script = document.createElement('script')
-    script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js'
-    script.async = true
-    document.head.appendChild(script)
+    loadScriptOnce(
+      'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js',
+      () => Boolean(window.confetti),
+    )
   }, [])
 
-  // Load state from localStorage on mount
+  // Hydrate state from localStorage on mount.
   useEffect(() => {
     try {
       const savedLevel = localStorage.getItem('quest_level')
@@ -117,34 +191,39 @@ export function QuestProvider({ children }: { children: React.ReactNode }) {
       if (savedLevel) setLevel(parseInt(savedLevel, 10))
       if (savedXp) setXp(parseInt(savedXp, 10))
       if (savedUnlocked) {
-        const parsed = JSON.parse(savedUnlocked)
+        const parsed = JSON.parse(savedUnlocked) as Record<AchievementKey, boolean>
         setUnlockedAchievements(parsed)
         unlockedRef.current = parsed
       }
     } catch (e) {
-      console.warn('Failed to load quest status from localStorage:', e)
+      console.warn('[Quest] Failed to load quest status from localStorage:', e)
     }
   }, [])
 
-  // Sync state to localStorage on updates
-  const saveState = (newLvl: number, newXp: number, newUnlocked: Record<AchievementKey, boolean>) => {
+  // Persist state to localStorage whenever it changes.
+  const persistState = (
+    newLvl: number,
+    newXp: number,
+    newUnlocked: Record<AchievementKey, boolean>,
+  ) => {
     try {
       localStorage.setItem('quest_level', newLvl.toString())
       localStorage.setItem('quest_xp', newXp.toString())
       localStorage.setItem('quest_unlocked', JSON.stringify(newUnlocked))
     } catch (e) {
-      console.warn('Failed to save quest status to localStorage:', e)
+      console.warn('[Quest] Failed to persist quest status to localStorage:', e)
     }
   }
 
-  const addToast = (title: string, description: string, type: 'achievement' | 'levelup', rewardXp?: number) => {
+  const addToast = (
+    title: string,
+    description: string,
+    type: 'achievement' | 'levelup',
+    rewardXp?: number,
+  ) => {
     const id = Math.random().toString(36).substring(2, 9)
     setToasts((prev) => [...prev, { id, title, description, xp: rewardXp, type }])
-    
-    // Auto-remove toast after 4 seconds
-    setTimeout(() => {
-      removeToast(id)
-    }, 4000)
+    setTimeout(() => removeToast(id), 4000)
   }
 
   const removeToast = (id: string) => {
@@ -152,89 +231,58 @@ export function QuestProvider({ children }: { children: React.ReactNode }) {
   }
 
   const unlockAchievement = (key: AchievementKey) => {
-    // Check ref synchronously to ignore double calls in the same render tick
+    // Synchronous ref check prevents duplicate unlocks in the same tick.
     if (unlockedRef.current[key]) return
-
-    // Immediately mark as unlocked in ref
     unlockedRef.current[key] = true
 
     const achievement = ACHIEVEMENTS[key]
     const updatedUnlocked = { ...unlockedRef.current }
-    
-    let newXp = xp + achievement.xp
-    let newLvl = level
-    let leveledUp = false
 
-    // Handle leveling up logic (each level requires 500 XP)
-    const xpNeeded = 500
-    if (newXp >= xpNeeded && level < 5) {
-      newXp = newXp - xpNeeded
-      newLvl = level + 1
-      leveledUp = true
-    }
+    // Delegate XP/level maths to the pure helper.
+    const { newXp, newLevel, leveledUp } = calculateLevelAndXp(xp, level, achievement.xp)
 
-    setLevel(newLvl)
+    setLevel(newLevel)
     setXp(newXp)
     setUnlockedAchievements(updatedUnlocked)
-    saveState(newLvl, newXp, updatedUnlocked)
+    persistState(newLevel, newXp, updatedUnlocked)
 
-    // Trigger unlocked toast
     addToast(
       `Achievement Unlocked: ${achievement.title}`,
       achievement.description,
       'achievement',
-      achievement.xp
+      achievement.xp,
     )
 
-    // Trigger level up effects
     if (leveledUp) {
-      // Trigger canvas confetti burst
+      // Fire confetti burst on level-up.
       if (typeof window !== 'undefined' && window.confetti) {
         try {
-          window.confetti({
-            particleCount: 180,
-            spread: 90,
-            origin: { y: 0.6 }
-          })
+          window.confetti({ particleCount: 180, spread: 90, origin: { y: 0.6 } })
         } catch (e) {
-          console.warn('Confetti burst failed:', e)
+          console.warn('[Quest] Confetti burst failed:', e)
         }
       }
 
       setTimeout(() => {
-        const classNames = [
-          'Novice Reviewer',
-          'Observer',
-          'Reliability Inspector',
-          'Systems Analyst',
-          'Lead System Evaluator',
-        ]
         addToast(
-          `Level Up! 🌟 Level ${newLvl}`,
-          `You unlocked the Class: ${classNames[newLvl - 1]}`,
-          'levelup'
+          `Level Up! 🌟 Level ${newLevel}`,
+          `You unlocked the Class: ${LEVEL_CLASS_NAMES[newLevel - 1]}`,
+          'levelup',
         )
-      }, 800) // slight offset for clean visual separation
+      }, 800) // Slight offset for visual separation
     }
   }
 
   const resetQuests = () => {
-    const initialUnlocked = {
-      LAND_ON_PORTFOLIO: false,
-      VIEW_RESUME: false,
-      FULLSCREEN_PDF: false,
-      TRIGGER_CHAOS: false,
-      CHAT_QUERY: false,
-      EXPAND_PROMOTION: false,
-    }
-    unlockedRef.current = initialUnlocked
+    const initial = buildInitialUnlocked()
+    unlockedRef.current = initial
     setLevel(1)
     setXp(0)
-    setUnlockedAchievements(initialUnlocked)
+    setUnlockedAchievements(initial)
+    setToasts([])
     localStorage.removeItem('quest_level')
     localStorage.removeItem('quest_xp')
     localStorage.removeItem('quest_unlocked')
-    setToasts([])
   }
 
   return (
@@ -254,10 +302,10 @@ export function QuestProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function useQuest() {
+export function useQuest(): QuestContextType {
   const context = useContext(QuestContext)
   if (!context) {
     throw new Error('useQuest must be used inside a QuestProvider')
   }
-  return context;
+  return context
 }
