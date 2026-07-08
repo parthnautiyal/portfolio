@@ -9,7 +9,7 @@ export default function RootLayout() {
     <div className="min-h-screen text-[var(--color-text)]">
       <StructuredData />
       <Navbar />
-      <main id="main-content" className="max-w-7xl mx-auto px-6 pb-16 pt-6">
+      <main id="main-content" className="max-w-[1600px] mx-auto px-6 md:px-12 xl:px-16 pb-16 pt-6">
         <Outlet />
       </main>
       <Footer />

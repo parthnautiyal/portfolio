@@ -4,7 +4,7 @@ import { trackLinkClick } from '../utils/analytics.ts'
 export default function Footer() {
   return (
     <footer className="mt-16 border-t border-slate-200 dark:border-slate-800">
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-6 py-6 text-xs text-slate-500 dark:text-slate-400 md:flex-row">
+      <div className="mx-auto flex max-w-[1600px] flex-col items-center justify-between gap-2 px-6 md:px-12 xl:px-16 py-6 text-xs text-slate-500 dark:text-slate-400 md:flex-row">
         <span>
           © {new Date().getFullYear()} {personal.name}
         </span>

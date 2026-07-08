@@ -36,6 +36,7 @@ export const skillCategories: SkillCategory[] = [
       { name: 'Kubernetes', icon: 'SiKubernetes', url: 'https://kubernetes.io', color: '#326CE5' },
       { name: 'Rancher', icon: 'SiRancher', url: 'https://rancher.com', color: '#0075A8' },
       { name: 'Helm', icon: 'SiHelm', url: 'https://helm.sh', color: '#0F1689' },
+      { name: 'Harness', icon: 'SiHarness', url: 'https://harness.io', color: '#3577FF' },
     ]
   },
   {
@@ -64,6 +65,7 @@ export const skillCategories: SkillCategory[] = [
       { name: 'SonarQube', icon: 'SiSonarqube', url: 'https://www.sonarqube.org', color: '#4E9BCD' },
       { name: 'Artifactory', icon: 'SiJfrog', url: 'https://jfrog.com/artifactory/', color: '#40BE46' },
       { name: 'Snyk', icon: 'SiSnyk', url: 'https://snyk.io', color: '#4C4A73' },
+      { name: 'JMeter', icon: 'SiApachejmeter', url: 'https://jmeter.apache.org', color: '#D22128' },
     ]
   },
   {

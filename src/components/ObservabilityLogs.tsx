@@ -47,11 +47,13 @@ export default function ObservabilityLogs({ failureState }: Props) {
     kafkaLag: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   })
 
-  const logsEndRef = useRef<HTMLDivElement>(null)
+  const logsContainerRef = useRef<HTMLDivElement>(null)
 
-  // Auto-scroll logs to bottom
+  // Auto-scroll logs to bottom of the container only, to avoid centering the page window
   useEffect(() => {
-    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (logsContainerRef.current) {
+      logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight
+    }
   }, [logs])
 
   // Periodically generate background noise logs and update metrics
@@ -421,7 +423,10 @@ export default function ObservabilityLogs({ failureState }: Props) {
         </div>
 
         {/* Logs viewport */}
-        <div className="flex-1 overflow-y-auto font-mono text-[0.6rem] space-y-1 bg-slate-950 p-3 rounded-xl border border-slate-800 text-slate-300 select-text leading-relaxed">
+        <div 
+          ref={logsContainerRef}
+          className="flex-1 overflow-y-auto font-mono text-[0.6rem] space-y-1 bg-slate-950 p-3 rounded-xl border border-slate-800 text-slate-300 select-text leading-relaxed"
+        >
           {logs.map((log, idx) => (
             <div key={idx} className="hover:bg-slate-900/60 py-0.5 rounded px-1 flex gap-2">
               <span className="text-slate-500 shrink-0 select-none">[{log.timestamp.split('T')[1].slice(0, 12)}]</span>
@@ -441,7 +446,6 @@ export default function ObservabilityLogs({ failureState }: Props) {
               <span className="text-slate-100 flex-1">{log.message}</span>
             </div>
           ))}
-          <div ref={logsEndRef} />
         </div>
       </div>
     </div>

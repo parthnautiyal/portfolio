@@ -157,10 +157,10 @@ export default function Contact() {
   }
 
   const inputClass = (hasError: boolean) =>
-    `w-full glass-panel rounded-xl px-4 py-3 text-sm outline-none focus:ring-1 border-none text-[var(--color-text)] placeholder:text-slate-500 dark:placeholder:text-slate-600 transition-all ${
+    `w-full rounded-xl px-4 py-3 text-sm outline-none border transition-all duration-300 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm text-[var(--color-text)] placeholder:text-slate-400 dark:placeholder:text-slate-600 ${
       hasError
-        ? 'ring-1 ring-rose-500/50'
-        : 'focus:ring-[var(--border-color-hover)]'
+        ? 'border-rose-500/60 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+        : 'border-slate-200/60 dark:border-slate-800/60 hover:border-slate-350 dark:hover:border-slate-700 focus:border-blue-500 dark:focus:border-sky-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-sky-400/20'
     }`
 
   return (
@@ -284,10 +284,10 @@ export default function Contact() {
                 onDragLeave={(e) => { e.preventDefault(); setDragActive(false) }}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`relative flex items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 cursor-pointer transition-colors ${
+                className={`relative flex items-center gap-3 rounded-xl border-2 border-dashed px-4 py-4 cursor-pointer transition-all duration-300 bg-white/10 dark:bg-slate-900/10 ${
                   dragActive
-                    ? 'border-blue-500 bg-blue-500/5'
-                    : 'border-slate-200/60 dark:border-slate-800/60 hover:border-blue-500/50 dark:hover:border-sky-400/50'
+                    ? 'border-blue-500 dark:border-sky-450 bg-blue-500/5 dark:bg-sky-400/5 scale-[1.01]'
+                    : 'border-slate-200/70 dark:border-slate-800/70 hover:border-blue-550/50 dark:hover:border-sky-400/50 hover:bg-slate-100/30 dark:hover:bg-slate-900/30'
                 }`}
               >
                 <input
@@ -332,29 +332,54 @@ export default function Contact() {
           )}
         </form>
 
-        <div className="space-y-3 text-xs">
-          <p className="font-semibold text-[var(--color-text-bright)]">Direct links</p>
+        <div className="space-y-4 text-xs select-none">
+          {/* Mock API & Server Gateway Status Dashboard */}
+          <div className="glass-card p-5 space-y-4 border border-slate-200/50 dark:border-slate-800/80 shadow-md">
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800/80 pb-2">
+              <span className="text-[0.62rem] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400">Endpoint Cockpit</span>
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[0.55rem] font-mono text-emerald-500 uppercase font-black">Operational</span>
+              </div>
+            </div>
+            <div className="space-y-2.5 text-[0.65rem] font-mono text-slate-500 dark:text-slate-450">
+              <div className="flex justify-between items-center">
+                <span>SMTP Mail Router</span>
+                <span className="text-emerald-500 font-bold px-1.5 py-0.5 rounded bg-emerald-500/10">CONNECTED</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>API Gateway (Vercel)</span>
+                <span className="text-emerald-500 font-bold px-1.5 py-0.5 rounded bg-emerald-500/10">200 OK</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Dev Node (Parth)</span>
+                <span className="text-blue-500 font-bold px-1.5 py-0.5 rounded bg-blue-500/10">ACTIVE</span>
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2.5">
+            <p className="font-bold text-[var(--color-text-bright)] px-1 uppercase text-[0.6rem] tracking-wider text-slate-500 dark:text-slate-400">Direct Links</p>
             <a
               href={`mailto:${personal.email}`}
-              className="flex items-center gap-3 glass-panel rounded-xl p-3.5 transition-all hover:border-blue-500/40 dark:hover:border-sky-400/40 hover:scale-[1.02]"
+              className="flex items-center gap-3 glass-panel rounded-xl p-3.5 transition-all duration-300 border border-slate-200/60 dark:border-slate-850 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/5 hover:-translate-y-0.5 hover:scale-[1.01]"
             >
               <HiMail className="text-blue-500 dark:text-sky-400 shrink-0" size={18} />
-              <div className="flex-1 overflow-hidden">
-                <p className="text-[0.65rem] text-[var(--color-text-muted)]">Email</p>
-                <p className="truncate text-xs font-medium text-[var(--color-text-bright)]">{personal.email}</p>
+              <div className="flex-1 overflow-hidden text-left">
+                <p className="text-[0.65rem] text-[var(--color-text-muted)] font-bold">Email</p>
+                <p className="truncate text-xs font-semibold text-[var(--color-text-bright)]">{personal.email}</p>
               </div>
             </a>
 
             <button
               onClick={handleWhatsAppClick}
               type="button"
-              className="flex w-full items-center gap-3 glass-panel rounded-xl p-3.5 text-left transition-all hover:border-green-500/40 hover:scale-[1.02] cursor-pointer"
+              className="flex w-full items-center gap-3 glass-panel rounded-xl p-3.5 text-left transition-all duration-300 border border-slate-200/60 dark:border-slate-855 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/5 hover:-translate-y-0.5 hover:scale-[1.01] cursor-pointer"
             >
               <HiPhone className="text-green-500 dark:text-green-400 shrink-0" size={18} />
               <div className="flex-1 overflow-hidden">
-                <p className="text-[0.65rem] text-[var(--color-text-muted)]">WhatsApp</p>
-                <p className="truncate text-xs font-medium text-[var(--color-text-bright)]">Send Instant Message</p>
+                <p className="text-[0.65rem] text-[var(--color-text-muted)] font-bold">WhatsApp</p>
+                <p className="truncate text-xs font-semibold text-[var(--color-text-bright)]">Send Instant Message</p>
               </div>
             </button>
 
@@ -362,12 +387,12 @@ export default function Contact() {
               href={personal.github}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-3 glass-panel rounded-xl p-3.5 transition-all hover:border-slate-500/40 hover:scale-[1.02]"
+              className="flex items-center gap-3 glass-panel rounded-xl p-3.5 transition-all duration-300 border border-slate-200/60 dark:border-slate-860 hover:border-slate-400/50 hover:shadow-lg hover:shadow-slate-400/5 hover:-translate-y-0.5 hover:scale-[1.01]"
             >
               <FiGithub className="text-[var(--color-text-bright)] shrink-0" size={18} />
-              <div className="flex-1 overflow-hidden">
-                <p className="text-[0.65rem] text-[var(--color-text-muted)]">GitHub</p>
-                <p className="truncate text-xs font-medium text-[var(--color-text-bright)]">{personal.github.replace('https://', '')}</p>
+              <div className="flex-1 overflow-hidden text-left">
+                <p className="text-[0.65rem] text-[var(--color-text-muted)] font-bold">GitHub</p>
+                <p className="truncate text-xs font-semibold text-[var(--color-text-bright)]">{personal.github.replace('https://', '')}</p>
               </div>
             </a>
 
@@ -375,12 +400,12 @@ export default function Contact() {
               href={personal.linkedin}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-3 glass-panel rounded-xl p-3.5 transition-all hover:border-blue-600/40 hover:scale-[1.02]"
+              className="flex items-center gap-3 glass-panel rounded-xl p-3.5 transition-all duration-300 border border-slate-200/60 dark:border-slate-865 hover:border-sky-600/50 hover:shadow-lg hover:shadow-sky-500/5 hover:-translate-y-0.5 hover:scale-[1.01]"
             >
               <FiLinkedin className="text-blue-500 dark:text-blue-400 shrink-0" size={18} />
-              <div className="flex-1 overflow-hidden">
-                <p className="text-[0.65rem] text-[var(--color-text-muted)]">LinkedIn</p>
-                <p className="truncate text-xs font-medium text-[var(--color-text-bright)]">{personal.linkedin.replace('https://', '')}</p>
+              <div className="flex-1 overflow-hidden text-left">
+                <p className="text-[0.65rem] text-[var(--color-text-muted)] font-bold">LinkedIn</p>
+                <p className="truncate text-xs font-semibold text-[var(--color-text-bright)]">{personal.linkedin.replace('https://', '')}</p>
               </div>
             </a>
           </div>

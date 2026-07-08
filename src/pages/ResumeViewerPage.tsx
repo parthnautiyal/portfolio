@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
+import { Link } from 'react-router-dom'
 import { getPersonal, getExperience, getEducation, getSkills } from '../utils/contentLoader.ts'
-import { FiDownload, FiPrinter, FiCopy, FiCheck, FiSliders, FiEye, FiFileText } from 'react-icons/fi'
+import { FiDownload, FiPrinter, FiCopy, FiCheck, FiSliders, FiEye, FiFileText, FiMaximize, FiMinimize, FiChevronUp, FiChevronDown, FiExternalLink } from 'react-icons/fi'
 import * as SimpleIcons from 'react-icons/si'
 import * as TablerIcons from 'react-icons/tb'
 
@@ -16,6 +18,88 @@ export default function ResumeViewerPage() {
   const [recruiterFocus, setRecruiterFocus] = useState<RecruiterFocus>('all')
   const [copied, setCopied] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [isPdfFullscreen, setIsPdfFullscreen] = useState(false)
+  const [isPdfFullscreenClosing, setIsPdfFullscreenClosing] = useState(false)
+  const [activeMatchIndex, setActiveMatchIndex] = useState(0)
+
+  let matchGlobalCounter = 0
+
+  // Lock background body scroll when fullscreen PDF is active
+  useEffect(() => {
+    if (isPdfFullscreen) {
+      document.body.classList.add('overflow-hidden')
+    } else {
+      document.body.classList.remove('overflow-hidden')
+    }
+    return () => {
+      document.body.classList.remove('overflow-hidden')
+    }
+  }, [isPdfFullscreen])
+
+  // Pre-calculate search matches count to display X of Y
+  const countMatches = (term: string) => {
+    if (!term.trim()) return 0
+    let count = 0
+    const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+    const regex = new RegExp(escapedTerm, 'gi')
+
+    const summaryMatches = personal.summary.match(regex)
+    if (summaryMatches) count += summaryMatches.length
+
+    experience.forEach((exp: any) => {
+      exp.bullets.forEach((bullet: string) => {
+        const bulletMatches = bullet.match(regex)
+        if (bulletMatches) count += bulletMatches.length
+      })
+    })
+
+    return count
+  }
+
+  const totalMatches = countMatches(searchTerm)
+
+  const handleNextMatch = () => {
+    if (totalMatches === 0) return
+    const nextIndex = (activeMatchIndex + 1) % totalMatches
+    setActiveMatchIndex(nextIndex)
+    scrollToMatch(nextIndex)
+  }
+
+  const handlePrevMatch = () => {
+    if (totalMatches === 0) return
+    const prevIndex = (activeMatchIndex - 1 + totalMatches) % totalMatches
+    setActiveMatchIndex(prevIndex)
+    scrollToMatch(prevIndex)
+  }
+
+  const scrollToMatch = (index: number) => {
+    setTimeout(() => {
+      const element = document.getElementById(`search-match-${index}`)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 45)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleNextMatch()
+    }
+  }
+
+  const handleOpenPdfFullscreen = () => {
+    setIsPdfFullscreenClosing(false)
+    setIsPdfFullscreen(true)
+  }
+
+  const handleClosePdfFullscreen = () => {
+    setIsPdfFullscreenClosing(true)
+    setTimeout(() => {
+      setIsPdfFullscreen(false)
+      setIsPdfFullscreenClosing(false)
+    }, 280)
+  }
 
   // Copy plain text representation of the resume to clipboard
   const handleCopyText = async () => {
@@ -123,26 +207,150 @@ ${skillsText}
 
   // Highlight search terms
   const highlightSearchText = (text: string) => {
-    if (!searchTerm.trim()) return text
+    if (!searchTerm.trim()) return <>{text}</>
 
-    const parts = text.split(new RegExp(`(${searchTerm})`, 'gi'))
+    const escapedTerm = searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+    const parts = text.split(new RegExp(`(${escapedTerm})`, 'gi'))
     return (
       <>
-        {parts.map((part, i) =>
-          part.toLowerCase() === searchTerm.toLowerCase() ? (
-            <mark key={i} className="bg-yellow-200 dark:bg-amber-500/30 text-[var(--color-text-bright)] px-0.5 rounded">
-              {part}
-            </mark>
-          ) : (
-            part
-          )
-        )}
+        {parts.map((part, i) => {
+          if (part.toLowerCase() === searchTerm.toLowerCase()) {
+            const currentIndex = matchGlobalCounter
+            matchGlobalCounter++
+            const isActive = currentIndex === activeMatchIndex
+
+            return (
+              <mark
+                key={i}
+                id={isActive ? `search-match-${currentIndex}` : undefined}
+                className={`px-0.5 rounded transition-all duration-200 ${
+                  isActive
+                    ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20 dark:ring-amber-500/20'
+                    : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]'
+                }`}
+              >
+                {part}
+              </mark>
+            )
+          }
+          return part
+        })}
+      </>
+    )
+  }
+
+  // Parse text and replace technical keywords/projects with interactive internal site links
+  const renderLinkedText = (text: string) => {
+    if (!text) return <></>
+
+    const linksMap = [
+      {
+        pattern: /\bKafka\b/g,
+        to: '/system?select=kafka'
+      },
+      {
+        pattern: /\bTemporal\b/g,
+        to: '/system?select=temporal'
+      },
+      {
+        pattern: /\b(?:Kubernetes|K8s)\b/g,
+        to: '/system?select=k8s'
+      },
+      {
+        pattern: /\bResilience4j\b/g,
+        to: '/system?select=circuit'
+      },
+      {
+        pattern: /\bSpring Boot\b/g,
+        to: '/system'
+      },
+      {
+        pattern: /\b(?:CI\/CD pipelines|CI\/CD|Jenkins|Helm|Docker)\b/g,
+        to: '/system'
+      },
+      {
+        pattern: /\b(?:Java|TypeScript|REST APIs|APIs|JUnit|Mockito|TDD)\b/g,
+        to: '/projects'
+      },
+      {
+        pattern: /\b(?:microservices|microservice)\b/gi,
+        to: '/projects'
+      },
+      {
+        pattern: /\b(?:e-learning platform|training-upskilling)\b/gi,
+        to: '/projects'
+      },
+      {
+        pattern: /\b(?:ZopSmart)\b/g,
+        to: '/experience'
+      },
+      {
+        pattern: /\b(?:Lovely Professional University)\b/g,
+        to: '/experience'
+      },
+      {
+        pattern: /\b(?:B\.Tech)\b/g,
+        to: '/experience'
+      },
+      {
+        pattern: /\b(?:email|phone|contact)\b/gi,
+        to: '/contact'
+      }
+    ]
+
+    type Token = {
+      text: string
+      isLink: boolean
+      to?: string
+    }
+
+    let tokens: Token[] = [{ text, isLink: false }]
+
+    for (const mapping of linksMap) {
+      const nextTokens: Token[] = []
+      for (const token of tokens) {
+        if (token.isLink) {
+          nextTokens.push(token)
+          continue
+        }
+
+        const parts = token.text.split(mapping.pattern)
+        const matches = token.text.match(mapping.pattern) || []
+
+        parts.forEach((part, index) => {
+          if (part) {
+            nextTokens.push({ text: part, isLink: false })
+          }
+          if (index < matches.length) {
+            nextTokens.push({ text: matches[index], isLink: true, to: mapping.to })
+          }
+        })
+      }
+      tokens = nextTokens
+    }
+
+    return (
+      <>
+        {tokens.map((token, idx) => {
+          if (token.isLink && token.to) {
+            return (
+              <Link
+                key={idx}
+                to={token.to}
+                className="text-blue-600 dark:text-sky-400 hover:underline font-semibold"
+              >
+                {highlightSearchText(token.text)}
+              </Link>
+            )
+          }
+          return <span key={idx}>{highlightSearchText(token.text)}</span>
+        })}
       </>
     )
   }
 
   return (
-    <section className="py-8 space-y-8 animate-fade-up">
+    <section className="py-8 space-y-8 animate-scale-in">
       {/* Header Actions */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200/40 dark:border-slate-800/40 pb-4 print:hidden">
         <div>
@@ -172,6 +380,14 @@ ${skillsText}
           >
             <FiPrinter /> Print Resume
           </button>
+          <a
+            href={personal.resumeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-xs font-semibold text-[var(--color-text-bright)] transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+          >
+            <FiExternalLink /> Open in New Tab
+          </a>
           <a
             href={personal.resumeUrl}
             download="Parth_Nautiyal_Resume.pdf"
@@ -210,14 +426,44 @@ ${skillsText}
           ))}
         </div>
 
-        <div className="w-full md:w-56">
-          <input
-            type="text"
-            placeholder="Search keywords..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full text-xs rounded-xl glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none text-[var(--color-text)]"
-          />
+        <div className="w-full md:w-64">
+          <div className="relative w-full flex items-center">
+            <input
+              type="text"
+              placeholder="Search keywords..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value)
+                setActiveMatchIndex(0)
+              }}
+              onKeyDown={handleKeyDown}
+              className="w-full text-xs rounded-xl glass-panel pl-3 pr-24 py-2 outline-none dark:bg-slate-900 border-none text-[var(--color-text)]"
+            />
+            {searchTerm.trim() && (
+              <div className="absolute right-2.5 flex items-center gap-1 text-[0.6rem] text-slate-500 dark:text-slate-400 select-none font-mono">
+                <span>
+                  {totalMatches > 0 ? `${activeMatchIndex + 1}/${totalMatches}` : '0/0'}
+                </span>
+                <div className="h-3.5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1" />
+                <button
+                  type="button"
+                  onClick={handlePrevMatch}
+                  className="p-0.5 hover:bg-slate-200 dark:hover:bg-slate-805 rounded text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+                  title="Previous match"
+                >
+                  <FiChevronUp size={12} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextMatch}
+                  className="p-0.5 hover:bg-slate-200 dark:hover:bg-slate-805 rounded text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+                  title="Next match"
+                >
+                  <FiChevronDown size={12} />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -246,7 +492,7 @@ ${skillsText}
       </div>
 
       {/* Grid workspace */}
-      <div className="grid gap-6 md:grid-cols-[1.2fr_0.8fr] print:block">
+      <div className="grid gap-6 md:grid-cols-2 print:block items-start">
         {/* Left Side: Dynamic resume content */}
         <div
           id="printable-resume-area"
@@ -281,7 +527,7 @@ ${skillsText}
               Summary
             </h2>
             <p className="text-sm leading-relaxed text-[var(--color-text)] dark:text-slate-300 print:text-slate-800">
-              {highlightSearchText(personal.summary)}
+              {renderLinkedText(personal.summary)}
             </p>
           </div>
 
@@ -316,7 +562,7 @@ ${skillsText}
                               : 'text-[var(--color-text)] dark:text-slate-300 print:text-slate-800'
                           }`}
                         >
-                          {highlightSearchText(bullet)}
+                          {renderLinkedText(bullet)}
                         </li>
                       )
                     })}
@@ -398,34 +644,123 @@ ${skillsText}
 
         {/* Right Side: Authentic PDF frame embed */}
         <div
-          className={`h-[780px] glass-card p-2 print:hidden ${
+          className={`glass-card p-3 print:hidden md:sticky md:top-24 h-[calc(100vh-8.5rem)] ${
             activeTab === 'pdf' ? 'block' : 'hidden md:block'
           }`}
         >
-          <object
-            data={personal.resumeUrl}
-            type="application/pdf"
-            className="w-full h-full rounded-xl overflow-hidden border border-[var(--border-color)]"
-          >
-            <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-4">
-              <FiEye size={40} className="text-slate-400" />
-              <div>
-                <p className="text-xs font-bold">PDF rendering is not supported by your browser.</p>
-                <p className="text-[0.65rem] text-slate-500 mt-1">
-                  You can click below to download the PDF directly to view.
-                </p>
-              </div>
+          <div className="flex items-center justify-between pb-2 px-1 text-slate-400 select-none h-10">
+            <span className="text-[0.6rem] font-bold uppercase tracking-wider">Authentic PDF Layout</span>
+            <div className="flex items-center gap-2">
               <a
                 href={personal.resumeUrl}
-                download="Parth_Nautiyal_Resume.pdf"
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-md transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-[0.6rem] font-bold text-white border border-slate-700 cursor-pointer shadow transition-transform active:scale-95"
               >
-                <FiDownload /> Download Resume
+                <FiExternalLink size={10} /> Open in New Tab
               </a>
+              <button
+                onClick={handleOpenPdfFullscreen}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-[0.6rem] font-bold text-white border border-slate-700 cursor-pointer shadow transition-transform active:scale-95"
+              >
+                <FiMaximize size={10} /> Fullscreen
+              </button>
             </div>
-          </object>
+          </div>
+          <div className="w-full h-[calc(100%-2.5rem)] flex justify-center items-center">
+            <div className="h-full aspect-[8.5/11] max-w-full relative rounded-xl overflow-hidden border border-[var(--border-color)]">
+              <object
+                data={`${personal.resumeUrl}#toolbar=1&navpanes=0&zoom=page-fit`}
+                type="application/pdf"
+                className="absolute inset-0 w-full h-full"
+              >
+                <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-4">
+                  <FiEye size={40} className="text-slate-400" />
+                  <div>
+                    <p className="text-xs font-bold text-slate-700 dark:text-slate-200">PDF rendering is not supported by your browser.</p>
+                    <p className="text-[0.65rem] text-slate-500 mt-1">
+                      You can click below to download the PDF directly to view.
+                    </p>
+                  </div>
+                  <a
+                    href={personal.resumeUrl}
+                    download="Parth_Nautiyal_Resume.pdf"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-md transition-colors"
+                  >
+                    <FiDownload /> Download Resume
+                  </a>
+                </div>
+              </object>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Fullscreen PDF overlay rendered via React Portal to prevent CSS transform positioning offset */}
+      {isPdfFullscreen && createPortal(
+        <div
+          className={`fixed inset-0 z-50 bg-slate-200/85 dark:bg-slate-950/85 p-4 flex flex-col justify-center items-center print:hidden cursor-pointer backdrop-blur-md ${
+            isPdfFullscreenClosing ? 'animate-fade-out' : 'animate-fade-in'
+          }`}
+          onClick={handleClosePdfFullscreen}
+        >
+          <div
+            className={`h-[96vh] w-[74vh] max-w-[95vw] bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-800 rounded-2xl p-4 flex flex-col cursor-default shadow-2xl relative ${
+              isPdfFullscreenClosing ? 'animate-mac-zoom-out' : 'animate-mac-zoom'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 select-none h-12">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <FiFileText /> Parth_Nautiyal_Resume.pdf
+              </h3>
+              <div className="flex items-center gap-2">
+                <a
+                  href={personal.resumeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-950 hover:bg-slate-200 dark:hover:bg-slate-805 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-white cursor-pointer shadow transition-all active:scale-95"
+                >
+                  <FiExternalLink size={12} /> Open in New Tab
+                </a>
+                <button
+                  onClick={handleClosePdfFullscreen}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-950 hover:bg-slate-200 dark:hover:bg-slate-805 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-white cursor-pointer shadow transition-all active:scale-95"
+                >
+                  <FiMinimize size={12} /> Back to Page
+                </button>
+              </div>
+            </div>
+            {/* PDF Render Container */}
+            <div className="flex-1 mt-4 relative w-full rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-850/50">
+              <object
+                data={`${personal.resumeUrl}#toolbar=1&navpanes=0&zoom=page-fit`}
+                type="application/pdf"
+                className="absolute inset-0 w-full h-full"
+              >
+                <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-4">
+                  <FiEye size={40} className="text-slate-400" />
+                  <div>
+                    <p className="text-xs font-bold text-slate-700 dark:text-slate-200">PDF rendering is not supported by your browser.</p>
+                    <p className="text-[0.65rem] text-slate-500 mt-1">
+                      You can click below to download the PDF directly to view.
+                    </p>
+                  </div>
+                  <a
+                    href={personal.resumeUrl}
+                    download="Parth_Nautiyal_Resume.pdf"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-md transition-colors"
+                  >
+                    <FiDownload /> Download Resume
+                  </a>
+                </div>
+              </object>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </section>
   )
 }

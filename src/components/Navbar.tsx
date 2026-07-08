@@ -114,7 +114,7 @@ export default function Navbar() {
       >
         Skip to main content
       </a>
-      <nav aria-label="Main navigation" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
+      <nav aria-label="Main navigation" className="mx-auto flex max-w-[1600px] items-center justify-between px-6 md:px-12 xl:px-16 py-3">
         <a
           href={personal.linkedin}
           target="_blank"
