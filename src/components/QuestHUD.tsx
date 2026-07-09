@@ -1,7 +1,17 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuest, ACHIEVEMENTS } from '../context/QuestContext.tsx'
 import type { AchievementKey } from '../context/QuestContext.tsx'
-import { FiAward, FiCheckCircle, FiLock, FiX, FiRefreshCw, FiChevronLeft } from 'react-icons/fi'
+import { FiAward, FiCheckCircle, FiLock, FiX, FiRefreshCw, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
+
+const achievementLinks: Record<AchievementKey, string> = {
+  LAND_ON_PORTFOLIO: '/',
+  VIEW_RESUME: '/resume',
+  FULLSCREEN_PDF: '/resume',
+  TRIGGER_CHAOS: '/system',
+  CHAT_QUERY: '/chat',
+  EXPAND_PROMOTION: '/experience',
+}
 
 export default function QuestHUD() {
   const {
@@ -14,8 +24,21 @@ export default function QuestHUD() {
   } = useQuest()
 
   const [isOpen, setIsOpen] = useState(false)
+  const [position, setPosition] = useState({ x: -1, y: -1 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [isShrunk, setIsShrunk] = useState(false)
+  const [shrinkSide, setShrinkSide] = useState<'left' | 'right' | null>(null)
+  const [hasOpened, setHasOpened] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('portfolio_quest_opened') === 'true'
+    }
+    return false
+  })
 
-  // Calculations for circular progress ring (radius = 18, circumference = 2 * pi * r ≈ 113)
+  const dragRef = useRef<{ startX: number; startY: number; posX: number; posY: number; moved: boolean } | null>(null)
+  const navigate = useNavigate()
+
+  // Circular progress calculations
   const radius = 18
   const stroke = 3
   const normalizedRadius = radius - stroke * 2
@@ -32,6 +55,187 @@ export default function QuestHUD() {
 
   const totalAchievements = Object.keys(ACHIEVEMENTS).length
   const unlockedCount = Object.values(unlockedAchievements).filter(Boolean).length
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return // Left click only
+    e.preventDefault()
+    
+    const posX = position.x !== -1 ? position.x : window.innerWidth - 200
+    const posY = position.y !== -1 ? position.y : window.innerHeight - 76
+    
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      posX,
+      posY,
+      moved: false,
+    }
+    
+    setIsDragging(true)
+    
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!dragRef.current) return
+      const dx = moveEvent.clientX - dragRef.current.startX
+      const dy = moveEvent.clientY - dragRef.current.startY
+      
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+        dragRef.current.moved = true
+      }
+      
+      let newX = dragRef.current.posX + dx
+      let newY = dragRef.current.posY + dy
+      
+      newX = Math.max(0, Math.min(window.innerWidth - 180, newX))
+      newY = Math.max(0, Math.min(window.innerHeight - 70, newY))
+      
+      setPosition({ x: newX, y: newY })
+    }
+    
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      setIsDragging(false)
+      
+      if (!dragRef.current) return
+      
+      if (!dragRef.current.moved) {
+        handleToggleOpen()
+      } else {
+        const x = position.x
+        const threshold = 50
+        if (x < threshold) {
+          setIsShrunk(true)
+          setShrinkSide('left')
+          setPosition({ x: 0, y: position.y })
+        } else if (x > window.innerWidth - 220) {
+          setIsShrunk(true)
+          setShrinkSide('right')
+          setPosition({ x: window.innerWidth - 44, y: position.y })
+        } else {
+          setIsShrunk(false)
+          setShrinkSide(null)
+        }
+      }
+    }
+    
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    const posX = position.x !== -1 ? position.x : window.innerWidth - 200
+    const posY = position.y !== -1 ? position.y : window.innerHeight - 76
+    
+    dragRef.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      posX,
+      posY,
+      moved: false,
+    }
+    
+    setIsDragging(true)
+    
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      if (!dragRef.current) return
+      const t = moveEvent.touches[0]
+      const dx = t.clientX - dragRef.current.startX
+      const dy = t.clientY - dragRef.current.startY
+      
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+        dragRef.current.moved = true
+      }
+      
+      let newX = dragRef.current.posX + dx
+      let newY = dragRef.current.posY + dy
+      
+      newX = Math.max(0, Math.min(window.innerWidth - 180, newX))
+      newY = Math.max(0, Math.min(window.innerHeight - 70, newY))
+      
+      setPosition({ x: newX, y: newY })
+    }
+    
+    const handleTouchEnd = () => {
+      document.removeEventListener('touchmove', handleTouchMove)
+      document.removeEventListener('touchend', handleTouchEnd)
+      setIsDragging(false)
+      
+      if (!dragRef.current) return
+      
+      if (!dragRef.current.moved) {
+        handleToggleOpen()
+      } else {
+        const x = position.x
+        const threshold = 50
+        if (x < threshold) {
+          setIsShrunk(true)
+          setShrinkSide('left')
+          setPosition({ x: 0, y: position.y })
+        } else if (x > window.innerWidth - 220) {
+          setIsShrunk(true)
+          setShrinkSide('right')
+          setPosition({ x: window.innerWidth - 44, y: position.y })
+        } else {
+          setIsShrunk(false)
+          setShrinkSide(null)
+        }
+      }
+    }
+    
+    document.addEventListener('touchmove', handleTouchMove)
+    document.addEventListener('touchend', handleTouchEnd)
+  }
+
+  const handleToggleOpen = () => {
+    setIsOpen((prev) => {
+      const next = !prev
+      if (next && !hasOpened) {
+        setHasOpened(true)
+        localStorage.setItem('portfolio_quest_opened', 'true')
+      }
+      return next
+    })
+  }
+
+  const handleExpand = () => {
+    setIsShrunk(false)
+    setShrinkSide(null)
+    if (shrinkSide === 'left') {
+      setPosition({ x: 32, y: position.y })
+    } else {
+      setPosition({ x: window.innerWidth - 220, y: position.y })
+    }
+  }
+
+  const handleAchievementClick = (key: AchievementKey) => {
+    const target = achievementLinks[key]
+    if (target) {
+      navigate(target)
+      setIsOpen(false)
+    }
+  }
+
+  // Adjust coordinates on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (position.x !== -1) {
+        if (isShrunk) {
+          if (shrinkSide === 'left') {
+            setPosition({ x: 0, y: Math.min(position.y, window.innerHeight - 70) })
+          } else {
+            setPosition({ x: window.innerWidth - 44, y: Math.min(position.y, window.innerHeight - 70) })
+          }
+        } else {
+          const newX = Math.min(position.x, window.innerWidth - 190)
+          const newY = Math.min(position.y, window.innerHeight - 70)
+          setPosition({ x: newX, y: newY })
+        }
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [position, isShrunk, shrinkSide])
 
   return (
     <>
@@ -70,57 +274,92 @@ export default function QuestHUD() {
         ))}
       </div>
 
-      {/* 2. Floating Circular Progress HUD Pill */}
-      <div className="fixed bottom-6 right-6 z-[99] print:hidden">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={`flex items-center gap-2.5 p-2 pr-4 rounded-full shadow-lg border backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${
-            isOpen
-              ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 border-slate-800 dark:border-slate-200'
-              : 'bg-white/85 dark:bg-slate-900/85 text-[var(--color-text)] border-slate-200 dark:border-slate-800'
-          }`}
-          aria-label="Toggle Recruiter Quest HUD"
-        >
-          {/* Circular Progress Ring */}
-          <div className="relative flex items-center justify-center w-9 h-9 select-none">
-            <svg className="absolute w-full h-full -rotate-90">
-              <circle
-                className="text-slate-200 dark:text-slate-700/60"
-                strokeWidth={stroke}
-                stroke="currentColor"
-                fill="transparent"
-                r={normalizedRadius}
-                cx={radius}
-                cy={radius}
-              />
-              <circle
-                className="text-blue-500 dark:text-sky-400 transition-all duration-500 ease-out"
-                strokeWidth={stroke}
-                strokeDasharray={circumference}
-                strokeDashoffset={strokeDashoffset}
-                strokeLinecap="round"
-                stroke="currentColor"
-                fill="transparent"
-                r={normalizedRadius}
-                cx={radius}
-                cy={radius}
-              />
-            </svg>
-            <span className="text-[0.65rem] font-black tracking-tight">{level}</span>
-          </div>
+      {/* Click Outside Transparent Overlay for closing drawer */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-[97] bg-transparent cursor-default print:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
 
-          <div className="text-left min-w-[70px]">
-            <p className="text-[0.55rem] font-bold uppercase tracking-wider opacity-60">Recruiter Quest</p>
-            <p className="text-[0.68rem] font-black -mt-0.5 truncate max-w-[100px]">
-              {classNames[level - 1]}
-            </p>
-          </div>
-          <FiChevronLeft
-            size={14}
-            className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
-          />
+      {/* 2. Floating Circular Progress HUD Pill */}
+      {isShrunk ? (
+        <button
+          onClick={handleExpand}
+          style={position.y !== -1 ? { top: position.y, left: shrinkSide === 'left' ? 0 : 'auto', right: shrinkSide === 'right' ? 0 : 'auto' } : {}}
+          className={`fixed z-[99] w-11 h-11 bg-[var(--color-primary)] hover:scale-105 active:scale-95 text-white flex items-center justify-center shadow-2xl transition-all cursor-pointer ${
+            shrinkSide === 'left' ? 'rounded-r-2xl border-l-0 border border-white/20' : 'rounded-l-2xl border-r-0 border border-white/20'
+          }`}
+          title="Expand Quest Tracker"
+        >
+          {shrinkSide === 'left' ? (
+            <div className="flex items-center gap-0.5 pl-1.5 text-white">
+              <FiAward size={16} />
+              <FiChevronRight size={12} className="animate-pulse" />
+            </div>
+          ) : (
+            <div className="flex items-center gap-0.5 pr-1.5 text-white">
+              <FiChevronLeft size={12} className="animate-pulse" />
+              <FiAward size={16} />
+            </div>
+          )}
         </button>
-      </div>
+      ) : (
+        <div
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+          style={position.x !== -1 && position.y !== -1 ? { left: position.x, top: position.y, bottom: 'auto', right: 'auto' } : {}}
+          className={`fixed bottom-6 right-6 z-[99] print:hidden select-none ${isDragging ? 'cursor-grabbing opacity-75' : 'cursor-grab'}`}
+        >
+          <button
+            className={`flex items-center gap-2.5 p-2 pr-4 rounded-full shadow-lg border backdrop-blur-md transition-all duration-300 pointer-events-none ${
+              isOpen
+                ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 border-slate-800 dark:border-slate-200'
+                : 'bg-white/85 dark:bg-slate-900/85 text-[var(--color-text)] border-slate-200 dark:border-slate-800'
+            } ${!hasOpened && !isOpen ? 'animate-highlight-pulse' : ''}`}
+            aria-label="Toggle Recruiter Quest HUD"
+          >
+            {/* Circular Progress Ring */}
+            <div className="relative flex items-center justify-center w-9 h-9 select-none">
+              <svg className="absolute w-full h-full -rotate-90">
+                <circle
+                  className="text-slate-200 dark:text-slate-700/60"
+                  strokeWidth={stroke}
+                  stroke="currentColor"
+                  fill="transparent"
+                  r={normalizedRadius}
+                  cx={radius}
+                  cy={radius}
+                />
+                <circle
+                  className="text-[var(--color-primary)] transition-all duration-500 ease-out"
+                  strokeWidth={stroke}
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="transparent"
+                  r={normalizedRadius}
+                  cx={radius}
+                  cy={radius}
+                />
+              </svg>
+              <span className="text-[0.65rem] font-black tracking-tight">{level}</span>
+            </div>
+
+            <div className="text-left min-w-[70px]">
+              <p className="text-[0.55rem] font-bold uppercase tracking-wider opacity-60">Recruiter Quest</p>
+              <p className="text-[0.68rem] font-black -mt-0.5 truncate max-w-[100px]">
+                {classNames[level - 1]}
+              </p>
+            </div>
+            <FiChevronLeft
+              size={14}
+              className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+        </div>
+      )}
 
       {/* 3. Sliding Challenges Drawer Panel */}
       <div
@@ -133,7 +372,7 @@ export default function QuestHUD() {
           <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
             <div>
               <h3 className="text-sm font-black flex items-center gap-1.5 uppercase tracking-wider">
-                <FiAward className="text-blue-500" size={16} /> Quest Tracker
+                <FiAward className="text-[var(--color-primary)]" size={16} /> Quest Tracker
               </h3>
               <p className="text-[0.62rem] text-slate-500 mt-0.5">
                 Unlocked {unlockedCount} of {totalAchievements} achievements
@@ -162,7 +401,7 @@ export default function QuestHUD() {
             <div className="w-full bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
               <div
                 style={{ width: `${(xp / 500) * 100}%` }}
-                className="bg-gradient-to-r from-blue-500 to-sky-400 h-full rounded-full transition-all duration-500 ease-out"
+                className="bg-[var(--color-primary)] h-full rounded-full transition-all duration-500 ease-out"
               ></div>
             </div>
           </div>
@@ -176,10 +415,11 @@ export default function QuestHUD() {
               return (
                 <div
                   key={key}
+                  onClick={() => !isUnlocked && handleAchievementClick(key)}
                   className={`p-3 rounded-2xl border flex gap-3 transition-all duration-300 ${
                     isUnlocked
                       ? 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20'
-                      : 'bg-slate-50/50 dark:bg-slate-900/40 border-slate-150 dark:border-slate-850'
+                      : 'bg-slate-50/50 dark:bg-slate-900/40 border-slate-150 dark:border-slate-850 hover:border-[var(--color-primary)] dark:hover:border-[var(--color-primary)] cursor-pointer hover:scale-[1.01]'
                   }`}
                 >
                   <div className="mt-0.5">
@@ -202,6 +442,11 @@ export default function QuestHUD() {
                     <p className="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 leading-normal">
                       {item.description}
                     </p>
+                    {!isUnlocked && (
+                      <span className="text-[0.55rem] text-[var(--color-primary)] font-bold block mt-1">
+                        Go to challenge →
+                      </span>
+                    )}
                   </div>
                   <div className="text-right">
                     <span

@@ -32,5 +32,16 @@ export const experience: ExperienceItem[] = [
       "Ensured code quality with 85%+ coverage, eliminated vulnerabilities, and enforced testing using JUnit and Mockito.",
       "Collaborated with QA and cross-functional teams to deliver stable, production-ready features with faster turnaround times."
     ]
+  },
+  {
+    "role": "Software Development Engineer Intern",
+    "company": "ZopSmart",
+    "location": "Bangalore, India",
+    "period": "Jan 2024 – Jul 2024",
+    "bullets": [
+      "Worked on Test-Driven Development (TDD) using JUnit and Mockito, increasing unit test coverage across key service modules by 45%.",
+      "Assisted in writing REST API endpoints, debugging database bottlenecks, and optimizing query execution speeds.",
+      "Collaborated with senior engineers to learn distributed workflow orchestration and event-driven patterns in microservices."
+    ]
   }
 ]

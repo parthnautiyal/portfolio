@@ -125,7 +125,7 @@ export default function SystemArchitectureCanvas({ failureState }: Props) {
     <div className="glass-card p-6 space-y-6">
       <div className="border-b border-slate-200/40 dark:border-slate-800/40 pb-3">
         <h3 className="text-sm font-bold flex items-center gap-2">
-          <FiCode className="text-blue-500" />
+          <FiCode className="text-[var(--color-primary)]" />
           Interactive System Architecture
         </h3>
         <p className="text-xs text-slate-500 mt-1">
@@ -138,9 +138,9 @@ export default function SystemArchitectureCanvas({ failureState }: Props) {
         <svg viewBox="0 0 760 400" className="w-[760px] mx-auto select-none">
           {/* Defs for gradients and markers */}
           <defs>
-            <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#2563eb" />
-              <stop offset="100%" stopColor="#3b82f6" />
+            <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="var(--color-primary)" />
+              <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0.8" />
             </linearGradient>
             <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#ef4444" />
@@ -265,16 +265,16 @@ export default function SystemArchitectureCanvas({ failureState }: Props) {
             // Determine background/border coloring
             let fillClass = 'fill-white dark:fill-slate-900'
             let strokeClass = 'stroke-slate-200 dark:stroke-slate-800'
-            let textClass = 'fill-slate-800 dark:fill-slate-100'
-            let subtextClass = 'fill-slate-500 dark:fill-slate-400'
-            let iconBoxClass = 'fill-blue-500/10'
-            let iconClass = 'text-blue-600 dark:text-blue-400'
+            let textClass = 'fill-slate-700 dark:fill-slate-200'
+            let subtextClass = 'fill-slate-400 dark:fill-slate-500'
+            let iconBoxClass = 'fill-[var(--color-primary)]/10'
+            let iconClass = 'text-[var(--color-primary)]'
 
             if (isSelected) {
-              fillClass = 'fill-blue-600 dark:fill-blue-500/90'
-              strokeClass = 'stroke-blue-700 dark:stroke-blue-400'
+              fillClass = 'fill-[var(--color-primary)]'
+              strokeClass = 'stroke-[var(--color-primary)]'
               textClass = 'fill-white'
-              subtextClass = 'fill-blue-100'
+              subtextClass = 'fill-white/80'
               iconBoxClass = 'fill-white/20'
               iconClass = 'text-white'
             } else if (node.isOffline) {
@@ -356,7 +356,7 @@ export default function SystemArchitectureCanvas({ failureState }: Props) {
       <div className="glass-panel p-5 rounded-2xl space-y-4 animate-fade-up relative z-10">
         <div className="flex justify-between items-start gap-3">
           <div className="min-w-0">
-            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-blue-600 dark:text-sky-400 bg-blue-50 dark:bg-blue-950/20 px-2 py-0.5 rounded">
+            <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[var(--color-primary)] bg-[var(--color-primary)]/10 px-2 py-0.5 rounded">
               Pattern: {activeNode.pattern}
             </span>
             <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-1 truncate">{activeNode.label.substring(2)}</h4>

@@ -342,7 +342,7 @@ ${skillsText}
               <Link
                 key={idx}
                 to={token.to}
-                className="text-blue-600 dark:text-sky-400 hover:underline font-semibold"
+                className="text-[var(--color-primary)] hover:underline font-semibold"
               >
                 {highlightSearchText(token.text)}
               </Link>
@@ -511,7 +511,7 @@ ${skillsText}
             <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-text-bright)] print:text-black print:text-2xl">
               {personal.name}
             </h1>
-            <p className="text-sm font-semibold text-blue-600 dark:text-sky-400 print:text-blue-600">
+            <p className="text-sm font-semibold text-[var(--color-primary)] print:text-black">
               {personal.title}
             </p>
             <div className="flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 print:text-slate-700">
@@ -519,17 +519,17 @@ ${skillsText}
               <span>•</span>
               <span>{personal.phone}</span>
               <span>•</span>
-              <a href={personal.linkedin} className="hover:underline">LinkedIn</a>
+              <a href={personal.linkedin} className="text-[var(--color-primary)] hover:underline font-semibold">LinkedIn</a>
               <span>•</span>
-              <a href={personal.github} className="hover:underline">GitHub</a>
+              <a href={personal.github} className="text-[var(--color-primary)] hover:underline font-semibold">GitHub</a>
               <span>•</span>
-              <a href={personal.leetcode} className="hover:underline">LeetCode</a>
+              <a href={personal.leetcode} className="text-[var(--color-primary)] hover:underline font-semibold">LeetCode</a>
             </div>
           </div>
 
           {/* Summary */}
           <div className="space-y-2 print:text-black">
-            <h2 className="text-xs font-extrabold uppercase tracking-wider text-blue-600 dark:text-sky-400 border-b border-blue-500/10 pb-1 print:text-blue-600 print:border-blue-500/20">
+            <h2 className="text-xs font-extrabold uppercase tracking-wider text-[var(--color-primary)] border-b border-[var(--border-color-hover)] pb-1 print:text-black print:border-black/20">
               Summary
             </h2>
             <p className="text-sm leading-relaxed text-[var(--color-text)] dark:text-slate-300 print:text-slate-800">
@@ -539,7 +539,7 @@ ${skillsText}
 
           {/* Experience */}
           <div className="space-y-5 print:text-black">
-            <h2 className="text-xs font-extrabold uppercase tracking-wider text-blue-600 dark:text-sky-400 border-b border-blue-500/10 pb-1 print:text-blue-600 print:border-blue-500/20">
+            <h2 className="text-xs font-extrabold uppercase tracking-wider text-[var(--color-primary)] border-b border-[var(--border-color-hover)] pb-1 print:text-black print:border-black/20">
               Experience
             </h2>
             <div className="space-y-6">
@@ -580,7 +580,7 @@ ${skillsText}
 
           {/* Education */}
           <div className="space-y-3 print:text-black">
-            <h2 className="text-xs font-extrabold uppercase tracking-wider text-blue-600 dark:text-sky-400 border-b border-blue-500/10 pb-1 print:text-blue-600 print:border-blue-500/20">
+            <h2 className="text-xs font-extrabold uppercase tracking-wider text-[var(--color-primary)] border-b border-[var(--border-color-hover)] pb-1 print:text-black print:border-black/20">
               Education
             </h2>
             <div className="space-y-2 text-sm">
@@ -596,7 +596,7 @@ ${skillsText}
                 {education.institution} · {education.location}
               </p>
               <p className="text-xs font-semibold text-[var(--color-text)] print:text-slate-800">
-                CGPA/GPA: <span className="text-blue-600 dark:text-sky-400">{education.cgpa}</span>
+                CGPA/GPA: <span className="text-[var(--color-primary)] print:text-black">{education.cgpa}</span>
               </p>
               <div className="pt-1">
                 <span className="text-[0.65rem] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
@@ -611,7 +611,7 @@ ${skillsText}
 
           {/* Skills */}
           <div className="space-y-4 print:text-black">
-            <h2 className="text-xs font-extrabold uppercase tracking-wider text-blue-600 dark:text-sky-400 border-b border-blue-500/10 pb-1 print:text-blue-600 print:border-blue-500/20">
+            <h2 className="text-xs font-extrabold uppercase tracking-wider text-[var(--color-primary)] border-b border-[var(--border-color-hover)] pb-1 print:text-black print:border-black/20">
               Skills Grid
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -692,66 +692,43 @@ ${skillsText}
       {/* Fullscreen PDF overlay rendered via React Portal to prevent CSS transform positioning offset */}
       {isPdfFullscreen && createPortal(
         <div
-          className={`fixed inset-0 z-50 bg-slate-200/85 dark:bg-slate-950/85 p-4 flex flex-col justify-center items-center print:hidden cursor-pointer backdrop-blur-md ${
+          className={`fixed inset-0 z-[100] bg-slate-950/95 flex flex-col print:hidden backdrop-blur-md overflow-hidden ${
             isPdfFullscreenClosing ? 'animate-fade-out' : 'animate-fade-in'
           }`}
-          onClick={handleClosePdfFullscreen}
         >
-          <div
-            className={`h-[96vh] w-[68vh] max-w-[95vw] bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-800 rounded-2xl p-4 flex flex-col cursor-default shadow-2xl relative ${
-              isPdfFullscreenClosing ? 'animate-mac-zoom-out' : 'animate-mac-zoom'
-            }`}
-            onClick={(e) => e.stopPropagation()}
+          {/* Floating Close Button */}
+          <button
+            onClick={handleClosePdfFullscreen}
+            className="absolute top-4 right-4 z-[110] flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-xs font-bold text-white cursor-pointer shadow-2xl transition-all active:scale-95 backdrop-blur-sm"
+            title="Close Fullscreen"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 select-none h-12">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                <FiFileText /> Parth_Nautiyal_Resume.pdf
-              </h3>
-              <div className="flex items-center gap-2">
+            <FiMinimize size={14} /> Close Fullscreen
+          </button>
+
+          {/* Full Screen PDF Render Container */}
+          <div className="w-full h-full flex justify-center items-center bg-slate-950">
+            <object
+              data={`${personal.resumeUrl}#toolbar=1&navpanes=0`}
+              type="application/pdf"
+              className="w-full h-full border-none"
+            >
+              <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-4 text-white">
+                <FiEye size={40} className="text-slate-400" />
+                <div>
+                  <p className="text-xs font-bold text-slate-200">PDF rendering is not supported by your browser.</p>
+                  <p className="text-[0.65rem] text-slate-400 mt-1">
+                    You can click below to download the PDF directly to view.
+                  </p>
+                </div>
                 <a
                   href={personal.resumeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-950 hover:bg-slate-200 dark:hover:bg-slate-805 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-white cursor-pointer shadow transition-all active:scale-95"
+                  download="Parth_Nautiyal_Resume.pdf"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl btn-gradient text-xs font-bold shadow-md transition-colors"
                 >
-                  <FiExternalLink size={12} /> Open in New Tab
+                  <FiDownload /> Download Resume
                 </a>
-                <button
-                  onClick={handleClosePdfFullscreen}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-950 hover:bg-slate-200 dark:hover:bg-slate-805 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-white cursor-pointer shadow transition-all active:scale-95"
-                >
-                  <FiMinimize size={12} /> Back to Page
-                </button>
               </div>
-            </div>
-            {/* PDF Render Container */}
-            <div className="flex-1 mt-4 flex justify-center items-center overflow-hidden">
-              <div className="h-full aspect-[210/297] max-w-full relative rounded-xl overflow-hidden bg-transparent">
-                <object
-                  data={`${personal.resumeUrl}#toolbar=1&navpanes=0&zoom=page-fit`}
-                  type="application/pdf"
-                  className="absolute inset-0 w-full h-full border-none border-0 scale-[1.06] origin-center"
-                >
-                  <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-4">
-                    <FiEye size={40} className="text-slate-400" />
-                    <div>
-                      <p className="text-xs font-bold text-slate-700 dark:text-slate-200">PDF rendering is not supported by your browser.</p>
-                      <p className="text-[0.65rem] text-slate-500 mt-1">
-                        You can click below to download the PDF directly to view.
-                      </p>
-                    </div>
-                    <a
-                      href={personal.resumeUrl}
-                      download="Parth_Nautiyal_Resume.pdf"
-                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl btn-gradient text-xs font-bold shadow-md transition-colors"
-                    >
-                      <FiDownload /> Download Resume
-                    </a>
-                  </div>
-                </object>
-              </div>
-            </div>
+            </object>
           </div>
         </div>,
         document.body

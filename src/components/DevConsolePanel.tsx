@@ -15,6 +15,13 @@ export default function DevConsolePanel() {
   const [history, setHistory] = useState<LogEntry[]>([
     { text: 'Parth OS v1.0.0 (Type "help" for commands)', type: 'success' }
   ])
+  const [shownJokes, setShownJokes] = useState<number[]>([])
+  const [hasOpened, setHasOpened] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('portfolio_console_opened') === 'true'
+    }
+    return false
+  })
   
   const consoleEndRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
@@ -24,12 +31,30 @@ export default function DevConsolePanel() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === '`') {
         e.preventDefault()
-        setIsOpen((prev) => !prev)
+        setIsOpen((prev) => {
+          const next = !prev
+          if (next && !hasOpened) {
+            setHasOpened(true)
+            localStorage.setItem('portfolio_console_opened', 'true')
+          }
+          return next
+        })
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [hasOpened])
+
+  const toggleConsole = () => {
+    setIsOpen((prev) => {
+      const next = !prev
+      if (next && !hasOpened) {
+        setHasOpened(true)
+        localStorage.setItem('portfolio_console_opened', 'true')
+      }
+      return next
+    })
+  }
 
   // Auto-scroll to bottom of console logs
   useEffect(() => {
@@ -124,8 +149,19 @@ export default function DevConsolePanel() {
           "Spring Boot: because XML configs weren't painful enough.",
           "Temporal workflows: for when your cron job has abandonment issues.",
         ]
-        const idx = Math.floor(Math.random() * jokes.length)
-        newEntries.push({ text: jokes[idx], type: 'output' })
+        
+        let available = jokes.map((_, i) => i).filter(i => !shownJokes.includes(i))
+        if (available.length === 0) {
+          newEntries.push({ 
+            text: "⚠️ Humor Buffer Overflow! You've exhausted my entire stand-up routine. But just like your git history, I'm about to start repeating my past mistakes. (Joke registry reset!)", 
+            type: 'error' 
+          })
+          setShownJokes([])
+        } else {
+          const randomIdx = available[Math.floor(Math.random() * available.length)]
+          setShownJokes(prev => [...prev, randomIdx])
+          newEntries.push({ text: jokes[randomIdx], type: 'output' })
+        }
         break
       }
       case 'sudo':
@@ -154,8 +190,10 @@ export default function DevConsolePanel() {
     <>
       {/* Floating CLI Toggle button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 right-4 z-40 p-3.5 rounded-full bg-slate-900 text-green-400 border border-slate-700/50 shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer dark:bg-slate-900"
+        onClick={toggleConsole}
+        className={`fixed bottom-4 left-4 z-40 p-3.5 rounded-full bg-slate-900 text-green-400 border border-slate-700/50 shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer dark:bg-slate-900 ${
+          !hasOpened && !isOpen ? 'animate-highlight-pulse' : ''
+        }`}
         title="Toggle Dev CLI Console (Ctrl + `)"
       >
         <FiTerminal size={20} />
