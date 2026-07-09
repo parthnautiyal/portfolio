@@ -50,7 +50,7 @@ export default function DevConsolePanel() {
           { text: '  skills     - List technical capabilities', type: 'output' },
           { text: '  projects   - Navigate to projects page', type: 'output' },
           { text: '  resume     - Launch interactive resume viewer', type: 'output' },
-          { text: '  system     - Launch system observability cockpit', type: 'output' },
+          { text: '  system     - Open system architecture & pipeline', type: 'output' },
           { text: '  joke       - Print a developer joke', type: 'output' },
           { text: '  sudo       - Elevate privileges', type: 'output' },
           { text: '  clear      - Clear screen logs', type: 'output' }
@@ -87,7 +87,7 @@ export default function DevConsolePanel() {
         }, 1000)
         break
       case 'system':
-        newEntries.push({ text: 'Navigating to System Cockpit Section /system...', type: 'success' })
+        newEntries.push({ text: 'Navigating to System Architecture Section /system...', type: 'success' })
         setTimeout(() => {
           navigate('/system')
           setIsOpen(false)

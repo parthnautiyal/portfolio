@@ -380,6 +380,12 @@ ${skillsText}
             )}
           </button>
 
+          <button
+            onClick={handleOpenPdfFullscreen}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-xs font-semibold text-[var(--color-text-bright)] transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+          >
+            <FiMaximize /> Fullscreen
+          </button>
           <a
             href={personal.resumeUrl}
             target="_blank"
@@ -648,26 +654,7 @@ ${skillsText}
             activeTab === 'pdf' ? 'block' : 'hidden md:block'
           }`}
         >
-          <div className="flex items-center justify-between pb-3 px-1 text-slate-400 select-none h-10 border-b border-slate-200/60 dark:border-slate-800/80">
-            <span className="text-xs font-black uppercase tracking-wider text-[var(--color-text-bright)]">Authentic PDF Layout</span>
-            <div className="flex items-center gap-2">
-              <a
-                href={personal.resumeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-[0.65rem] font-bold text-[var(--color-text-bright)] cursor-pointer shadow transition-all active:scale-95"
-              >
-                <FiExternalLink size={12} /> Open in New Tab
-              </a>
-              <button
-                onClick={handleOpenPdfFullscreen}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-[0.65rem] font-bold text-[var(--color-text-bright)] cursor-pointer shadow transition-all active:scale-95"
-              >
-                <FiMaximize size={12} /> Fullscreen
-              </button>
-            </div>
-          </div>
-          <div className="w-full mt-4">
+          <div className="w-full">
             <div className="w-full aspect-[210/297] relative rounded-xl overflow-hidden bg-transparent">
               <object
                 data={`${personal.resumeUrl}#toolbar=0&navpanes=0&zoom=page-width`}

@@ -333,31 +333,6 @@ export default function Contact() {
         </form>
 
         <div className="space-y-4 text-xs select-none">
-          {/* Mock API & Server Gateway Status Dashboard */}
-          <div className="glass-card p-5 space-y-4 border border-slate-200/50 dark:border-slate-800/80 shadow-md">
-            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800/80 pb-2">
-              <span className="text-[0.62rem] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400">Endpoint Cockpit</span>
-              <div className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[0.55rem] font-mono text-emerald-500 uppercase font-black">Operational</span>
-              </div>
-            </div>
-            <div className="space-y-2.5 text-[0.65rem] font-mono text-slate-500 dark:text-slate-450">
-              <div className="flex justify-between items-center">
-                <span>SMTP Mail Router</span>
-                <span className="text-emerald-500 font-bold px-1.5 py-0.5 rounded bg-emerald-500/10">CONNECTED</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>API Gateway (Vercel)</span>
-                <span className="text-emerald-500 font-bold px-1.5 py-0.5 rounded bg-emerald-500/10">200 OK</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Dev Node (Parth)</span>
-                <span className="text-blue-500 font-bold px-1.5 py-0.5 rounded bg-blue-500/10">ACTIVE</span>
-              </div>
-            </div>
-          </div>
-
           <div className="space-y-2.5">
             <p className="font-bold text-[var(--color-text-bright)] px-1 uppercase text-[0.6rem] tracking-wider text-slate-500 dark:text-slate-400">Direct Links</p>
             <a

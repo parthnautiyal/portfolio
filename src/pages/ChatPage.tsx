@@ -322,7 +322,7 @@ Base answers on the above facts. Be concise, developer-friendly, and polite.
         <div>
           <h2 className="text-3xl font-extrabold tracking-tight">AI Agent Sandbox</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Chat with Parth&apos;s AI Agent, query his profile, and inject custom context into the knowledge base.
+            Chat with Parth&apos;s AI Agent, query his profile, and supply local context (saved securely in your browser).
           </p>
         </div>
         <button
@@ -475,7 +475,7 @@ Base answers on the above facts. Be concise, developer-friendly, and polite.
               )}
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed mt-2">
-              Inject custom logs, job requirements, or project details into the RAG context. The AI Agent will use this background to tailor its answers.
+              Provide custom logs, job requirements, or project details as local context (stored client-side in your browser&apos;s localStorage). The AI Agent will use this background to tailor its answers for your current session.
             </p>
           </div>
 
@@ -573,7 +573,7 @@ Base answers on the above facts. Be concise, developer-friendly, and polite.
                     disabled={!textContext.trim() || textContext === textContextSaved}
                     className="flex-1 rounded-xl btn-gradient disabled:opacity-40 px-3 py-2 text-[0.65rem] font-bold transition-all cursor-pointer"
                   >
-                    {textContextSaved && textContext === textContextSaved ? '✓ Saved to Context' : 'Save & Inject'}
+                    {textContextSaved && textContext === textContextSaved ? '✓ Saved to Context' : 'Save Context'}
                   </button>
                   {textContextSaved && (
                     <button

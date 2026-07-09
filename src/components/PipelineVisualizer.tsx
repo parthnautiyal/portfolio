@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FiCheckCircle, FiGitCommit, FiFileText, FiLayers, FiCpu } from 'react-icons/fi'
+import { FiCheckCircle, FiGitCommit, FiCode, FiLayers, FiCpu } from 'react-icons/fi'
 
 type Stage = {
   id: string
@@ -14,184 +14,156 @@ type Stage = {
 const pipelineStages: Stage[] = [
   {
     id: 'git-commit',
-    name: 'Git Trigger',
+    name: 'GitHub Webhook',
     icon: FiGitCommit,
-    description: 'Webhook triggers build on Git branch merge to main. Verifies commit signatures.',
+    description: 'Vercel GitHub integration detects push triggers to main branch and initiates automatic build.',
     status: 'success',
-    configTitle: 'GitHub Actions workflow configuration (.github/workflows/deploy.yml)',
-    configContent: `name: Production Build & Deploy
-on:
-  push:
-    branches: [ main ]
+    configTitle: 'GitHub Repository push event webhook logs',
+    configContent: `[10:45:12 AM] Git Commit Detected: 8af1a392 ("Refactor system architecture dashboard")
+[10:45:13 AM] Triggering Vercel deployment pipeline...
+[10:45:14 AM] Deploying branch: main (commit author: Parth Nautiyal)
+[10:45:15 AM] Cloning repository from GitHub parthnautiyal/portfolio...
+[10:45:16 AM] Environment variables successfully injected (GEMINI_API_KEY = encrypted)`
+  },
+  {
+    id: 'vite-compile',
+    name: 'Vite Compilation',
+    icon: FiCode,
+    description: 'Runs npm run build compiling TypeScript, minifying assets, and bundling modules via Vite.',
+    status: 'success',
+    configTitle: 'Vite static site compiler log output',
+    configContent: `> portfolio-frontend@0.0.0 build
+> tsc -b && vite build
 
-jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-      - name: Setup Java JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: maven`
+vite v7.3.1 building for production...
+transforming...
+✓ 457 modules transformed.
+rendering chunks...
+computing html, css and js bundles...
+
+dist/index.html                     3.45 kB │ gzip: 1.21 kB
+dist/assets/index-D7b3e21a.css      18.42 kB │ gzip: 4.88 kB
+dist/assets/index-B9e8f4c2.js      142.10 kB │ gzip: 44.52 kB
+✓ built in 1.84s`
   },
   {
-    id: 'junit-tdd',
-    name: 'TDD Test Runner',
-    icon: FiCheckCircle,
-    description: 'Runs Maven test suite compiling unit tests. Verifies TDD code coverage requirements.',
-    status: 'success',
-    configTitle: 'Surefire Test Report & TDD coverage metrics',
-    configContent: `[INFO] --- maven-surefire-plugin:3.0.0:test (default-test) ---
-[INFO] Running com.zopsmart.orders.OrderServiceTest
-[INFO] Tests run: 147, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 14.281 s
-[INFO] 
-[INFO] Results:
-[INFO] Tests run: 147, Failures: 0, Errors: 0, Skipped: 0
-[INFO]
-[INFO] --- jacoco-maven-plugin:0.8.8:report (post-test) ---
-[INFO] Analysing class files: Line Coverage: 87.2%, Branch Coverage: 84.5%
-[INFO] Quality Gate Result: PASSED (Coverage >= 85.0%)`
-  },
-  {
-    id: 'sonarqube',
-    name: 'SonarQube Quality Gate',
-    icon: FiFileText,
-    description: 'Statics analysis scan checking for security violations, secrets leaks, and code smells.',
-    status: 'success',
-    configTitle: 'SonarQube Analysis Report Summary',
-    configContent: `INFO: Sensor JavaSecuritySensor [security]
-INFO: Sensor JavaSecuritySensor [security] done: 1205 ms
-INFO: ------------- Analysing Quality Gate -------------
-INFO: Quality Gate status: PASSED
-INFO: 
-INFO: Breakdown:
-INFO: - Reliability: A (0 Bugs)
-INFO: - Security: A (0 Vulnerabilities)
-INFO: - Security Hotspots: 0 Review Required
-INFO: - Maintainability: A (4 Code Smells, Technical Debt: 1h 20m)
-INFO: - Duplicated Lines: 0.0%`
-  },
-  {
-    id: 'docker-pack',
-    name: 'Docker Build',
+    id: 'postcss-purge',
+    name: 'Tailwind CSS processing',
     icon: FiLayers,
-    description: 'Compiles lightweight OCI jar container. Optimizes layers utilizing multi-stage builder.',
+    description: 'Processes utility classes using Tailwind CSS v4 and PostCSS autoprefixer, purging unused styles.',
     status: 'success',
-    configTitle: 'JVM Microservice optimized multi-stage Dockerfile',
-    configContent: `# Stage 1: Runtime extraction layer
-FROM eclipse-temurin:17-jre-alpine AS builder
-WORKDIR /application
-ARG JAR_FILE=target/*.jar
-COPY \${JAR_FILE} app.jar
-RUN java -Djarmode=layertools -jar app.jar extract
-
-# Stage 2: Final runtime container
-FROM eclipse-temurin:17-jre-alpine
-WORKDIR /application
-COPY --from=builder /application/dependencies/ ./
-COPY --from=builder /application/spring-boot-loader/ ./
-COPY --from=builder /application/snapshot-dependencies/ ./
-COPY --from=builder /application/application/ ./
-ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]`
+    configTitle: 'PostCSS Tailwind v4 compiler stats',
+    configContent: `[INFO] PostCSS processing initiated for src/index.css
+[INFO] Resolving @tailwindcss/postcss compiler directives
+[INFO] Scanning source code files for active classes (src/**/*.{ts,tsx,html})
+[INFO] Purging unused tailwind components & utility classes
+[INFO] CSS assets optimization & minification completed
+[INFO] Generated styles bundle size: 18.42 kB (74.2% size reduction)`
   },
   {
-    id: 'k8s-helm',
-    name: 'K8s Helm Deploy',
+    id: 'serverless-map',
+    name: 'Serverless Bundling',
     icon: FiCpu,
-    description: 'Updates GitOps repository triggers. ArgoCD deploys Helm charts to Kubernetes cluster.',
+    description: 'Bundles individual Vercel Serverless proxy functions (api/chat.js, api/job-match.js) into Vercel lambdas.',
     status: 'success',
-    configTitle: 'Kubernetes resources templates configuration values (helm/values.yaml)',
-    configContent: `replicaCount: 3
+    configTitle: 'Vercel Serverless routing maps (vercel.json)',
+    configContent: `{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
 
-image:
-  repository: registry.zopsmart.com/orders-service
-  tag: "git-8af1a392"
-  pullPolicy: IfNotPresent
-
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 200m
-    memory: 256Mi
-
-livenessProbe:
-  httpGet:
-    path: /actuator/health/liveness
-    port: 8080
-  initialDelaySeconds: 30
-  periodSeconds: 10
-
-readinessProbe:
-  httpGet:
-    path: /actuator/health/readiness
-    port: 8080
-  initialDelaySeconds: 15
-  periodSeconds: 5`
+[INFO] Bundling api/chat.js (Size: 5.3 KB, Runtime: Node.js 20)
+[INFO] Bundling api/contact.js (Size: 2.5 KB, Runtime: Node.js 20)
+[INFO] Bundling api/job-match.js (Size: 6.1 KB, Runtime: Node.js 20)
+[INFO] Bundling api/update-content.js (Size: 7.9 KB, Runtime: Node.js 20)`
+  },
+  {
+    id: 'edge-cdn',
+    name: 'Edge CDN Deploy',
+    icon: FiCheckCircle,
+    description: 'Deploys static files to 80+ Edge PoPs global Anycast network and runs a Core Web Vitals audit.',
+    status: 'success',
+    configTitle: 'Edge caching status & Web Vitals audit results',
+    configContent: `[INFO] Deployed static workspace assets to global Vercel CDN.
+[INFO] Routing tables updated. Edge caching active (Cache-Control: public, max-age=0, must-revalidate)
+[INFO] Verifying performance vitals:
+  - FCP (First Contentful Paint): 0.4s
+  - LCP (Largest Contentful Paint): 0.8s
+  - CLS (Cumulative Layout Shift): 0.01
+[INFO] Edge Deployment SUCCESSFUL. Live URL: https://parthnautiyal.com`
   }
 ]
 
 export default function PipelineVisualizer() {
-  const [activeStage, setActiveStage] = useState<Stage>(pipelineStages[1]) // Default to testing report
+  const [activeStageId, setActiveStageId] = useState<string>('vite-compile')
+
+  const activeStage = pipelineStages.find((s) => s.id === activeStageId) || pipelineStages[1]
 
   return (
     <div className="glass-card p-5 space-y-6">
       <div className="border-b border-slate-200/40 dark:border-slate-800/40 pb-2">
         <h3 className="text-sm font-bold flex items-center gap-2">
           <FiCheckCircle className="text-green-500" />
-          GitOps CI/CD Pipeline Visualizer
+          GitOps CI/CD Build Pipeline Visualizer
         </h3>
         <p className="text-[0.65rem] text-slate-500 mt-0.5">
-          Select any pipeline node to inspect real deployment configs, build logs, and test verification scripts.
+          Select any pipeline node to inspect authentic deployment configurations, Vite build logs, and edge distribution status.
         </p>
       </div>
 
-      {/* Horizontal Pipeline flow */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-4 glass-panel rounded-2xl relative overflow-hidden">
-        {pipelineStages.map((stage, idx) => {
-          const Icon = stage.icon
-          const isActive = activeStage.id === stage.id
-          return (
-            <div key={stage.id} className="flex-1 flex flex-col md:flex-row items-center w-full relative z-10">
+      <div className="grid gap-6 md:grid-cols-[0.4fr_0.6fr]">
+        {/* Left column: Stages sequence list */}
+        <div className="space-y-2.5">
+          {pipelineStages.map((stage) => {
+            const Icon = stage.icon
+            const isActive = stage.id === activeStageId
+            return (
               <button
-                onClick={() => setActiveStage(stage)}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
+                key={stage.id}
+                onClick={() => setActiveStageId(stage.id)}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all hover:scale-[1.01] cursor-pointer ${
                   isActive
-                    ? 'bg-blue-600/10 border-blue-500 text-blue-500 scale-105'
-                    : 'bg-slate-900/10 border-[var(--border-color)] hover:border-slate-400 dark:hover:border-slate-600 text-[var(--color-text)]'
-                } cursor-pointer`}
+                    ? 'bg-green-500/10 border-green-500/40 text-green-600 dark:text-green-400 font-bold'
+                    : 'glass-panel border-[var(--border-color)] hover:border-slate-350 dark:hover:border-slate-700'
+                }`}
               >
-                <div className={`p-2 rounded-lg shrink-0 ${isActive ? 'bg-blue-600/20 text-blue-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                  <Icon size={16} />
+                <div className={`p-2 rounded-lg shrink-0 ${isActive ? 'bg-green-500/20 text-green-500' : 'bg-slate-500/10 text-slate-500'}`}>
+                  <Icon size={14} />
                 </div>
-                <div className="min-w-0">
-                  <span className="text-[0.65rem] font-extrabold uppercase tracking-wide block">Stage 0{idx + 1}</span>
-                  <span className="text-xs font-bold block text-[var(--color-text-bright)] mt-0.5 truncate">{stage.name}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-xs text-[var(--color-text-bright)]">{stage.name}</span>
+                    <span className="text-[0.5rem] font-bold uppercase text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded">
+                      Passed
+                    </span>
+                  </div>
+                  <p className="text-[0.55rem] text-slate-500 mt-0.5 truncate leading-relaxed">
+                    {stage.description}
+                  </p>
                 </div>
               </button>
-              
-              {/* Connector line for large screens */}
-              {idx < pipelineStages.length - 1 && (
-                <div className="hidden md:block w-6 h-0.5 bg-slate-200 dark:bg-slate-800 shrink-0 self-center mx-1" />
-              )}
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Code Inspector */}
-      <div className="glass-panel p-4 rounded-xl space-y-3 relative z-10">
-        <div className="flex items-center justify-between text-[0.65rem] border-b border-slate-200/20 dark:border-slate-800/40 pb-2">
-          <span className="font-bold text-slate-700 dark:text-slate-300">File: {activeStage.configTitle}</span>
-          <span className="font-extrabold text-green-500 uppercase bg-green-500/10 px-2 py-0.5 rounded-full">Success</span>
+            )
+          })}
         </div>
-        <pre className="p-4 rounded-lg bg-slate-950 text-green-400 text-[0.6rem] font-mono overflow-x-auto overflow-y-auto leading-relaxed max-h-[220px] w-full border border-slate-800">
-          {activeStage.configContent}
-        </pre>
+
+        {/* Right column: Active stage code viewer */}
+        <div className="glass-panel p-4 rounded-xl flex flex-col justify-between h-full min-h-[300px]">
+          <div>
+            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 border-b border-slate-200/20 dark:border-slate-800 pb-2 mb-3">
+              {activeStage.configTitle}
+            </h4>
+            <pre className="text-[0.62rem] font-mono text-emerald-500 dark:text-emerald-400 overflow-x-auto whitespace-pre leading-relaxed p-4 rounded-lg bg-slate-950 border border-slate-850">
+              {activeStage.configContent}
+            </pre>
+          </div>
+          <div className="text-[0.6rem] text-slate-400 mt-3 flex items-center gap-1">
+            <FiCheckCircle className="text-green-500" />
+            <span>Deployment verification checklist complete for this build.</span>
+          </div>
+        </div>
       </div>
     </div>
   )

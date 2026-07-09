@@ -55,7 +55,7 @@ export const ACHIEVEMENTS: Record<AchievementKey, Omit<Achievement, 'key'>> = {
   },
   TRIGGER_CHAOS: {
     title: 'Chaos Engineer',
-    description: 'Trigger a simulator failure injection in the cockpit.',
+    description: 'Trigger a simulation event in the system architecture dashboard.',
     xp: 250,
   },
   CHAT_QUERY: {
@@ -163,15 +163,51 @@ export function loadScriptOnce(src: string, guard: () => boolean): HTMLScriptEle
 const QuestContext = createContext<QuestContextType | undefined>(undefined)
 
 export function QuestProvider({ children }: { children: React.ReactNode }) {
-  const [level, setLevel] = useState<number>(1)
-  const [xp, setXp] = useState<number>(0)
-  const [unlockedAchievements, setUnlockedAchievements] =
-    useState<Record<AchievementKey, boolean>>(buildInitialUnlocked())
+  const [level, setLevel] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedLevel = localStorage.getItem('quest_level')
+        if (savedLevel) return parseInt(savedLevel, 10)
+      } catch (e) {
+        // ignore
+      }
+    }
+    return 1
+  })
+
+  const [xp, setXp] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedXp = localStorage.getItem('quest_xp')
+        if (savedXp) return parseInt(savedXp, 10)
+      } catch (e) {
+        // ignore
+      }
+    }
+    return 0
+  })
+
+  const [unlockedAchievements, setUnlockedAchievements] = useState<
+    Record<AchievementKey, boolean>
+  >(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedUnlocked = localStorage.getItem('quest_unlocked')
+        if (savedUnlocked) {
+          return JSON.parse(savedUnlocked) as Record<AchievementKey, boolean>
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    return buildInitialUnlocked()
+  })
+
   const [toasts, setToasts] = useState<QuestToast[]>([])
 
   // Ref used for synchronous "already unlocked?" check, preventing double
   // toasts in React StrictMode.
-  const unlockedRef = useRef<Record<AchievementKey, boolean>>(buildInitialUnlocked())
+  const unlockedRef = useRef<Record<AchievementKey, boolean>>(unlockedAchievements)
 
   // Load canvas-confetti once for level-up celebrations.
   useEffect(() => {
@@ -179,25 +215,6 @@ export function QuestProvider({ children }: { children: React.ReactNode }) {
       'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js',
       () => Boolean(window.confetti),
     )
-  }, [])
-
-  // Hydrate state from localStorage on mount.
-  useEffect(() => {
-    try {
-      const savedLevel = localStorage.getItem('quest_level')
-      const savedXp = localStorage.getItem('quest_xp')
-      const savedUnlocked = localStorage.getItem('quest_unlocked')
-
-      if (savedLevel) setLevel(parseInt(savedLevel, 10))
-      if (savedXp) setXp(parseInt(savedXp, 10))
-      if (savedUnlocked) {
-        const parsed = JSON.parse(savedUnlocked) as Record<AchievementKey, boolean>
-        setUnlockedAchievements(parsed)
-        unlockedRef.current = parsed
-      }
-    } catch (e) {
-      console.warn('[Quest] Failed to load quest status from localStorage:', e)
-    }
   }, [])
 
   // Persist state to localStorage whenever it changes.
@@ -254,10 +271,11 @@ export function QuestProvider({ children }: { children: React.ReactNode }) {
     )
 
     if (leveledUp) {
-      // Fire confetti burst on level-up.
+      // Fire subtle corner confetti burst on level-up.
       if (typeof window !== 'undefined' && window.confetti) {
         try {
-          window.confetti({ particleCount: 180, spread: 90, origin: { y: 0.6 } })
+          window.confetti({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0, y: 1 } })
+          window.confetti({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1, y: 1 } })
         } catch (e) {
           console.warn('[Quest] Confetti burst failed:', e)
         }

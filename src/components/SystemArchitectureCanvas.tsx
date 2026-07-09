@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { FiHardDrive, FiCpu, FiGlobe, FiFolder, FiNavigation, FiCode } from 'react-icons/fi'
+import { FiHardDrive, FiCpu, FiGlobe, FiFolder, FiNavigation, FiCode, FiAlertCircle } from 'react-icons/fi'
+import type { FailureState } from '../pages/SystemCockpitPage.tsx'
 
 type SystemNode = {
   id: string
@@ -11,93 +12,114 @@ type SystemNode = {
   codeSnippet: string
   x: number
   y: number
+  isOffline?: boolean
+  hasWarning?: boolean
 }
 
-const systemNodes: SystemNode[] = [
-  {
-    id: 'resume-pdf',
-    label: 'Resume PDF (Local)',
-    icon: FiHardDrive,
-    description: 'The primary source of truth. Whenever Parth updates his credentials, he updates this local PDF file on his Mac.',
-    tradeOffs: 'Maintains offline master document format; but requires compilation to update the web representation.',
-    pattern: 'Single Source of Truth (SSOT)',
-    codeSnippet: 'Parth_Nautiyal_Resume.pdf',
-    x: 150,
-    y: 80
-  },
-  {
-    id: 'sync-script',
-    label: 'Sync Script (Node CLI)',
-    icon: FiCpu,
-    description: 'A Node.js CLI script (scripts/sync-resume.js) run locally by the developer. It copies the resume PDF to iCloud/GDrive cloud directories, then re-generates src/content/*.ts files from PDF text via Gemini API so the site always reflects the latest resume data.',
-    tradeOffs: 'Eliminates server overhead by shifting all compilation to build time (SSG); requires a one-time developer execution whenever the resume is updated.',
-    pattern: 'Build-Time Pipeline (SSG)',
-    codeSnippet: '# Run from project root after updating resume PDF:\nnode scripts/sync-resume.js\n\n# What it does:\n# 1. Copy PDF -> iCloud & Google Drive paths\n# 2. Extract text via pdf-parse\n# 3. Call Gemini API to generate structured JSON\n# 4. Overwrite src/content/*.ts with updated data',
-    x: 150,
-    y: 220
-  },
-  {
-    id: 'icloud-gdrive',
-    label: 'iCloud & GDrive',
-    icon: FiFolder,
-    description: 'Native macOS CloudStorage mount paths. The sync script copies the PDF here automatically — iCloud at ~/Library/Mobile Documents/com~apple~CloudDocs/ and Google Drive at ~/Google Drive/My Drive/. Both auto-sync to cloud on save, requiring zero external API keys.',
-    tradeOffs: 'Zero-config cloud backup leveraging macOS folder mounts; requires Mac environment with both services signed in.',
-    pattern: 'File System Sync (NIO)',
-    codeSnippet: "const ICLOUD = path.join(os.homedir(),\n  'Library/Mobile Documents/com~apple~CloudDocs/Resume'\n)\nconst GDRIVE = path.join(os.homedir(), 'Google Drive/My Drive/Resume')\n\nfor (const dest of [ICLOUD, GDRIVE]) {\n  fs.mkdirSync(dest, { recursive: true })\n  fs.copyFileSync(PDF_PATH, path.join(dest, 'resume.pdf'))\n}",
-    x: 380,
-    y: 80
-  },
-  {
-    id: 'vercel-cdn',
-    label: 'Vercel CDN',
-    icon: FiGlobe,
-    description: 'Hosts the statically compiled React site globally. Delivers maximum speed, high SEO rating, and 99.99% uptime for $0/month.',
-    tradeOffs: 'Provides extreme speed and durability; updates require a static redeploy (automated via GitHub Webhooks).',
-    pattern: 'Jamstack CDN Distribution',
-    codeSnippet: 'vercel deploy --prod\n// Global edge network distribution',
-    x: 380,
-    y: 220
-  },
-  {
-    id: 'visitor-browser',
-    label: 'Visitor Browser',
-    icon: FiNavigation,
-    description: "Renders the glassmorphic React site. Automatically computes auto dark mode based on the user's local hour and manages API keys in localStorage.",
-    tradeOffs: 'Maximizes client-side performance; relies on the visitor\'s machine resources.',
-    pattern: 'Client-Side Rendering (CSR)',
-    codeSnippet: 'const hour = new Date().getHours();\nconst isNight = hour >= 18 || hour < 6;',
-    x: 610,
-    y: 220
-  },
-  {
-    id: 'vercel-api',
-    label: 'Serverless Functions',
-    icon: FiCpu,
-    description: 'Vercel Serverless proxy endpoints. Acts as a secure intermediary to hide Parth\'s Gemini API keys from the client.',
-    tradeOffs: 'Secures credentials and handles CORS; subject to cold starts (minimized by lightweight Node.js runtimes).',
-    pattern: 'Serverless Gateway Proxy',
-    codeSnippet: 'export default async function handler(req, res) {\n  const res = await fetch("...gemini?key=" + process.env.GEMINI_KEY);\n}',
-    x: 380,
-    y: 360
-  },
-  {
-    id: 'gemini-api',
-    label: 'Google Gemini API',
-    icon: FiCpu,
-    description: 'AI backend running the resume analysis and chatbot response generation. Supports developer API key overrides.',
-    tradeOffs: 'Highly accurate and fast (Gemini 2.5 Flash); requires internet access and handles API limits.',
-    pattern: 'External LLM Gateway',
-    codeSnippet: 'fetch("https://generativelanguage.googleapis.com/...key=" + key)',
-    x: 610,
-    y: 360
-  }
-]
+type Props = {
+  failureState: FailureState
+}
 
-export default function SystemArchitectureCanvas() {
-  const [selectedNode, setSelectedNode] = useState<SystemNode | null>(systemNodes[1]) // Default to sync script
+export default function SystemArchitectureCanvas({ failureState }: Props) {
+  const [selectedNode, setSelectedNode] = useState<string>('sync-script')
   const [showCode, setShowCode] = useState(false)
 
-  const activeNode = selectedNode || systemNodes[1]
+  const systemNodes: SystemNode[] = [
+    {
+      id: 'resume-pdf',
+      label: '① Resume PDF (Local)',
+      icon: FiHardDrive,
+      description: "Parth's primary credentials file (Parth_Nautiyal_Resume.pdf) edited on his local machine. Any updates to his professional history begin here.",
+      tradeOffs: 'Allows keeping a clean offline master resume document; requires compilation/parsing to update the live website.',
+      pattern: 'Single Source of Truth (SSOT)',
+      codeSnippet: 'Parth_Nautiyal_Resume.pdf (Binary PDF file)',
+      x: 150,
+      y: 70
+    },
+    {
+      id: 'sync-script',
+      label: '② Sync Script (Node CLI)',
+      icon: FiCode,
+      description: 'A Node.js build-time CLI script (scripts/sync-resume.js) run locally. Copies the PDF to iCloud/GDrive and calls Gemini (or local Ollama) to output JSON content.',
+      tradeOffs: 'Shifts parsing overhead to build-time, achieving zero server runtime load; requires manual or file-watch triggering.',
+      pattern: 'Static Site Generation (SSG)',
+      codeSnippet: 'node scripts/sync-resume.js\n\n// 1. Sync PDF to local CloudStorage folders\n// 2. Extract PDF text layer\n// 3. Request Gemini API to parse to structured JSON\n// 4. Overwrite local src/content/*.ts',
+      x: 150,
+      y: 200
+    },
+    {
+      id: 'icloud-gdrive',
+      label: '③ iCloud & GDrive',
+      icon: FiFolder,
+      description: 'Local macOS cloud storage mounts. Automatically backs up the resume to iCloud and Google Drive paths natively upon script execution.',
+      tradeOffs: 'Zero-config automated cloud backups; requires Mac environment with both iCloud & Drive accounts signed in.',
+      pattern: 'File Sync Pipeline',
+      codeSnippet: 'const ICLOUD = \'~/Library/Mobile Documents/com~apple~CloudDocs/Resume\'\nconst GDRIVE = \'~/Library/CloudStorage/GoogleDrive-user/My Drive/Resume\'\n\nfs.copyFileSync(PDF_PATH, path.join(ICLOUD, \'resume.pdf\'))',
+      x: 380,
+      y: 70,
+      isOffline: failureState.cloudMountOffline
+    },
+    {
+      id: 'vercel-cdn',
+      label: '④ Vercel CDN',
+      icon: FiGlobe,
+      description: 'Hosts the statically compiled React/Vite application globally. Provides ultra-low latency edge delivery, high SEO speed ratings, and near 100% availability.',
+      tradeOffs: 'Extreme speed and scale; updates require a static build trigger (automated via GitHub Webhook on commit pushes).',
+      pattern: 'Edge Cache Distribution',
+      codeSnippet: 'git push origin main\n// Triggers Vercel CI/CD Webhook\n// Compiles and deploys production static assets',
+      x: 380,
+      y: 200
+    },
+    {
+      id: 'visitor-browser',
+      label: '⑤ Visitor Browser',
+      icon: FiNavigation,
+      description: 'Renders the glassmorphic React site. Serves interactive content, computes layouts, toggles themes, and manages local storage keys.',
+      tradeOffs: 'Instant user interactions; performance depends on client-side CPU/GPU resources.',
+      pattern: 'Client-Side Rendering (CSR)',
+      codeSnippet: 'const activeTheme = localStorage.getItem(\'theme\')\n// Client-side routing and DOM updates',
+      x: 610,
+      y: 200
+    },
+    {
+      id: 'vercel-api',
+      label: '⑥ Serverless Functions',
+      icon: FiCpu,
+      description: 'Vercel serverless proxy endpoints (api/chat.js, api/job-match.js) acting as a secure gateway to forward client requests to LLM APIs, keeping credentials secure.',
+      tradeOffs: 'Secures credentials and prevents client CORS issues; subject to serverless function cold starts.',
+      pattern: 'Serverless Gateway Proxy',
+      codeSnippet: 'export default async function handler(req, res) {\n  // Safe proxy endpoint hiding environment keys\n  const reply = await callGeminiAPI(req.body);\n  res.status(200).json(reply);\n}',
+      x: 380,
+      y: 330,
+      hasWarning: failureState.gatewayLatency
+    },
+    {
+      id: 'gemini-api',
+      label: '⑦ Google Gemini API',
+      icon: FiCpu,
+      description: 'The primary external LLM provider. Generates responses for the Chatbot and performs ATS Job Matching comparisons based on Parth\'s resume.',
+      tradeOffs: 'High speed, large context window, and accurate reasoning; requires internet connectivity and is subject to rate/quota limits.',
+      pattern: 'External LLM Gateway',
+      codeSnippet: 'const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });\nconst model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });',
+      x: 610,
+      y: 330,
+      isOffline: failureState.geminiLimit
+    },
+    {
+      id: 'ollama-local',
+      label: '⑧ Local Ollama Fallback',
+      icon: FiCpu,
+      description: 'A locally running Ollama server on Parth\'s development machine. Acts as a fully offline fallback to parse/generate text during local sync and local testing.',
+      tradeOffs: 'Complete data privacy and offline capability; model inference speed is dependent on local GPU hardware.',
+      pattern: 'Offline Local LLM',
+      codeSnippet: 'const response = await fetch(\'http://localhost:11434/api/generate\', {\n  method: \'POST\',\n  body: JSON.stringify({ model: \'llama3\', prompt })\n})',
+      x: 150,
+      y: 330,
+      isOffline: failureState.ollamaOffline
+    }
+  ]
+
+  const activeNode = systemNodes.find(n => n.id === selectedNode) || systemNodes[1]
 
   return (
     <div className="glass-card p-6 space-y-6">
@@ -112,94 +134,218 @@ export default function SystemArchitectureCanvas() {
       </div>
 
       {/* SVG Interactive Canvas */}
-      <div className="overflow-x-auto rounded-xl glass-panel p-4">
-        <svg viewBox="0 0 760 440" className="w-[760px] mx-auto select-none">
+      <div className="overflow-x-auto rounded-xl glass-panel p-4 bg-slate-50/50 dark:bg-slate-950/20">
+        <svg viewBox="0 0 760 400" className="w-[760px] mx-auto select-none">
           {/* Defs for gradients and markers */}
           <defs>
             <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#2563eb" />
               <stop offset="100%" stopColor="#3b82f6" />
             </linearGradient>
-            <linearGradient id="skyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#0284c7" />
-              <stop offset="100%" stopColor="#0ea5e9" />
+            <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f87171" />
+            </linearGradient>
+            <linearGradient id="amberGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#fbbf24" />
             </linearGradient>
             <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8" />
+              <path d="M 0 0 L 10 5 L 0 10 z" className="fill-slate-400 dark:fill-slate-600" />
+            </marker>
+            <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" className="fill-rose-500 dark:fill-rose-400" />
+            </marker>
+            <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" className="fill-amber-500 dark:fill-amber-400" />
             </marker>
           </defs>
 
           {/* Connectors (Flow Paths) */}
-          {/* PDF -> Sync Script */}
-          <path d="M 150 120 L 150 190" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="5,5" className="animate-pulse" markerEnd="url(#arrow)" />
-          
-          {/* Sync Script -> iCloud / GDrive */}
-          <path d="M 195 210 L 320 90" fill="none" stroke="#94a3b8" strokeWidth="2" markerEnd="url(#arrow)" />
-          
-          {/* Sync Script -> Vercel CDN (updates build files) */}
-          <path d="M 195 220 L 340 220" fill="none" stroke="#94a3b8" strokeWidth="2" markerEnd="url(#arrow)" />
-          
-          {/* Vercel CDN -> Visitor Browser */}
-          <path d="M 425 220 L 570 220" fill="none" stroke="#94a3b8" strokeWidth="2" markerEnd="url(#arrow)" />
-          
-          {/* Visitor Browser <-> Vercel API (serverless calls) */}
-          <path d="M 610 260 L 425 350" fill="none" stroke="#94a3b8" strokeWidth="2" markerEnd="url(#arrow)" />
-          
-          {/* Vercel API -> Gemini API */}
-          <path d="M 425 365 L 570 365" fill="none" stroke="#94a3b8" strokeWidth="2" markerEnd="url(#arrow)" />
-          
-          {/* Direct Developer Key Browser Call -> Gemini API */}
-          <path d="M 610 260 L 610 320" fill="none" stroke="#2563eb" strokeWidth="2" strokeDasharray="3,3" markerEnd="url(#arrow)" />
+          {/* PDF -> Sync Script (1 -> 2) */}
+          <path
+            d="M 150 95 L 150 175"
+            fill="none"
+            strokeWidth="2"
+            strokeDasharray="4,4"
+            className="stroke-slate-400 dark:stroke-slate-600"
+            markerEnd="url(#arrow)"
+          />
+
+          {/* Sync Script -> iCloud / GDrive (2 -> 3) */}
+          <path
+            d="M 215 95 L 315 75"
+            fill="none"
+            strokeWidth="2"
+            className={`transition-colors duration-300 ${
+              failureState.cloudMountOffline
+                ? 'stroke-rose-500 dark:stroke-rose-450 stroke-dashed animate-pulse'
+                : 'stroke-slate-400 dark:stroke-slate-600'
+            }`}
+            markerEnd={failureState.cloudMountOffline ? 'url(#arrow-red)' : 'url(#arrow)'}
+          />
+
+          {/* Sync Script -> Vercel CDN (2 -> 4) */}
+          <path
+            d="M 215 200 L 315 200"
+            fill="none"
+            strokeWidth="2"
+            className="stroke-slate-400 dark:stroke-slate-600"
+            markerEnd="url(#arrow)"
+          />
+
+          {/* Vercel CDN -> Visitor Browser (4 -> 5) */}
+          <path
+            d="M 445 200 L 545 200"
+            fill="none"
+            strokeWidth="2"
+            className="stroke-slate-400 dark:stroke-slate-600"
+            markerEnd="url(#arrow)"
+          />
+
+          {/* Visitor Browser <-> Serverless Functions (5 -> 6) */}
+          <path
+            d="M 610 225 L 445 330"
+            fill="none"
+            strokeWidth="2"
+            className={`transition-all duration-300 ${
+              failureState.gatewayLatency
+                ? 'stroke-amber-500 dark:stroke-amber-400 stroke-[3px] stroke-dashed animate-pulse'
+                : 'stroke-slate-400 dark:stroke-slate-600'
+            }`}
+            markerEnd={failureState.gatewayLatency ? 'url(#arrow-amber)' : 'url(#arrow)'}
+          />
+
+          {/* Serverless Functions -> Gemini API (6 -> 7) */}
+          <path
+            d="M 445 330 L 545 330"
+            fill="none"
+            strokeWidth="2"
+            className={`transition-colors duration-300 ${
+              failureState.geminiLimit
+                ? 'stroke-rose-500 dark:stroke-rose-450 stroke-dashed'
+                : 'stroke-slate-400 dark:stroke-slate-600'
+            }`}
+            markerEnd={failureState.geminiLimit ? 'url(#arrow-red)' : 'url(#arrow)'}
+          />
+
+          {/* Serverless Functions -> Ollama Local Fallback (6 -> 8) */}
+          <path
+            d="M 315 330 L 215 330"
+            fill="none"
+            strokeWidth="2"
+            className={`transition-all duration-300 ${
+              failureState.geminiLimit && !failureState.ollamaOffline
+                ? 'stroke-emerald-500 dark:stroke-emerald-450 stroke-[3px] animate-pulse'
+                : failureState.ollamaOffline
+                ? 'stroke-slate-300 dark:stroke-slate-800 stroke-dashed'
+                : 'stroke-slate-400 dark:stroke-slate-600 stroke-dashed'
+            }`}
+            markerEnd={failureState.geminiLimit && !failureState.ollamaOffline ? 'url(#arrow)' : 'url(#arrow)'}
+          />
+
+          {/* Sync Script -> Ollama Local Fallback (2 -> 8) */}
+          <path
+            d="M 150 225 L 150 305"
+            fill="none"
+            strokeWidth="2"
+            className={`transition-colors duration-300 ${
+              failureState.ollamaOffline
+                ? 'stroke-rose-500 dark:stroke-rose-450 stroke-dashed'
+                : 'stroke-slate-400 dark:stroke-slate-600'
+            }`}
+            markerEnd={failureState.ollamaOffline ? 'url(#arrow-red)' : 'url(#arrow)'}
+          />
 
           {/* Node Render Loop */}
           {systemNodes.map((node) => {
             const Icon = node.icon
-            const isSelected = activeNode.id === node.id
+            const isSelected = selectedNode === node.id
+            
+            // Determine background/border coloring
+            let fillClass = 'fill-white dark:fill-slate-900'
+            let strokeClass = 'stroke-slate-200 dark:stroke-slate-800'
+            let textClass = 'fill-slate-800 dark:fill-slate-100'
+            let subtextClass = 'fill-slate-500 dark:fill-slate-400'
+            let iconBoxClass = 'fill-blue-500/10'
+            let iconClass = 'text-blue-600 dark:text-blue-400'
+
+            if (isSelected) {
+              fillClass = 'fill-blue-600 dark:fill-blue-500/90'
+              strokeClass = 'stroke-blue-700 dark:stroke-blue-400'
+              textClass = 'fill-white'
+              subtextClass = 'fill-blue-100'
+              iconBoxClass = 'fill-white/20'
+              iconClass = 'text-white'
+            } else if (node.isOffline) {
+              fillClass = 'fill-rose-500/5 dark:fill-rose-950/20'
+              strokeClass = 'stroke-rose-500/40 dark:stroke-rose-500/40'
+              iconBoxClass = 'fill-rose-500/10'
+              iconClass = 'text-rose-500'
+            } else if (node.hasWarning) {
+              fillClass = 'fill-amber-500/5 dark:fill-amber-950/20'
+              strokeClass = 'stroke-amber-500/50 dark:stroke-amber-500/40'
+              iconBoxClass = 'fill-amber-500/10'
+              iconClass = 'text-amber-500'
+            }
+
             return (
               <g
                 key={node.id}
-                transform={`translate(${node.x - 45}, ${node.y - 25})`}
+                transform={`translate(${node.x - 65}, ${node.y - 25})`}
                 onClick={() => {
-                  setSelectedNode(node)
+                  setSelectedNode(node.id)
                   setShowCode(false)
                 }}
-                className="cursor-pointer"
+                className="cursor-pointer group"
               >
                 {/* Node Box background */}
                 <rect
                   width="130"
                   height="50"
-                  rx="10"
-                  fill={isSelected ? 'url(#blueGradient)' : 'light-dark(rgba(255,255,255,0.7), rgba(30,41,59,0.7))'}
-                  stroke={isSelected ? '#2563eb' : 'light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.1))'}
-                  strokeWidth={isSelected ? '2' : '1'}
-                  className="transition-all duration-300 hover:scale-105"
+                  rx="12"
+                  className={`transition-all duration-300 group-hover:scale-[1.03] ${fillClass} ${strokeClass}`}
+                  strokeWidth={isSelected ? '2' : '1.5'}
                 />
-                {/* Node Icon */}
+
+                {/* Node Icon container */}
                 <g transform="translate(10, 15)">
-                  <rect width="20" height="20" rx="4" fill={isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(59,130,246,0.1)'} />
+                  <rect width="20" height="20" rx="6" className={iconBoxClass} />
                   <foreignObject x="2" y="2" width="16" height="16">
-                    <Icon size={16} className={isSelected ? 'text-white' : 'text-blue-500'} />
+                    <Icon size={16} className={iconClass} />
                   </foreignObject>
                 </g>
+
                 {/* Node Text */}
                 <text
                   x="38"
-                  y="28"
+                  y="26"
                   fontSize="8"
                   fontWeight="bold"
-                  fill={isSelected ? '#ffffff' : 'light-dark(#1e293b, #f8fafc)'}
+                  className={textClass}
                 >
                   {node.label.split(' (')[0]}
                 </text>
                 <text
                   x="38"
-                  y="38"
-                  fontSize="6"
-                  fill={isSelected ? 'rgba(255,255,255,0.7)' : 'light-dark(#64748b, #94a3b8)'}
+                  y="36"
+                  fontSize="6.5"
+                  className={subtextClass}
                 >
                   {node.label.includes('(') ? '(' + node.label.split(' (')[1] : ''}
                 </text>
+
+                {/* Status Badges */}
+                {node.isOffline && (
+                  <g transform="translate(118, 8)">
+                    <circle r="5" className="fill-rose-500 stroke-white dark:stroke-slate-900" strokeWidth="1.5" />
+                  </g>
+                )}
+                {node.hasWarning && (
+                  <g transform="translate(118, 8)">
+                    <circle r="5" className="fill-amber-500 stroke-white dark:stroke-slate-900 animate-pulse" strokeWidth="1.5" />
+                  </g>
+                )}
               </g>
             )
           })}
@@ -213,14 +359,14 @@ export default function SystemArchitectureCanvas() {
             <span className="text-[0.65rem] font-bold uppercase tracking-wider text-blue-600 dark:text-sky-400 bg-blue-50 dark:bg-blue-950/20 px-2 py-0.5 rounded">
               Pattern: {activeNode.pattern}
             </span>
-            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-1 truncate">{activeNode.label}</h4>
+            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-1 truncate">{activeNode.label.substring(2)}</h4>
           </div>
           <button
             onClick={() => setShowCode(!showCode)}
             className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[0.65rem] font-semibold bg-slate-900 text-slate-50 dark:bg-slate-50 dark:text-slate-900 hover:opacity-90 transition-opacity cursor-pointer shrink-0"
           >
             <FiCode size={12} />
-            {showCode ? 'Description' : 'Show Code'}
+            {showCode ? 'Description' : 'Show Snippet'}
           </button>
         </div>
 
@@ -230,12 +376,24 @@ export default function SystemArchitectureCanvas() {
               <p className="leading-relaxed text-slate-600 dark:text-slate-300">
                 {activeNode.description}
               </p>
+              {activeNode.isOffline && (
+                <div className="flex items-center gap-1.5 text-rose-500 font-semibold mt-1">
+                  <FiAlertCircle size={14} />
+                  <span>Outage simulated: system has suspended normal operations for this component.</span>
+                </div>
+              )}
+              {activeNode.hasWarning && (
+                <div className="flex items-center gap-1.5 text-amber-500 font-semibold mt-1">
+                  <FiAlertCircle size={14} />
+                  <span>Latency warning: performance is currently degraded.</span>
+                </div>
+              )}
               <div className="border-t border-slate-200/40 dark:border-slate-800/40 pt-2 text-[0.7rem] text-slate-500 dark:text-slate-400">
                 <strong className="text-slate-700 dark:text-slate-300">Architectural Trade-Off:</strong> {activeNode.tradeOffs}
               </div>
             </div>
           ) : (
-            <pre className="p-4 rounded-xl bg-slate-950 text-green-400 text-[0.65rem] font-mono overflow-x-auto overflow-y-auto leading-relaxed max-h-[180px] w-full">
+            <pre className="p-4 rounded-xl bg-slate-950 text-emerald-400 text-[0.65rem] font-mono overflow-x-auto overflow-y-auto leading-relaxed max-h-[180px] w-full border border-slate-800">
               {activeNode.codeSnippet}
             </pre>
           )}

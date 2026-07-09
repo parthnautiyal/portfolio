@@ -10,7 +10,7 @@ const links = [
   { to: '/experience', label: 'Experience' },
   { to: '/projects', label: 'Projects' },
   { to: '/resume', label: 'Resume' },
-  { to: '/system', label: 'System Cockpit' },
+  { to: '/system', label: 'System Architecture' },
 ]
 
 type ThemeMode = 'auto' | 'light' | 'dark'
