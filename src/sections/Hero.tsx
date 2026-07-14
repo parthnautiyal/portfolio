@@ -17,7 +17,7 @@ export default function Hero() {
       <div className="grid gap-12 md:grid-cols-[1.3fr_0.7fr] md:items-center">
         <div className="space-y-8 animate-fade-up">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--color-primary)]">
-            Full-Stack Developer
+            Backend Engineer
           </p>
           <h1 className="text-5xl font-extrabold tracking-tight md:text-6xl lg:text-7xl">
             Hi, I&apos;m{' '}
