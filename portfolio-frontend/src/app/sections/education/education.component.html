@@ -1,0 +1,56 @@
+<section id="education" class="py-16">
+  <h2 class="section-heading animate-fade-up">Education</h2>
+  <div *ngIf="edu" class="mt-8 card-elevated overflow-hidden">
+    <!-- Header -->
+    <div class="flex items-start gap-5 p-6 border-b border-[var(--border-color)]">
+      <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-2xl bg-purple-500/10">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500 dark:text-purple-400"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path></svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h3 class="text-lg font-bold text-[var(--color-text-bright)]">{{ edu.institution }}</h3>
+        <p class="text-sm font-semibold text-[var(--color-primary)] mt-0.5">{{ edu.degree }}</p>
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-[var(--color-text-muted)]">
+          <span class="flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            {{ edu.location }}
+          </span>
+          <span class="flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            {{ edu.period }}
+          </span>
+          <span *ngIf="edu.cgpa" class="flex items-center gap-1 font-semibold text-amber-500">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+            CGPA {{ edu.cgpa }} / 10
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coursework -->
+    <div class="p-6">
+      <p class="text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)] mb-3">
+        Relevant Coursework
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <ng-container *ngFor="let course of edu.coursework">
+          <a
+            *ngIf="courseLinks[course]"
+            [href]="courseLinks[course]"
+            target="_blank"
+            rel="noreferrer"
+            class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-[var(--color-text)] transition-all border border-purple-500/25 bg-[var(--bg-surface)] hover:scale-105 hover:border-purple-500/50 hover:text-purple-600 dark:hover:text-purple-400 cursor-pointer"
+          >
+            <span>{{ course }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-40 shrink-0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          </a>
+          <span
+            *ngIf="!courseLinks[course]"
+            class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-[var(--color-text)] transition-all border border-[var(--border-color)] bg-[var(--bg-surface)]"
+          >
+            <span>{{ course }}</span>
+          </span>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</section>

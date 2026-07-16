@@ -1,0 +1,168 @@
+<section id="about" class="py-16">
+  <h2 class="section-heading animate-fade-up">About</h2>
+  <p class="mt-4 max-w-xl text-sm leading-relaxed text-slate-600 dark:text-slate-300 animate-fade-up">
+    {{ personal.summary }}
+    I enjoy designing reliable systems, simplifying complex workflows, and
+    collaborating with product and platform teams to ship features safely.
+  </p>
+  <div class="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+    <div
+      *ngFor="let item of highlights"
+      class="card-elevated px-4 py-5 text-xs cursor-pointer select-none transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] hover:border-blue-500/30 dark:hover:border-sky-400/30 hover:shadow-lg flex flex-col justify-between h-28"
+      (click)="handleOpen(item.label, $event)"
+      role="button"
+      aria-haspopup="dialog"
+    >
+      <div class="flex items-center justify-between">
+        <p class="text-[0.62rem] uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 font-bold">
+          {{ item.label }}
+        </p>
+        <span [class]="item.color + ' dark:opacity-85'">
+          <!-- Inlined SVGs based on label -->
+          <svg *ngIf="item.label === 'API latency reduction'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2s-8 7-9 8l-4-4C8 5 2 11 2 11l4 2-1 4 4-1 2 4s6-6 5-7l-4-4c1-1 8-9 8-9z"></path><path d="M3 21l3-3"></path><path d="M15 6s-2 2-3 2"></path></svg>
+          <svg *ngIf="item.label === 'Rollback reduction'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 11 11 13 15 9"></polyline></svg>
+          <svg *ngIf="item.label === 'Uptime achieved'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          <svg *ngIf="item.label === 'MTTR reduction'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </span>
+      </div>
+      <p class="mt-2 text-2xl font-black text-slate-900 dark:text-slate-50">
+        {{ item.value }}
+      </p>
+    </div>
+  </div>
+
+  <!-- macOS Style Spring Zoom Modal Overlay -->
+  <div
+    *ngIf="expanded"
+    [class]="'fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/30 dark:bg-slate-950/45 backdrop-blur-[6px] print:hidden ' + (
+      isClosing ? 'animate-fade-out' : 'animate-fade-in'
+    )"
+    (click)="handleClose()"
+  >
+    <div
+      [style.--invoked-x.px]="clickCoords.x"
+      [style.--invoked-y.px]="clickCoords.y"
+      [class]="'bg-white dark:bg-slate-900 p-6 md:p-8 w-full max-w-md rounded-2xl shadow-2xl relative border border-slate-200 dark:border-slate-800 text-[var(--color-text)] ' + (
+        isClosing ? 'animate-mac-zoom-out' : 'animate-mac-zoom'
+      )"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200/60 dark:border-slate-800/80">
+        <span class="text-[0.65rem] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5 select-none">
+          <span [class]="getSelectedHighlight()?.color">
+            <svg *ngIf="expanded === 'API latency reduction'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2s-8 7-9 8l-4-4C8 5 2 11 2 11l4 2-1 4 4-1 2 4s6-6 5-7l-4-4c1-1 8-9 8-9z"></path><path d="M3 21l3-3"></path><path d="M15 6s-2 2-3 2"></path></svg>
+            <svg *ngIf="expanded === 'Rollback reduction'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 11 11 13 15 9"></polyline></svg>
+            <svg *ngIf="expanded === 'Uptime achieved'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            <svg *ngIf="expanded === 'MTTR reduction'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </span>
+          {{ expanded }}
+        </span>
+        <button
+          (click)="handleClose()"
+          class="p-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-800 text-slate-400 hover:text-[var(--color-text-bright)] transition-colors cursor-pointer text-xs leading-none"
+          title="Close details"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="mt-4 space-y-4">
+        <div class="space-y-1">
+          <p class="text-[0.65rem] uppercase font-bold text-slate-400 select-none">Achieved Metric</p>
+          <p class="text-4xl font-extrabold text-[var(--color-text-bright)] tracking-tight">{{ getSelectedHighlight()?.value }}</p>
+        </div>
+        <div class="space-y-1">
+          <p class="text-[0.65rem] uppercase font-bold text-slate-400 select-none">Implementation Details</p>
+          <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+            {{ getSelectedHighlight()?.explanation }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Graphic -->
+      <div *ngIf="expanded === 'API latency reduction'" class="space-y-2 mt-4 p-3 bg-slate-100/50 dark:bg-slate-900/50 rounded-xl border border-slate-200/40 dark:border-slate-800/80">
+        <div class="flex justify-between text-[0.65rem] font-mono text-slate-500 dark:text-slate-400">
+          <span>Before Optimization</span>
+          <span class="text-rose-500 font-bold">80ms (P95)</span>
+        </div>
+        <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+          <div class="bg-rose-500 h-full w-[80%] rounded-full"></div>
+        </div>
+        <div class="flex justify-between text-[0.65rem] font-mono text-slate-500 dark:text-slate-400">
+          <span>Post Optimization</span>
+          <span class="text-emerald-500 font-bold">40ms (P95)</span>
+        </div>
+        <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+          <div class="bg-emerald-500 h-full w-[40%] rounded-full"></div>
+        </div>
+      </div>
+
+      <div *ngIf="expanded === 'Rollback reduction'" class="space-y-2 mt-4 p-3 bg-slate-100/50 dark:bg-slate-900/50 rounded-xl border border-slate-200/40 dark:border-slate-800/80">
+        <div class="flex justify-between text-[0.65rem] font-mono text-slate-500 dark:text-slate-400">
+          <span>Manual Deploy Rollbacks</span>
+          <span class="text-rose-500 font-bold">30%</span>
+        </div>
+        <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+          <div class="bg-rose-500 h-full w-[30%] rounded-full"></div>
+        </div>
+        <div class="flex justify-between text-[0.65rem] font-mono text-slate-500 dark:text-slate-400">
+          <span>Jenkins/Helm GitOps Rollbacks</span>
+          <span class="text-emerald-500 font-bold">9%</span>
+        </div>
+        <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+          <div class="bg-emerald-500 h-full w-[9%] rounded-full"></div>
+        </div>
+      </div>
+
+      <div *ngIf="expanded === 'Uptime achieved'" class="space-y-2 mt-4 p-3 bg-slate-100/50 dark:bg-slate-900/50 rounded-xl border border-slate-200/40 dark:border-slate-800/80">
+        <div class="flex justify-between text-[0.65rem] font-mono text-slate-500 dark:text-slate-400">
+          <span>Kubernetes Cluster Health</span>
+          <span class="text-emerald-500 font-bold">99.9% Availability</span>
+        </div>
+        <div class="flex gap-1 h-3 mt-1.5">
+          <div class="flex-1 bg-emerald-500 rounded-sm animate-pulse"></div>
+          <div class="flex-1 bg-emerald-500 rounded-sm animate-pulse" style="animation-delay: 100ms"></div>
+          <div class="flex-1 bg-emerald-500 rounded-sm animate-pulse" style="animation-delay: 200ms"></div>
+          <div class="flex-1 bg-emerald-500 rounded-sm animate-pulse" style="animation-delay: 300ms"></div>
+          <div class="flex-1 bg-emerald-500 rounded-sm animate-pulse" style="animation-delay: 400ms"></div>
+          <div class="flex-1 bg-emerald-500 rounded-sm animate-pulse" style="animation-delay: 500ms"></div>
+          <div class="flex-1 bg-emerald-500 rounded-sm animate-pulse" style="animation-delay: 600ms"></div>
+          <div class="flex-1 bg-emerald-500 rounded-sm animate-pulse" style="animation-delay: 700ms"></div>
+          <div class="flex-1 bg-emerald-500 rounded-sm animate-pulse" style="animation-delay: 800ms"></div>
+          <div class="flex-1 bg-emerald-500 rounded-sm animate-pulse" style="animation-delay: 900ms"></div>
+          <div class="flex-1 bg-emerald-500 rounded-sm animate-pulse" style="animation-delay: 1000ms"></div>
+          <div class="flex-1 bg-emerald-500 rounded-sm animate-pulse" style="animation-delay: 1100ms"></div>
+        </div>
+      </div>
+
+      <div *ngIf="expanded === 'MTTR reduction'" class="space-y-2 mt-4 p-3 bg-slate-100/50 dark:bg-slate-900/50 rounded-xl border border-slate-200/40 dark:border-slate-800/80">
+        <div class="flex justify-between text-[0.65rem] font-mono text-slate-500 dark:text-slate-400">
+          <span>Incident Response (MTTD)</span>
+          <span class="text-amber-500 font-bold">5 mins (down from 30)</span>
+        </div>
+        <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+          <div class="bg-amber-500 h-full w-[17%] rounded-full"></div>
+        </div>
+        <div class="flex justify-between text-[0.65rem] font-mono text-slate-500 dark:text-slate-400">
+          <span>Resolution Duration (MTTR)</span>
+          <span class="text-emerald-500 font-bold">18 mins (down from 30)</span>
+        </div>
+        <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+          <div class="bg-emerald-500 h-full w-[60%] rounded-full"></div>
+        </div>
+      </div>
+
+      <!-- Footer action button -->
+      <div class="mt-6 flex justify-end">
+        <button
+          (click)="handleClose()"
+          class="px-5 py-2 rounded-xl bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:bg-slate-900 dark:hover:bg-slate-100 text-xs font-bold border border-slate-800 dark:border-slate-200 cursor-pointer shadow-md transition-all active:scale-95"
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

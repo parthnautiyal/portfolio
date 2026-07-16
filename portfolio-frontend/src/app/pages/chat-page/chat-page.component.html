@@ -1,0 +1,260 @@
+<section class="py-8 space-y-8 animate-fade-up">
+  <div class="flex items-start justify-between">
+    <div>
+      <h2 class="text-3xl font-extrabold tracking-tight text-[var(--color-text-bright)]">AI Agent Sandbox</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        Chat with Parth's AI Agent, query his profile, and supply local context (saved securely in your browser).
+      </p>
+    </div>
+    <button
+      (click)="showSettings = !showSettings"
+      class="p-2 rounded-full glass-panel hover:bg-slate-200/50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+      title="API Key Settings"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+    </button>
+  </div>
+
+  <!-- Settings Panel -->
+  <div *ngIf="showSettings" class="p-5 glass-card space-y-4">
+    <h3 class="text-sm font-semibold flex items-center gap-2 text-[var(--color-text-bright)]">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+      API Key Settings
+    </h3>
+    <p class="text-xs text-slate-500">Stored locally in your browser. Provider choice applies to ATS Checker too.</p>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <div>
+        <label class="block text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 mb-1">Provider</label>
+        <select
+          [(ngModel)]="provider"
+          class="w-full text-xs rounded-lg glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none text-[var(--color-text)] cursor-pointer"
+        >
+          <option value="gemini">Google Gemini (Recommended)</option>
+          <option value="openai">OpenAI (ChatGPT)</option>
+          <option value="ollama">Ollama (Local Offline)</option>
+        </select>
+      </div>
+      <div *ngIf="provider === 'ollama'" class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 mb-1">Ollama URL</label>
+          <input type="text" [(ngModel)]="ollamaUrl"
+            class="w-full text-xs rounded-lg glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none text-[var(--color-text)]" />
+        </div>
+        <div>
+          <label class="block text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 mb-1">Model</label>
+          <input type="text" [(ngModel)]="ollamaModel"
+            class="w-full text-xs rounded-lg glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none text-[var(--color-text)]" />
+        </div>
+      </div>
+      <div *ngIf="provider !== 'ollama'">
+        <label class="block text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 mb-1">API Key</label>
+        <input type="password" [(ngModel)]="customKey"
+          [placeholder]="provider === 'gemini' ? 'AIzaSy...' : 'sk-proj-...'"
+          class="w-full text-xs rounded-lg glass-panel px-3 py-2 outline-none dark:bg-slate-900 border-none text-[var(--color-text)]" />
+      </div>
+    </div>
+    <div class="flex gap-2 justify-end">
+      <button (click)="showSettings = false" class="px-3 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--color-text)] cursor-pointer">Cancel</button>
+      <button (click)="saveSettings()" class="px-3 py-1.5 rounded-lg text-xs btn-gradient font-medium text-white cursor-pointer">Save</button>
+    </div>
+  </div>
+
+  <!-- Gemini key banner -->
+  <div *ngIf="!customKey && provider !== 'ollama'" class="flex items-start gap-3 p-4 glass-card border-l-4 border-l-amber-500">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 shrink-0 mt-0.5"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+    <div>
+      <p class="text-xs font-semibold text-amber-550">API Key Required</p>
+      <p class="text-[0.7rem] text-slate-500 dark:text-slate-400 mt-0.5">
+        No server-side Gemini key is configured. The chatbot will respond with a static fallback.
+        <button (click)="showSettings = true" class="text-blue-500 dark:text-sky-400 underline cursor-pointer">
+          Add your free Gemini key →
+        </button>
+      </p>
+    </div>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-[1.3fr_0.7fr]">
+    <!-- Chat Console Area -->
+    <div class="glass-card flex h-[560px] flex-col p-5 justify-between">
+      <div class="border-b border-slate-200/40 dark:border-slate-800/40 pb-3 flex items-center justify-between">
+        <h3 class="text-sm font-bold flex items-center gap-2 text-[var(--color-text-bright)]">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500 dark:text-indigo-400"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          Chatbot Console
+        </h3>
+        <span class="flex items-center gap-1.5 text-[0.6rem] font-bold text-orange-600 bg-orange-500/10 dark:text-indigo-400 dark:bg-indigo-500/10 px-2.5 py-0.5 rounded-full">
+          GEMINI / OLLAMA ACTIVE
+        </span>
+      </div>
+
+      <div class="flex-1 space-y-4 overflow-y-auto pr-1 py-4 text-xs scrollbar">
+        <div
+          *ngFor="let m of messages"
+          [class]="'flex ' + (m.role === 'user' ? 'justify-end' : 'justify-start')"
+        >
+          <div
+            [class]="'max-w-[82%] rounded-2xl px-4 py-2.5 leading-relaxed shadow-sm whitespace-pre-wrap ' + (
+              m.role === 'user'
+                ? 'btn-gradient rounded-tr-none text-white'
+                : 'glass-panel text-[var(--color-text)] rounded-tl-none border-[var(--border-color)]'
+            )"
+          >
+            {{ m.content }}
+          </div>
+        </div>
+        <div *ngIf="loading" class="flex gap-1 items-center text-[0.65rem] text-slate-400 font-medium">
+          <svg class="animate-spin h-3.5 w-3.5 text-orange-500 dark:text-indigo-400" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          Hiring Agent is formulating response...
+        </div>
+        <div #chatEnd></div>
+      </div>
+
+      <form
+        (submit)="onSubmit($event)"
+        class="flex items-center gap-2 border-t border-[var(--border-color)] pt-4"
+      >
+        <input
+          [(ngModel)]="input"
+          name="chatInput"
+          placeholder="Ask about Spring Boot, system architecture, observability, Docker..."
+          class="flex-1 rounded-xl glass-panel px-4 py-2.5 text-xs outline-none focus:ring-1 focus:ring-orange-500 dark:focus:ring-indigo-500 dark:bg-slate-900 border-none text-[var(--color-text)]"
+        />
+        <button
+          type="submit"
+          [disabled]="loading || !input.trim()"
+          class="rounded-xl btn-gradient px-5 py-2.5 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-md text-white"
+        >
+          Send
+        </button>
+      </form>
+    </div>
+
+    <!-- Right Side: RAG Document Knowledge Base panel -->
+    <div class="glass-card p-5 space-y-4 flex flex-col h-[560px]">
+      <div>
+        <h3 class="text-sm font-semibold flex items-center gap-2 border-b border-slate-200/40 dark:border-slate-800/40 pb-3 text-[var(--color-text-bright)]">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500 dark:text-indigo-400"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          Document Knowledge Base
+          <span *ngIf="totalKbItems > 0" class="ml-auto text-[0.6rem] font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+            {{ totalKbItems }} active
+          </span>
+        </h3>
+        <p class="text-xs text-slate-500 leading-relaxed mt-2">
+          Provide custom logs, job requirements, or project details as local context (stored client-side in your browser's localStorage). The AI Agent will use this background to tailor its answers for your current session.
+        </p>
+      </div>
+
+      <!-- Tab switcher -->
+      <div class="flex rounded-xl overflow-hidden border border-[var(--border-color)] text-[0.65rem] font-semibold">
+        <button
+          (click)="kbTab = 'file'"
+          [class]="'flex-1 flex items-center justify-center gap-1.5 px-3 py-2 transition-colors cursor-pointer ' + (
+            kbTab === 'file'
+              ? 'btn-gradient font-bold text-white'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+          )"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.2 15c.7-1.2 1-2.5.7-3.9-.6-3-3.1-5.2-6.1-5.4C14.8 3.5 12.7 2 10.3 2 7 2 4.3 4.4 4 7.6c-2.4.6-4 2.7-4 5.2 0 3.3 2.7 6 6 6h12c1.7 0 3.2-.8 4.2-2.2z"></path><polyline points="16 12 12 8 8 12"></polyline><line x1="12" y1="8" x2="12" y2="18"></line></svg>
+          Upload File
+        </button>
+        <button
+          (click)="kbTab = 'text'"
+          [class]="'flex-1 flex items-center justify-center gap-1.5 px-3 py-2 transition-colors cursor-pointer ' + (
+            kbTab === 'text'
+              ? 'btn-gradient font-bold text-white'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+          )"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+          Paste Text
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto scrollbar space-y-4">
+        <ng-container *ngIf="kbTab === 'file'">
+          <!-- File upload drop zone -->
+          <div class="border border-dashed border-[var(--border-color)] hover:border-[var(--border-color-hover)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all relative">
+            <input
+              type="file"
+              accept=".txt,.md,.json"
+              (change)="handleDocUpload($event)"
+              class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+            />
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 mb-1"><path d="M21.2 15c.7-1.2 1-2.5.7-3.9-.6-3-3.1-5.2-6.1-5.4C14.8 3.5 12.7 2 10.3 2 7 2 4.3 4.4 4 7.6c-2.4.6-4 2.7-4 5.2 0 3.3 2.7 6 6 6h12c1.7 0 3.2-.8 4.2-2.2z"></path><polyline points="16 12 12 8 8 12"></polyline><line x1="12" y1="8" x2="12" y2="18"></line></svg>
+            <span class="text-[0.65rem] font-semibold text-[var(--color-text)]">
+              Upload context (.txt, .md, .json)
+            </span>
+            <span class="text-[0.55rem] text-slate-500 mt-0.5">Max size 200KB</span>
+          </div>
+
+          <!-- Document list -->
+          <div class="space-y-2">
+            <span class="text-[0.65rem] font-bold uppercase tracking-wider text-slate-400 block">
+              Active Files ({{ documents.length }})
+            </span>
+            <div *ngIf="documents.length === 0" class="p-3 text-[0.65rem] text-slate-500 bg-slate-900/5 dark:bg-slate-100/5 rounded-xl border border-dashed border-[var(--border-color)] text-center">
+              No files uploaded yet.
+            </div>
+            <div *ngIf="documents.length > 0" class="space-y-1.5">
+              <div *ngFor="let doc of documents" class="flex items-center justify-between p-2 glass-panel rounded-xl text-[0.65rem]">
+                <div class="flex items-center gap-1.5 overflow-hidden text-[var(--color-text)]">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500 dark:text-indigo-400 shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                  <span class="truncate font-semibold">{{ doc.name }}</span>
+                  <span class="text-slate-400 shrink-0">({{ (doc.size / 1024).toFixed(1) }}KB)</span>
+                </div>
+                <button
+                  (click)="handleDeleteDoc(doc.name)"
+                  class="text-slate-400 hover:text-rose-500 transition-colors p-1 cursor-pointer"
+                  title="Delete document"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <div *ngIf="kbTab === 'text'" class="space-y-3 flex flex-col h-full">
+          <p class="text-[0.65rem] text-slate-500 leading-relaxed">
+            Paste a job description, project brief, tech spec, or any text. The agent will use it as context when answering questions.
+          </p>
+          <textarea
+            [(ngModel)]="textContext"
+            placeholder="Paste a job description, requirements, or any custom context here..."
+            rows="8"
+            class="flex-1 w-full rounded-xl glass-panel px-3 py-2.5 text-[0.7rem] leading-relaxed outline-none focus:ring-1 focus:ring-orange-500 dark:focus:ring-indigo-500 border-none text-[var(--color-text)] resize-none dark:bg-slate-900/50"
+          ></textarea>
+          <div class="flex items-center gap-2">
+            <button
+              (click)="handleSaveTextContext()"
+              [disabled]="!textContext.trim() || textContext === textContextSaved"
+              class="flex-1 rounded-xl btn-gradient disabled:opacity-40 px-3 py-2 text-[0.65rem] font-bold transition-all cursor-pointer text-white"
+            >
+              {{ textContextSaved && textContext === textContextSaved ? '✓ Saved to Context' : 'Save Context' }}
+            </button>
+            <button
+              *ngIf="textContextSaved"
+              (click)="handleClearTextContext()"
+              class="rounded-xl border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 px-3 py-2 text-[0.65rem] font-bold transition-all cursor-pointer"
+            >
+              Clear
+            </button>
+          </div>
+          <p *ngIf="textContextSaved" class="text-[0.6rem] text-green-500 flex items-center gap-1">
+            <span>✓</span>
+            {{ textContextSaved.length.toLocaleString() }} characters active in context
+          </p>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-200/40 dark:border-slate-800/40 pt-3 text-[0.65rem] text-slate-500">
+        <div class="flex items-center gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <span>All context is sent with each prompt automatically.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

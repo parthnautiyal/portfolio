@@ -1,0 +1,182 @@
+<header class="sticky top-0 z-20 glass-panel border-x-0 border-t-0 bg-[var(--bg-surface)]">
+  <a
+    href="#main-content"
+    class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-slate-900 focus:px-4 focus:py-2 focus:text-sm focus:text-white focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:bg-slate-100 dark:focus:text-slate-900"
+  >
+    Skip to main content
+  </a>
+  <nav aria-label="Main navigation" class="mx-auto flex max-w-[1600px] items-center justify-between px-6 md:px-12 xl:px-16 py-4">
+    <a
+      [href]="personal.linkedin"
+      target="_blank"
+      rel="noreferrer"
+      aria-label="LinkedIn Profile"
+      class="flex items-center gap-3 text-xl md:text-2xl font-semibold tracking-tight text-[var(--color-text-bright)] hover:text-[var(--color-primary)] transition-colors duration-200"
+      (click)="onLinkClick('LinkedIn Profile', personal.linkedin)"
+    >
+      <img
+        src="/parth_avatar.jpg"
+        alt=""
+        class="h-8 w-8 rounded-full object-cover border border-[var(--border-color)] shadow-sm shrink-0"
+      />
+      <span>{{ personal.name.split(' ')[0] }}</span>
+    </a>
+
+    <!-- Central spacious links menu -->
+    <ul class="hidden md:flex items-center gap-5 text-sm" role="menubar">
+      <li *ngFor="let link of links">
+        <a
+          [routerLink]="link.to"
+          [class]="isActive(link.to) 
+            ? 'h-10 flex items-center justify-center rounded-full px-4 text-sm font-semibold border-[var(--color-primary)]/20 shadow-sm bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-solid'
+            : 'h-10 flex items-center justify-center rounded-full px-4 text-sm font-medium transition-all duration-200 border border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-bright)] hover:bg-[var(--bg-surface-hover)]'"
+        >
+          {{ link.label }}
+        </a>
+      </li>
+    </ul>
+
+    <!-- Action Controls on the right (Desktop) -->
+    <div class="hidden md:flex items-center gap-3">
+      <!-- Theme toggle -->
+      <button
+        type="button"
+        (click)="cycleTheme()"
+        [title]="'Theme: ' + themeMode + ' — click to cycle'"
+        class="h-10 flex items-center justify-center gap-2 rounded-full border border-[var(--border-color)] px-4 text-sm font-medium hover:border-[var(--border-color-hover)] hover:bg-[var(--bg-surface-hover)] cursor-pointer transition-all duration-200 text-[var(--color-text)]"
+      >
+        <!-- Custom SVGs representing Feathers Sun/Moon/Clock -->
+        <svg *ngIf="themeMode === 'light'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg *ngIf="themeMode === 'dark'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg *ngIf="themeMode === 'auto'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span class="hidden lg:inline capitalize">{{ themeMode }}</span>
+      </button>
+
+      <!-- Local AI status badge -->
+      <button
+        type="button"
+        (click)="isOllamaModalOpen = true"
+        class="h-10 flex items-center justify-center gap-2 rounded-full border border-[var(--border-color)] px-4 text-sm font-medium hover:border-[var(--border-color-hover)] hover:bg-[var(--bg-surface-hover)] cursor-pointer transition-all duration-200 text-[var(--color-text)]"
+        [title]="'Local LLM Connectivity Setup & Status (Active Model: ' + ollamaModel + ')'"
+      >
+        <span [class]="'h-1.5 w-1.5 rounded-full ' + (ollamaStatus === 'connected' ? 'bg-green-500 animate-pulse' : ollamaStatus === 'checking' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500')"></span>
+        <span class="hidden lg:inline text-[var(--color-text)] font-medium">
+          Local AI: {{ ollamaStatus === 'connected' ? 'Online' : ollamaStatus === 'checking' ? 'Checking' : 'Offline' }}
+        </span>
+      </button>
+
+      <a
+        routerLink="/chat"
+        [class]="'h-10 flex items-center justify-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-md border-none btn-gradient ' + (isActive('/chat') ? 'font-bold' : '')"
+        (click)="onLinkClick('Chatbot CTA', '')"
+      >
+        💬 Chatbot
+      </a>
+
+      <!-- Contact CTA -->
+      <a
+        routerLink="/contact"
+        [class]="'h-10 flex items-center justify-center rounded-full border border-[var(--border-color)] px-4 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--bg-surface-hover)] hover:border-[var(--border-color-hover)] transition-all duration-200 cursor-pointer ' + (isActive('/contact') ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : '')"
+        (click)="onLinkClick('Contact CTA', '')"
+      >
+        Contact
+      </a>
+    </div>
+
+    <!-- Mobile menu trigger and quick actions -->
+    <div class="flex md:hidden items-center gap-2">
+      <a
+        routerLink="/chat"
+        class="h-9 w-9 flex items-center justify-center rounded-full btn-gradient text-xs shadow-md transition-all active:scale-95"
+        (click)="onLinkClick('Chatbot Mobile Shortcut', '')"
+        title="Chatbot Assistant"
+      >
+        💬
+      </a>
+
+      <button
+        type="button"
+        (click)="toggleMobileMenu()"
+        aria-label="Toggle navigation menu"
+        class="h-9 w-9 flex items-center justify-center rounded-full border border-[var(--border-color)] hover:bg-[var(--bg-surface-hover)] hover:border-[var(--border-color-hover)] text-[var(--color-text)] transition-all active:scale-95 cursor-pointer"
+      >
+        <svg *ngIf="isMobileMenuOpen" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        <svg *ngIf="!isMobileMenuOpen" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile navigation menu drawer -->
+  <div *ngIf="isMobileMenuOpen" class="md:hidden border-t border-[var(--border-color)] bg-[var(--bg-surface)] backdrop-blur-xl animate-fade-in">
+    <div class="px-6 py-6 space-y-6 flex flex-col">
+      <ul class="space-y-2.5" role="menubar">
+        <li *ngFor="let link of links">
+          <a
+            [routerLink]="link.to"
+            [class]="isActive(link.to)
+              ? 'w-full h-11 flex items-center px-4 rounded-xl text-sm font-semibold border-[var(--color-primary)]/20 bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-solid'
+              : 'w-full h-11 flex items-center px-4 rounded-xl text-sm font-medium transition-all text-[var(--color-text-muted)] hover:text-[var(--color-text-bright)] hover:bg-[var(--bg-surface-hover)]'"
+          >
+            {{ link.label }}
+          </a>
+        </li>
+      </ul>
+      <div class="border-t border-[var(--border-color)]"></div>
+      <div class="flex flex-col gap-3">
+        <!-- Theme toggle -->
+        <button
+          type="button"
+          (click)="cycleTheme()"
+          class="w-full h-11 flex items-center justify-between rounded-xl border border-[var(--border-color)] px-4 text-xs font-semibold hover:border-[var(--border-color-hover)] hover:bg-[var(--bg-surface-hover)] cursor-pointer text-[var(--color-text)] transition-all"
+        >
+          <span class="flex items-center gap-2">
+            <svg *ngIf="themeMode === 'light'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <svg *ngIf="themeMode === 'dark'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            <svg *ngIf="themeMode === 'auto'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>Theme Mode</span>
+          </span>
+          <span class="capitalize px-2.5 py-0.5 rounded-full bg-[var(--bg-surface-hover)] border border-[var(--border-color)] text-[10px]">
+            {{ themeMode }}
+          </span>
+        </button>
+
+        <!-- Local AI status -->
+        <button
+          type="button"
+          (click)="isOllamaModalOpen = true; isMobileMenuOpen = false"
+          class="w-full h-11 flex items-center justify-between rounded-xl border border-[var(--border-color)] px-4 text-xs font-semibold hover:border-[var(--border-color-hover)] hover:bg-[var(--bg-surface-hover)] cursor-pointer transition-all"
+        >
+          <span class="flex items-center gap-2">
+            <span [class]="'h-1.5 w-1.5 rounded-full ' + (ollamaStatus === 'connected' ? 'bg-green-500 animate-pulse' : ollamaStatus === 'checking' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500')"></span>
+            <span>Local AI Setup & Status</span>
+          </span>
+          <span class="text-[10px] text-slate-500 capitalize">
+            {{ ollamaStatus === 'connected' ? 'Online' : ollamaStatus === 'checking' ? 'Checking' : 'Offline' }}
+          </span>
+        </button>
+
+        <a
+          routerLink="/chat"
+          class="w-full h-11 flex items-center justify-center gap-2 rounded-xl btn-gradient text-sm font-semibold shadow-md transition-all active:scale-98"
+          (click)="onLinkClick('Chatbot CTA', '')"
+        >
+          💬 Chatbot Assistant
+        </a>
+
+        <!-- Contact CTA -->
+        <a
+          routerLink="/contact"
+          class="w-full h-11 flex items-center justify-center rounded-xl border border-[var(--border-color)] px-4 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--bg-surface-hover)] hover:border-[var(--border-color-hover)] transition-all active:scale-98"
+          (click)="onLinkClick('Contact CTA', '')"
+        >
+          Contact Me
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <app-ollama-diagnostic-modal
+    [isOpen]="isOllamaModalOpen"
+    (close)="isOllamaModalOpen = false"
+  ></app-ollama-diagnostic-modal>
+</header>

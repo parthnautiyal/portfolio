@@ -1,0 +1,121 @@
+<div class="glass-card p-5 space-y-4">
+  <div class="border-b border-slate-200/40 dark:border-slate-800/40 pb-2">
+    <h3 class="text-sm font-bold flex items-center gap-2 text-[var(--color-text-bright)]">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500 dark:text-sky-400"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      System Telemetry & Architecture Simulation
+    </h3>
+    <p class="text-[0.65rem] text-slate-500 mt-0.5">
+      Toggle real system scenario parameters to observe how the portfolio architecture handles failures, delays, and offlines.
+    </p>
+  </div>
+
+  <div class="grid gap-3">
+    <!-- Gemini API Outage -->
+    <button
+      (click)="handleToggle('geminiLimit')"
+      [class]="'flex items-start gap-3 p-3 rounded-xl border text-left transition-all hover:scale-[1.02] cursor-pointer ' + (
+        state.geminiLimit
+          ? 'bg-rose-500/10 border-rose-500/40 text-rose-500'
+          : 'glass-panel border-[var(--border-color)] hover:border-slate-300 dark:hover:border-slate-700'
+      )"
+    >
+      <div [class]="'p-2 rounded-lg shrink-0 ' + (state.geminiLimit ? 'bg-rose-500/20' : 'bg-red-500/10 text-red-500')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-1.5 justify-between">
+          <span class="text-xs font-bold text-[var(--color-text-bright)]">Gemini API Outage</span>
+          <span [class]="'text-[0.55rem] font-extrabold uppercase px-1.5 py-0.5 rounded-full shrink-0 ' + (
+            state.geminiLimit ? 'bg-rose-500/20 text-rose-500 animate-pulse' : 'bg-green-500/10 text-green-500'
+          )">
+            {{ state.geminiLimit ? '429 Rate Limit' : 'Healthy' }}
+          </span>
+        </div>
+        <p class="text-[0.6rem] text-slate-500 mt-1 leading-relaxed">
+          Simulates a Gemini API rate limit (429) or service interruption. Witness fallback response routes routing requests to the local Ollama LLM endpoint or a static answer.
+        </p>
+      </div>
+    </button>
+
+    <!-- Vercel Serverless Latency -->
+    <button
+      (click)="handleToggle('gatewayLatency')"
+      [class]="'flex items-start gap-3 p-3 rounded-xl border text-left transition-all hover:scale-[1.02] cursor-pointer ' + (
+        state.gatewayLatency
+          ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
+          : 'glass-panel border-[var(--border-color)] hover:border-slate-300 dark:hover:border-slate-700'
+      )"
+    >
+      <div [class]="'p-2 rounded-lg shrink-0 ' + (state.gatewayLatency ? 'bg-amber-500/20' : 'bg-amber-500/10 text-amber-500')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-1.5 justify-between">
+          <span class="text-xs font-bold text-[var(--color-text-bright)]">Serverless API Latency</span>
+          <span [class]="'text-[0.55rem] font-extrabold uppercase px-1.5 py-0.5 rounded-full shrink-0 ' + (
+            state.gatewayLatency ? 'bg-amber-500/20 text-amber-500 animate-pulse' : 'bg-green-500/10 text-green-500'
+          )">
+            {{ state.gatewayLatency ? '10s Delay Injected' : 'Healthy' }}
+          </span>
+        </div>
+        <p class="text-[0.6rem] text-slate-500 mt-1 leading-relaxed">
+          Simulates serverless function cold starts and network throttling. Triggers client-side request timeout boundaries and loads visual loader overlays.
+        </p>
+      </div>
+    </button>
+
+    <!-- Cloud Mount Offline -->
+    <button
+      (click)="handleToggle('cloudMountOffline')"
+      [class]="'flex items-start gap-3 p-3 rounded-xl border text-left transition-all hover:scale-[1.02] cursor-pointer ' + (
+        state.cloudMountOffline
+          ? 'bg-rose-500/10 border-rose-500/40 text-rose-500'
+          : 'glass-panel border-[var(--border-color)] hover:border-slate-300 dark:hover:border-slate-700'
+      )"
+    >
+      <div [class]="'p-2 rounded-lg shrink-0 ' + (state.cloudMountOffline ? 'bg-rose-500/20' : 'bg-blue-500/10 text-blue-500')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-15.05 1.5 6 6 0 0 0 4.22 10.08h13.43a7 7 0 0 0 3.27-14.66"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-1.5 justify-between">
+          <span class="text-xs font-bold text-[var(--color-text-bright)]">iCloud / GDrive Offline</span>
+          <span [class]="'text-[0.55rem] font-extrabold uppercase px-1.5 py-0.5 rounded-full shrink-0 ' + (
+            state.cloudMountOffline ? 'bg-rose-500/20 text-rose-500 animate-pulse' : 'bg-green-500/10 text-green-500'
+          )">
+            {{ state.cloudMountOffline ? 'Unmounted' : 'Healthy' }}
+          </span>
+        </div>
+        <p class="text-[0.6rem] text-slate-500 mt-1 leading-relaxed">
+          Simulates local cloud directories being unmounted. The local script catches the error gracefully, logs the issue, and skips copy actions.
+        </p>
+      </div>
+    </button>
+
+    <!-- Ollama Local Engine Offline -->
+    <button
+      (click)="handleToggle('ollamaOffline')"
+      [class]="'flex items-start gap-3 p-3 rounded-xl border text-left transition-all hover:scale-[1.02] cursor-pointer ' + (
+        state.ollamaOffline
+          ? 'bg-rose-500/10 border-rose-500/40 text-rose-500'
+          : 'glass-panel border-[var(--border-color)] hover:border-slate-300 dark:hover:border-slate-700'
+      )"
+    >
+      <div [class]="'p-2 rounded-lg shrink-0 ' + (state.ollamaOffline ? 'bg-rose-500/20' : 'bg-purple-500/10 text-purple-500')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-1.5 justify-between">
+          <span class="text-xs font-bold text-[var(--color-text-bright)]">Local Ollama Server Offline</span>
+          <span [class]="'text-[0.55rem] font-extrabold uppercase px-1.5 py-0.5 rounded-full shrink-0 ' + (
+            state.ollamaOffline ? 'bg-rose-500/20 text-rose-500 animate-pulse' : 'bg-green-500/10 text-green-500'
+          )">
+            {{ state.ollamaOffline ? 'Offline' : 'Healthy' }}
+          </span>
+        </div>
+        <p class="text-[0.6rem] text-slate-500 mt-1 leading-relaxed">
+          Simulates the developer's local Ollama instance (http://localhost:11434) being offline. Restricts developer-side offline parsing and backup chat routing.
+        </p>
+      </div>
+    </button>
+  </div>
+</div>

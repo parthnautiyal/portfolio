@@ -1,0 +1,188 @@
+<div class="grid gap-6">
+  <!-- Performance Vitals Card row -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- FCP -->
+    <div class="glass-card p-4 flex flex-col justify-between">
+      <div class="text-[0.62rem] font-bold text-slate-500 uppercase tracking-wider">First Content Paint (FCP)</div>
+      <div class="text-xl font-black text-slate-800 dark:text-slate-100 mt-2">
+        {{ vitals.fcp }} <span class="text-[0.65rem] font-medium text-slate-500">s</span>
+      </div>
+      <span class="text-[0.55rem] font-extrabold uppercase px-1.5 py-0.5 rounded bg-green-500/10 text-green-500 w-max mt-2">
+        Excellent
+      </span>
+    </div>
+
+    <!-- LCP -->
+    <div class="glass-card p-4 flex flex-col justify-between">
+      <div class="text-[0.62rem] font-bold text-slate-500 uppercase tracking-wider">Largest Paint (LCP)</div>
+      <div class="text-xl font-black text-slate-800 dark:text-slate-100 mt-2">
+        {{ vitals.lcp }} <span class="text-[0.65rem] font-medium text-slate-500">s</span>
+      </div>
+      <span class="text-[0.55rem] font-extrabold uppercase px-1.5 py-0.5 rounded bg-green-500/10 text-green-500 w-max mt-2">
+        Optimized
+      </span>
+    </div>
+
+    <!-- CLS -->
+    <div class="glass-card p-4 flex flex-col justify-between">
+      <div class="text-[0.62rem] font-bold text-slate-500 uppercase tracking-wider">Layout Shift (CLS)</div>
+      <div class="text-xl font-black text-slate-800 dark:text-slate-100 mt-2">
+        {{ vitals.cls }}
+      </div>
+      <span class="text-[0.55rem] font-extrabold uppercase px-1.5 py-0.5 rounded bg-green-500/10 text-green-500 w-max mt-2">
+        Stable
+      </span>
+    </div>
+
+    <!-- TTFB -->
+    <div class="glass-card p-4 flex flex-col justify-between">
+      <div class="text-[0.62rem] font-bold text-slate-500 uppercase tracking-wider">Server TTFB</div>
+      <div class="text-xl font-black text-slate-800 dark:text-slate-100 mt-2">
+        {{ vitals.ttfb }} <span class="text-[0.65rem] font-medium text-slate-500">s</span>
+      </div>
+      <span class="text-[0.55rem] font-extrabold uppercase px-1.5 py-0.5 rounded bg-green-500/10 text-green-500 w-max mt-2">
+        Edge Fast
+      </span>
+    </div>
+  </div>
+
+  <!-- Metrics Sparkline Row -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Metric 1: Request Rate -->
+    <div class="glass-card p-4 space-y-2">
+      <div class="flex items-center justify-between text-[0.62rem] font-bold text-slate-500 uppercase tracking-wider">
+        <span>Serverless API RPS</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+      </div>
+      <div class="flex items-baseline justify-between">
+        <span class="text-xl font-black text-slate-800 dark:text-slate-100">
+          {{ getLatestVal(metrics.rps) }} <span class="text-[0.65rem] font-medium text-slate-500">req/s</span>
+        </span>
+      </div>
+      <div class="h-10 pt-1">
+        <svg class="w-full h-full stroke-blue-500" viewBox="0 0 200 40" preserveAspectRatio="none">
+          <path
+            [attr.d]="drawSparkline(metrics.rps, 200, 40)"
+            fill="none"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Metric 2: Latency -->
+    <div class="glass-card p-4 space-y-2">
+      <div class="flex items-center justify-between text-[0.62rem] font-bold text-slate-500 uppercase tracking-wider">
+        <span>Serverless Latency</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+      </div>
+      <div class="flex items-baseline justify-between">
+        <span [class]="'text-xl font-black ' + (failureState.gatewayLatency ? 'text-amber-500' : 'text-green-500')">
+          {{ getLatestVal(metrics.latency) }} <span class="text-[0.65rem] font-medium text-slate-500">ms</span>
+        </span>
+      </div>
+      <div class="h-10 pt-1">
+        <svg [class]="'w-full h-full ' + (failureState.gatewayLatency ? 'stroke-amber-500' : 'stroke-green-500')" viewBox="0 0 200 40" preserveAspectRatio="none">
+          <path
+            [attr.d]="drawSparkline(metrics.latency, 200, 40)"
+            fill="none"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Metric 3: Storage -->
+    <div class="glass-card p-4 space-y-2">
+      <div class="flex items-center justify-between text-[0.62rem] font-bold text-slate-500 uppercase tracking-wider">
+        <span>LocalStorage Used</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+      </div>
+      <div class="flex items-baseline justify-between">
+        <span class="text-xl font-black text-slate-800 dark:text-slate-100">
+          {{ getLatestVal(metrics.storage) }} <span class="text-[0.65rem] font-medium text-slate-500">KB</span>
+        </span>
+      </div>
+      <div class="h-10 pt-1">
+        <svg class="w-full h-full stroke-teal-500" viewBox="0 0 200 40" preserveAspectRatio="none">
+          <path
+            [attr.d]="drawSparkline(metrics.storage, 200, 40)"
+            fill="none"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Metric 4: Session Tokens -->
+    <div class="glass-card p-4 space-y-2">
+      <div class="flex items-center justify-between text-[0.62rem] font-bold text-slate-500 uppercase tracking-wider">
+        <span>Active Session Tokens</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+      </div>
+      <div class="flex items-baseline justify-between">
+        <span class="text-xl font-black text-slate-800 dark:text-slate-100">
+          {{ getLatestVal(metrics.tokens) }} <span class="text-[0.65rem] font-medium text-slate-500">tkn</span>
+        </span>
+      </div>
+      <div class="h-10 pt-1">
+        <svg class="w-full h-full stroke-purple-500" viewBox="0 0 200 40" preserveAspectRatio="none">
+          <path
+            [attr.d]="drawSparkline(metrics.tokens, 200, 40)"
+            fill="none"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log Console Frame -->
+  <div class="glass-card p-4 space-y-3 flex flex-col h-[380px]">
+    <div class="flex items-center justify-between border-b border-slate-200/20 dark:border-slate-800/40 pb-2">
+      <div class="flex items-center gap-2">
+        <span class="p-1.5 rounded-md bg-green-500/10 text-green-500">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+        </span>
+        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Real-Time Routing & Telemetry Stream Logs</span>
+      </div>
+      
+      <button
+        (click)="triggerTransaction()"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg btn-gradient text-[0.65rem] font-bold shadow transition-transform active:scale-95 cursor-pointer text-white"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        Simulate API Chat Trace
+      </button>
+    </div>
+
+    <!-- Logs viewport -->
+    <div 
+      #logsContainer
+      class="flex-1 overflow-y-auto font-mono text-[0.6rem] space-y-1 bg-slate-950 p-3 rounded-xl border border-slate-850 text-slate-300 select-text leading-relaxed scrollbar"
+    >
+      <div *ngFor="let log of logs" class="hover:bg-slate-900/60 py-0.5 rounded px-1 flex gap-2">
+        <span class="text-slate-500 shrink-0 select-none">[{{ log.timestamp.split('T')[1].slice(0, 12) }}]</span>
+        <span [class]="'font-semibold shrink-0 select-none ' + (
+          log.service === 'visitor-client' ? 'text-teal-400' :
+          log.service === 'serverless-api' ? 'text-blue-400' :
+          log.service === 'gemini-service' ? 'text-indigo-400' :
+          log.service === 'ollama-fallback' ? 'text-purple-400' : 'text-amber-400'
+        )">
+          {{ log.service.padEnd(16).substring(0, 16) }}
+        </span>
+        <span [class]="'font-bold shrink-0 select-none ' + (
+          log.level === 'ERROR' ? 'text-red-500' : log.level === 'WARN' ? 'text-amber-500' : 'text-slate-400'
+        )">
+          {{ log.level.padEnd(5) }}
+        </span>
+        <span class="text-slate-500 font-semibold shrink-0 select-none">{{ log.traceId }}</span>
+        <span class="text-slate-100 flex-1">{{ log.message }}</span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,59 @@
+<div class="glass-card p-5 space-y-6">
+  <div class="border-b border-slate-200/40 dark:border-slate-800/40 pb-2">
+    <h3 class="text-sm font-bold flex items-center gap-2 text-[var(--color-text-bright)]">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      GitOps CI/CD Build Pipeline Visualizer
+    </h3>
+    <p class="text-[0.65rem] text-slate-500 mt-0.5">
+      Select any pipeline node to inspect authentic deployment configurations, Vite build logs, and edge distribution status.
+    </p>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-[0.4fr_0.6fr]">
+    <!-- Left column: Stages sequence list -->
+    <div class="space-y-2.5">
+      <button
+        *ngFor="let stage of pipelineStages"
+        (click)="setActiveStage(stage.id)"
+        [class]="'w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all hover:scale-[1.01] cursor-pointer ' + (
+          activeStageId === stage.id
+            ? 'bg-green-500/10 border-green-500/40 text-green-600 dark:text-green-400 font-bold'
+            : 'glass-panel border-[var(--border-color)] hover:border-slate-350 dark:hover:border-slate-700'
+        )"
+      >
+        <div [class]="'p-2 rounded-lg shrink-0 ' + (activeStageId === stage.id ? 'bg-green-500/20 text-green-500' : 'bg-slate-500/10 text-slate-500')">
+          <svg *ngIf="stage.icon === 'FiGitCommit'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><line x1="1.05" y1="12" x2="7" y2="12"></line><line x1="17.01" y1="12" x2="22.96" y2="12"></line></svg>
+          <svg *ngIf="stage.icon === 'FiCode'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          <svg *ngIf="stage.icon === 'FiLayers'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          <svg *ngIf="stage.icon === 'FiCpu'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>
+          <svg *ngIf="stage.icon === 'FiCheckCircle'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-xs text-[var(--color-text-bright)]">{{ stage.name }}</span>
+            <span class="text-[0.5rem] font-bold uppercase text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded">
+              Passed
+            </span>
+          </div>
+          <p class="text-[0.55rem] text-slate-500 mt-0.5 truncate leading-relaxed">
+            {{ stage.description }}
+          </p>
+        </div>
+      </button>
+    </div>
+
+    <!-- Right column: Active stage code viewer -->
+    <div class="glass-panel p-4 rounded-xl flex flex-col justify-between h-full min-h-[300px]">
+      <div>
+        <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 border-b border-slate-200/20 dark:border-slate-800 pb-2 mb-3">
+          {{ activeStage.configTitle }}
+        </h4>
+        <pre class="text-[0.62rem] font-mono text-emerald-500 dark:text-emerald-400 overflow-x-auto whitespace-pre leading-relaxed p-4 rounded-lg bg-slate-950 border border-slate-850">{{ activeStage.configContent }}</pre>
+      </div>
+      <div class="text-[0.6rem] text-slate-400 mt-3 flex items-center gap-1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <span>Deployment verification checklist complete for this build.</span>
+      </div>
+    </div>
+  </div>
+</div>
