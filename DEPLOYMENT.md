@@ -1,149 +1,214 @@
-# Deployment Guide — Vercel (Free Tier)
+# Deployment Guide — Angular (Vercel) + Spring Boot (Render)
 
-**Why Vercel over Netlify:** The project uses an `/api/` folder for serverless functions (contact form, GitHub proxy). This is Vercel's native convention — zero restructuring needed. Netlify requires moving functions to `netlify/functions/` with a different module format.
+## Architecture
+
+```
+Browser → vercel.app
+           ├── /api/* → Render (Spring Boot :8080) → Gmail SMTP / Gemini / GitHub
+           └── /*     → Angular SPA (static files)
+```
+
+Vercel rewrites proxy all `/api/*` traffic to Render. Browser never hits Render directly — no CORS issues.
 
 ---
 
 ## Prerequisites
 
 - GitHub account with this repo pushed
-- Vercel account (free) — sign up at vercel.com with your GitHub account
-- Gmail App Password for the contact form
+- Vercel account — [vercel.com](https://vercel.com) (free, sign up with GitHub)
+- Render account — [render.com](https://render.com) (free, sign up with GitHub)
+- Gmail App Password (for contact form)
 
 ---
 
-## Step 1 — Push to GitHub
+## Part 1 — Deploy Spring Boot backend to Render
 
-If not already on GitHub:
+### Step 1 — Push to GitHub
 
 ```bash
 git add .
-git commit -m "deploy: production-ready portfolio"
+git commit -m "deploy: add Dockerfile and deployment config"
 git push origin main
 ```
 
----
+### Step 2 — Create Web Service on Render
 
-## Step 2 — Import project on Vercel
+1. Go to [dashboard.render.com](https://dashboard.render.com) → **New → Web Service**
+2. Connect your GitHub repo
+3. Configure:
 
-1. Go to [vercel.com/new](https://vercel.com/new)
-2. Click **"Import Git Repository"** → select your portfolio repo
-3. Vercel auto-detects Vite. Confirm these settings:
-   - **Framework Preset**: Vite
-   - **Root Directory**: `.` (leave as-is)
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-   - **Install Command**: `npm install`
-4. Do **not** deploy yet — set environment variables first (Step 3)
+| Setting | Value |
+|---------|-------|
+| **Root Directory** | `portfolio-backend` |
+| **Environment** | `Docker` |
+| **Branch** | `main` |
+| **Instance Type** | `Free` |
 
----
+4. Click **Create Web Service** — do not deploy yet, set env vars first.
 
-## Step 3 — Set environment variables
+### Step 3 — Set environment variables on Render
 
-In the Vercel import screen, click **"Environment Variables"** and add:
+Go to your service → **Environment** tab → add:
 
-### Required — Contact Form
+| Key | Value | Required |
+|-----|-------|----------|
+| `EMAIL_USER` | Your Gmail address | Yes (contact form) |
+| `EMAIL_PASS` | Gmail App Password (16 chars) | Yes (contact form) |
+| `GEMINI_API_KEY` | Gemini API key | Optional (AI chat) |
+| `OPENAI_API_KEY` | OpenAI API key | Optional (AI chat fallback) |
+| `CORS_ALLOWED_ORIGINS` | `https://YOUR_APP.vercel.app,http://localhost:4200` | Optional |
 
-| Name | Value |
-|------|-------|
-| `EMAIL_USER` | `parthnautiyal2002@gmail.com` |
-| `EMAIL_PASS` | Your Gmail App Password (see below) |
-
-**How to get a Gmail App Password:**
+**How to get Gmail App Password:**
 1. Go to [myaccount.google.com/security](https://myaccount.google.com/security)
 2. Enable **2-Step Verification** if not already on
-3. Search "App Passwords" → create one → select "Mail" + "Other (Custom)" → name it "Portfolio"
-4. Copy the 16-character password — use this as `EMAIL_PASS`
+3. Search "App Passwords" → create one → name it "Portfolio"
+4. Copy the 16-character password — this is `EMAIL_PASS`
 
-> Your real Gmail password will NOT work. Must be an App Password.
+### Step 4 — Deploy and get URL
 
-### Optional but Recommended — GitHub API (removes rate limit)
+Click **Deploy**. First build takes ~3–5 minutes (Maven downloads dependencies).
 
-| Name | Value |
-|------|-------|
-| `GITHUB_TOKEN` | GitHub personal access token |
+Once deployed, copy your service URL:
+```
+https://portfolio-backend-xxxx.onrender.com
+```
 
-**How to create a GitHub token:**
-1. Go to [github.com/settings/tokens](https://github.com/settings/tokens)
-2. Click **"Generate new token (classic)"**
-3. Name: "Portfolio Deploy", select only the `public_repo` scope
-4. Generate and copy — use as `GITHUB_TOKEN`
-
-Without this token, GitHub API is limited to 60 requests/hour per IP (enough for low traffic, but can hit limits).
+> **Free tier note:** Render spins down after 15 minutes of inactivity. First request after idle takes ~30–60 seconds to wake up. Subsequent requests are fast.
 
 ---
 
-## Step 4 — Deploy
+## Part 2 — Deploy Angular frontend to Vercel
 
-Click **"Deploy"**. Vercel will:
+### Step 1 — Fill in Render URL
 
-1. Run `npm install`
-2. Run `node scripts/fetch-projects.js` (prebuild — fetches your GitHub repos)
-3. Run `tsc -b && vite build`
-4. Serve `dist/` at your `.vercel.app` URL
-5. Wire `/api/*` routes to your serverless functions automatically
+Edit `portfolio-frontend/vercel.json` and replace the placeholder:
 
-First deploy takes ~2 minutes.
+```json
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://portfolio-backend-xxxx.onrender.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+```
+
+Commit the change:
+```bash
+git add portfolio-frontend/vercel.json
+git commit -m "chore: set Render backend URL in Vercel rewrites"
+git push origin main
+```
+
+### Step 2 — Deploy to Vercel via CLI
+
+```bash
+npm i -g vercel
+cd portfolio-frontend
+vercel
+```
+
+When prompted:
+
+| Prompt | Answer |
+|--------|--------|
+| Set up and deploy? | `Y` |
+| Link to existing project? | `N` |
+| Project name | `portfolio-frontend` (or anything) |
+| Directory | `./` |
+| Build command | `npm run build` |
+| Output directory | `dist/portfolio-frontend/browser` |
+| Install command | `npm install` |
+
+### Step 3 — Deploy to production
+
+```bash
+vercel --prod
+```
+
+Copy your production URL: `https://your-app.vercel.app`
+
+### Step 4 — Update CORS on Render
+
+Go to Render → your service → **Environment** → update `CORS_ALLOWED_ORIGINS`:
+
+```
+https://your-app.vercel.app,http://localhost:4200
+```
+
+Render restarts automatically.
 
 ---
 
-## Step 5 — Verify everything works
-
-Once deployed, open your `.vercel.app` URL and check:
+## Verification checklist
 
 | Feature | How to test |
 |---------|-------------|
-| **Projects** | Should show your GitHub repos (not "API unavailable") |
-| **Contact form** | Submit a test message — check your Gmail inbox |
-| **Terminal easter egg** | Press `Ctrl + \`` or click terminal icon bottom-right |
-| **Resume download** | Click "View Resume" in hero section |
+| Angular app loads | Visit `https://your-app.vercel.app` |
+| Contact form | Submit message → check Gmail inbox |
+| AI chat | Open chat page → send a message |
+| GitHub projects | Projects page shows repos |
+
+To verify Render proxy is working, open browser DevTools → Network → any `/api/` call should return 200.
 
 ---
 
-## Step 6 — Custom domain (optional)
+## Redeployment
 
-1. In Vercel dashboard → your project → **Settings → Domains**
-2. Click **"Add Domain"** → enter your domain (e.g. `parthnautiyal.dev`)
-3. Vercel shows DNS records to add — go to your domain registrar and add them
-4. Vercel provisions SSL automatically within ~5 minutes
+**Backend (Render):** Auto-deploys on every push to `main`. Can also trigger manually from Render dashboard → **Manual Deploy**.
 
-Free `.vercel.app` subdomain works fine without a custom domain.
-
----
-
-## Redeployment (future updates)
-
-Every `git push` to `main` triggers an automatic redeploy on Vercel. No manual steps needed.
-
+**Frontend (Vercel):**
 ```bash
-# Make changes, then:
-git add .
-git commit -m "your change"
-git push origin main
-# Vercel auto-deploys in ~1-2 minutes
+cd portfolio-frontend
+vercel --prod
 ```
 
-To manually redeploy (e.g. to refresh GitHub projects without a code change):
+Or connect repo to Vercel for auto-deploy on push:
+Vercel dashboard → your project → **Settings → Git** → connect repo → set root directory to `portfolio-frontend`.
 
-Vercel dashboard → your project → **Deployments** → **"Redeploy"** on the latest deployment.
+---
+
+## Custom domain (optional)
+
+**Vercel:**
+1. Dashboard → your project → **Settings → Domains**
+2. Add your domain (e.g. `parthnautiyal.dev`)
+3. Add the DNS records at your registrar — Vercel provisions SSL automatically
+
+**Render:** Same flow under your service → **Settings → Custom Domain**.
+
+After adding custom domain, update `CORS_ALLOWED_ORIGINS` on Render to include it.
 
 ---
 
 ## Troubleshooting
 
-**Contact form returns error:**
-- Check `EMAIL_USER` and `EMAIL_PASS` are set in Vercel → Settings → Environment Variables
-- Confirm `EMAIL_PASS` is a Gmail App Password (16 chars), not your login password
-- Check Vercel → Functions logs for the `/api/contact` error message
+**Contact form fails:**
+- Check `EMAIL_USER` and `EMAIL_PASS` are set on Render
+- `EMAIL_PASS` must be a Gmail App Password (16 chars), not login password
+- Render dashboard → your service → **Logs** for error details
 
-**Projects show old/no data:**
-- If `GITHUB_TOKEN` is missing and rate limit is hit, the build-time fetch falls back to `src/content/projects.json`
-- Fix: add `GITHUB_TOKEN` env var and redeploy
+**Chat returns error:**
+- Check `GEMINI_API_KEY` or `OPENAI_API_KEY` is set on Render
+- Without keys, chat uses Ollama fallback (local only) or returns default message
 
-**White page / broken styles:**
-- Check Vercel build logs for TypeScript or Vite errors
-- Run `npm run build` locally first to catch errors before deploying
+**`/api/*` returns 404 on Vercel:**
+- `portfolio-frontend/vercel.json` placeholder was not replaced with real Render URL
+- Redeploy after fixing the URL
 
-**Serverless function timeout:**
-- Free tier functions timeout at 10s
-- The contact and GitHub functions are fast (< 2s) — not an issue
+**Backend cold start (first request slow):**
+- Normal on Render free tier — service sleeps after 15 min idle
+- Upgrade to Render Starter ($7/mo) to eliminate cold starts
+
+**Angular app shows blank page:**
+- Run `npm run build` locally to catch build errors first
+- Check Vercel build logs for TypeScript errors
+
+**CORS errors in browser:**
+- Should not happen if using Vercel proxy rewrites for all `/api/*` calls
+- If calling Render directly from browser (e.g. hardcoded URL), add `CORS_ALLOWED_ORIGINS` on Render
