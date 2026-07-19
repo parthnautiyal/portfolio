@@ -318,31 +318,13 @@
       )"
     >
       <div class="w-full">
-        <div class="w-full aspect-[210/297] relative rounded-xl overflow-hidden bg-transparent">
-          <object
-            [attr.data]="personal.resumeUrl + '#toolbar=0&navpanes=0&zoom=page-width'"
-            type="application/pdf"
-            class="absolute inset-0 w-full h-full pointer-events-none border-none border-0 scale-[1.06] origin-center"
-          >
-            <div class="flex flex-col items-center justify-center h-full text-center p-6 space-y-4">
-              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-              <div>
-                <p class="text-xs font-bold text-slate-700 dark:text-slate-200">PDF rendering is not supported by your browser.</p>
-                <p class="text-[0.65rem] text-slate-500 mt-1">
-                  You can click below to download the PDF directly to view.
-                </p>
-              </div>
-              <a
-                [href]="personal.resumeUrl"
-                download="Parth_Nautiyal_Resume.pdf"
-                class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl btn-gradient text-xs font-bold shadow-md transition-colors text-white"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                Download Resume
-              </a>
-            </div>
-          </object>
-          <!-- Transparent overlay to lock all editing and selection interactions and trigger fullscreen view on click -->
+        <div class="w-full aspect-[210/297] relative rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900">
+          <iframe
+            [src]="personal.resumeUrl + '#toolbar=0&navpanes=0&zoom=page-width' | safeUrl"
+            class="absolute inset-0 w-full h-full border-none pointer-events-none scale-[1.06] origin-center"
+            title="Resume PDF"
+          ></iframe>
+          <!-- Transparent overlay triggers fullscreen on click -->
           <div
             (click)="handleOpenPdfFullscreen()"
             class="absolute inset-0 bg-transparent z-10 cursor-pointer select-none"
@@ -372,29 +354,11 @@
 
     <!-- Full Screen PDF Render Container -->
     <div class="w-full h-full flex justify-center items-center bg-slate-950">
-      <object
-        [attr.data]="personal.resumeUrl + '#toolbar=1&navpanes=0'"
-        type="application/pdf"
+      <iframe
+        [src]="personal.resumeUrl + '#toolbar=1&navpanes=0' | safeUrl"
         class="w-full h-full border-none"
-      >
-        <div class="flex flex-col items-center justify-center h-full text-center p-6 space-y-4 text-white">
-          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-          <div>
-            <p class="text-xs font-bold text-slate-200">PDF rendering is not supported by your browser.</p>
-            <p class="text-[0.65rem] text-slate-400 mt-1">
-              You can click below to download the PDF directly to view.
-            </p>
-          </div>
-          <a
-            [href]="personal.resumeUrl"
-            download="Parth_Nautiyal_Resume.pdf"
-            class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl btn-gradient text-xs font-bold shadow-md transition-colors text-white"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            Download Resume
-          </a>
-        </div>
-      </object>
+        title="Resume PDF Fullscreen"
+      ></iframe>
     </div>
   </div>
 </section>

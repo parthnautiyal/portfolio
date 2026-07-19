@@ -1,69 +1,110 @@
-<!-- Floating CLI Toggle button -->
+<!-- Shrunk tab (when dragged to edge) -->
 <button
-  (click)="toggleConsole()"
-  [class]="'fixed bottom-4 left-4 z-40 p-3.5 rounded-full bg-slate-900 text-green-400 border border-slate-700/50 shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer dark:bg-slate-900 ' + (
-    !hasOpened && !isOpen ? 'animate-highlight-pulse' : ''
-  )"
-  title="Toggle Dev CLI Console (Ctrl + `)"
+  *ngIf="isShrunk"
+  (click)="expand()"
+  [style.top.px]="position.y"
+  [style.left.px]="shrinkSide === 'left' ? 0 : null"
+  [style.right.px]="shrinkSide === 'right' ? 0 : null"
+  [class]="'fixed z-40 w-11 h-11 bg-slate-900 text-green-400 border border-slate-700/50 flex items-center justify-center shadow-2xl transition-all cursor-pointer ' + (shrinkSide === 'left' ? 'rounded-r-2xl' : 'rounded-l-2xl')"
+  title="Expand Dev Console"
 >
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+  <svg *ngIf="shrinkSide === 'left'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+  <svg *ngIf="shrinkSide === 'right'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
 </button>
 
-<!-- Slide-Up retro console panel -->
+<!-- Floating draggable toggle pill -->
 <div
-  *ngIf="isOpen"
-  class="fixed bottom-16 left-4 w-[92vw] sm:w-[460px] h-[340px] z-50 rounded-2xl border border-green-500/20 bg-slate-950/95 text-green-400 p-4 font-mono flex flex-col shadow-2xl select-text"
+  *ngIf="!isShrunk"
+  (mousedown)="onMouseDown($event)"
+  (touchstart)="onTouchStart($event)"
+  [style.left.px]="position.x !== -1 ? position.x : 16"
+  [style.top.px]="position.y !== -1 ? position.y : null"
+  [class]="'fixed z-40 select-none print:hidden ' + (isDragging ? 'cursor-grabbing opacity-75' : 'cursor-grab')"
 >
-  <!-- Header -->
-  <div class="flex items-center justify-between border-b border-green-500/10 pb-2 mb-2">
-    <div class="flex items-center gap-2">
-      <span class="h-2.5 w-2.5 rounded-full bg-red-500"></span>
-      <span class="h-2.5 w-2.5 rounded-full bg-yellow-500"></span>
-      <span class="h-2.5 w-2.5 rounded-full bg-green-500"></span>
-      <span class="text-[0.65rem] font-bold text-slate-500 ml-1">developer-console</span>
-    </div>
-    <button
-      (click)="isOpen = false"
-      class="text-slate-500 hover:text-green-400 transition-colors cursor-pointer"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-    </button>
-  </div>
-
-  <!-- Console Output Log -->
-  <div class="flex-1 overflow-y-auto space-y-1.5 text-[0.65rem] pr-1 scrollbar-thin scrollbar-thumb-green-500/20">
-    <div
-      *ngFor="let entry of history"
-      [class]="
-        entry.type === 'error'
-          ? 'text-red-400'
-          : entry.type === 'success'
-          ? 'text-blue-400 font-bold'
-          : entry.type === 'input'
-          ? 'text-slate-300'
-          : 'text-green-400'
-      "
-    >
-      {{ entry.text }}
-    </div>
-    <div #consoleEnd></div>
-  </div>
-
-  <!-- Console Command Input Form -->
-  <form
-    (submit)="onSubmit($event)"
-    class="mt-2 border-t border-green-500/10 pt-2 flex items-center gap-1.5"
+  <button
+    [class]="'flex items-center gap-2 p-2.5 pr-4 rounded-full shadow-lg border backdrop-blur-md transition-all pointer-events-none ' + (
+      isOpen
+        ? 'bg-slate-950 text-green-400 border-green-500/30'
+        : 'bg-slate-900 text-green-400 border-slate-700/50'
+    ) + ' ' + (!hasOpened && !isOpen ? 'animate-highlight-pulse' : '')"
+    title="Toggle Dev CLI Console (Ctrl + `)"
   >
-    <span class="text-[0.65rem] text-slate-400">guest@parth:~$</span>
-    <input
-      [(ngModel)]="inputVal"
-      name="cmdInput"
-      placeholder='Try "help" or "joke"...'
-      class="flex-1 text-[0.65rem] font-mono bg-transparent border-none outline-none text-green-400 placeholder-green-900"
-      autoFocus
-    />
-    <button type="submit" class="text-slate-600 hover:text-green-400 transition-colors cursor-pointer">
-      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10l-5 5 5 5"></path><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg>
-    </button>
-  </form>
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+    <span class="text-[0.62rem] font-bold text-green-400/80">dev-console</span>
+  </button>
+</div>
+
+<!-- Console panel — positioned above the pill -->
+<div
+  *ngIf="isOpen && !isShrunk"
+  [style.left.px]="position.x !== -1 ? position.x : 16"
+  [style.bottom.px]="typeof window !== 'undefined' ? (window.innerHeight - position.y + 8) : 80"
+  class="fixed z-50 w-[92vw] sm:w-[460px] rounded-2xl border border-green-500/20 bg-slate-950/97 text-green-400 font-mono flex flex-col shadow-2xl select-text"
+  [style.bottom]="'calc(100vh - ' + position.y + 'px + 8px)'"
+>
+  <!-- Title bar with working mac buttons -->
+  <div class="flex items-center justify-between border-b border-green-500/10 px-3 py-2 cursor-default">
+    <div class="flex items-center gap-1.5">
+      <!-- Red: close -->
+      <button
+        (click)="isOpen = false"
+        class="h-3 w-3 rounded-full bg-red-500 hover:bg-red-400 transition-colors cursor-pointer flex items-center justify-center group"
+        title="Close"
+      >
+        <svg class="opacity-0 group-hover:opacity-100 transition-opacity" xmlns="http://www.w3.org/2000/svg" width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+      <!-- Yellow: minimize/restore -->
+      <button
+        (click)="minimize()"
+        class="h-3 w-3 rounded-full bg-yellow-500 hover:bg-yellow-400 transition-colors cursor-pointer flex items-center justify-center group"
+        title="Minimize"
+      >
+        <svg class="opacity-0 group-hover:opacity-100 transition-opacity" xmlns="http://www.w3.org/2000/svg" width="8" height="2" viewBox="0 0 10 2"><line x1="0" y1="1" x2="10" y2="1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <!-- Green: maximize (fullscreen console height) -->
+      <button
+        (click)="maximize()"
+        class="h-3 w-3 rounded-full bg-green-500 hover:bg-green-400 transition-colors cursor-pointer flex items-center justify-center group"
+        title="Maximize"
+      >
+        <svg class="opacity-0 group-hover:opacity-100 transition-opacity" xmlns="http://www.w3.org/2000/svg" width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+      </button>
+      <span class="text-[0.62rem] font-bold text-slate-500 ml-1">developer-console</span>
+    </div>
+  </div>
+
+  <!-- Console body (hidden when minimized) -->
+  <div *ngIf="!isMinimized" class="flex flex-col" style="height: 320px;">
+    <!-- Output log -->
+    <div class="flex-1 overflow-y-auto space-y-1.5 text-[0.65rem] p-3 scrollbar-thin scrollbar-thumb-green-500/20">
+      <div
+        *ngFor="let entry of history"
+        [class]="
+          entry.type === 'error'   ? 'text-red-400' :
+          entry.type === 'success' ? 'text-blue-400 font-bold' :
+          entry.type === 'input'   ? 'text-slate-300' :
+          'text-green-400'
+        "
+      >{{ entry.text }}</div>
+      <div #consoleEnd></div>
+    </div>
+
+    <!-- Input -->
+    <form
+      (submit)="onSubmit($event)"
+      class="border-t border-green-500/10 px-3 py-2 flex items-center gap-1.5"
+    >
+      <span class="text-[0.65rem] text-slate-400 shrink-0">guest@parth:~$</span>
+      <input
+        #cmdInput
+        [(ngModel)]="inputVal"
+        name="cmdInput"
+        placeholder='Try "help" or "joke"...'
+        class="flex-1 text-[0.65rem] font-mono bg-transparent border-none outline-none text-green-400 placeholder-green-900"
+      />
+      <button type="submit" class="text-slate-600 hover:text-green-400 transition-colors cursor-pointer shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10l-5 5 5 5"></path><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg>
+      </button>
+    </form>
+  </div>
 </div>

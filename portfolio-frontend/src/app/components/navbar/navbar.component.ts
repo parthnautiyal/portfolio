@@ -5,7 +5,7 @@ import { getPersonal } from '../../utils/contentLoader';
 import { trackLinkClick } from '../../utils/analytics';
 import { OllamaDiagnosticModalComponent } from '../ollama-diagnostic-modal/ollama-diagnostic-modal.component';
 
-type ThemeMode = 'auto' | 'light' | 'dark';
+type ThemeMode = 'light' | 'dark';
 
 @Component({
   selector: 'app-navbar',
@@ -16,7 +16,7 @@ type ThemeMode = 'auto' | 'light' | 'dark';
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   personal = getPersonal();
-  themeMode: ThemeMode = 'auto';
+  themeMode: ThemeMode = 'dark';
   ollamaStatus: 'checking' | 'connected' | 'offline' = 'checking';
   ollamaModel = 'llama3';
   isOllamaModalOpen = false;
@@ -24,7 +24,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   currentUrl = '';
 
   private ollamaInterval: any;
-  private themeInterval: any;
+
 
   links = [
     { to: '/', label: 'Home' },
@@ -46,9 +46,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.currentUrl = this.router.url;
     if (typeof window !== 'undefined') {
-      const savedTheme = (localStorage.getItem('portfolio_theme_mode') as ThemeMode) || 'auto';
+      const saved = localStorage.getItem('portfolio_theme_mode');
+      const savedTheme: ThemeMode = (saved === 'light' || saved === 'dark') ? saved : 'dark';
       this.themeMode = savedTheme;
-      this.applyTheme(savedTheme === 'auto' ? this.getTimeBasedTheme() : savedTheme);
+      this.applyTheme(savedTheme);
 
       const savedUrl = localStorage.getItem('portfolio_ollama_url') || 'http://localhost:11434';
       const savedModel = localStorage.getItem('portfolio_ollama_model') || 'llama3';
@@ -60,25 +61,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.checkOllama(url);
       }, 15000);
 
-      this.themeInterval = setInterval(() => {
-        const mode = (localStorage.getItem('portfolio_theme_mode') as ThemeMode) || 'auto';
-        if (mode === 'auto') {
-          const next = this.getTimeBasedTheme();
-          const current = document.documentElement.classList.contains('light-theme') ? 'light' : 'dark';
-          if (next !== current) this.applyTheme(next, true);
-        }
-      }, 60000);
     }
   }
 
   ngOnDestroy() {
     if (this.ollamaInterval) clearInterval(this.ollamaInterval);
-    if (this.themeInterval) clearInterval(this.themeInterval);
-  }
-
-  private getTimeBasedTheme(): 'light' | 'dark' {
-    const hour = new Date().getHours();
-    return hour >= 18 || hour < 6 ? 'dark' : 'light';
   }
 
   private applyTheme(active: 'light' | 'dark', animate = false) {
@@ -120,12 +107,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   cycleTheme() {
-    const order: ThemeMode[] = ['auto', 'light', 'dark'];
-    const next = order[(order.indexOf(this.themeMode) + 1) % 3];
+    const next: ThemeMode = this.themeMode === 'dark' ? 'light' : 'dark';
     this.themeMode = next;
     localStorage.setItem('portfolio_theme_mode', next);
-    const active = next === 'auto' ? this.getTimeBasedTheme() : next;
-    this.applyTheme(active, true);
+    this.applyTheme(next, true);
   }
 
   async checkOllama(url: string) {

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewChecked, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewChecked, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -18,14 +18,23 @@ type LogEntry = {
 })
 export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('consoleEnd') private consoleEndRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('cmdInput') private cmdInputRef!: ElementRef<HTMLInputElement>;
 
   isOpen = false;
+  isMinimized = false;
   inputVal = '';
   history: LogEntry[] = [
     { text: 'Parth OS v1.0.0 (Type "help" for commands)', type: 'success' }
   ];
   shownJokes: number[] = [];
   hasOpened = false;
+
+  // Draggable state
+  isDragging = false;
+  isShrunk = false;
+  shrinkSide: 'left' | 'right' | null = null;
+  position = { x: -1, y: -1 };
+  private dragStart = { x: 0, y: 0, posX: 0, posY: 0, moved: false };
 
   private keyListener: any;
   private personal = getPersonal();
@@ -35,6 +44,7 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
   ngOnInit() {
     if (typeof window !== 'undefined') {
       this.hasOpened = localStorage.getItem('portfolio_console_opened') === 'true';
+      this.position = { x: 16, y: window.innerHeight - 76 };
 
       this.keyListener = (e: KeyboardEvent) => {
         if (e.ctrlKey && e.key === '`') {
@@ -53,24 +63,130 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
   }
 
   ngAfterViewChecked() {
-    if (this.isOpen) {
+    if (this.isOpen && !this.isMinimized) {
       this.scrollToBottom();
     }
   }
 
   scrollToBottom() {
     try {
-      this.consoleEndRef.nativeElement.scrollIntoView({ behavior: 'smooth' });
+      this.consoleEndRef?.nativeElement?.scrollIntoView({ behavior: 'smooth' });
     } catch (err) {}
   }
 
   toggleConsole() {
     this.isOpen = !this.isOpen;
-    if (this.isOpen && !this.hasOpened) {
-      this.hasOpened = true;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('portfolio_console_opened', 'true');
+    this.isMinimized = false;
+    if (this.isOpen) {
+      if (!this.hasOpened) {
+        this.hasOpened = true;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('portfolio_console_opened', 'true');
+        }
       }
+      setTimeout(() => this.cmdInputRef?.nativeElement?.focus(), 60);
+    }
+  }
+
+  minimize() {
+    this.isMinimized = !this.isMinimized;
+    if (!this.isMinimized) {
+      setTimeout(() => this.cmdInputRef?.nativeElement?.focus(), 60);
+    }
+  }
+
+  maximize() {
+    // Toggle between default and expanded height via class — handled in template
+    this.isMinimized = false;
+    this.isOpen = true;
+  }
+
+  // ── Drag (mouse) ──────────────────────────────────────────────────
+  onMouseDown(e: MouseEvent) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    this.startDrag(e.clientX, e.clientY);
+
+    const onMove = (me: MouseEvent) => this.drag(me.clientX, me.clientY);
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      this.endDrag();
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  onTouchStart(e: TouchEvent) {
+    const t = e.touches[0];
+    this.startDrag(t.clientX, t.clientY);
+
+    const onMove = (me: TouchEvent) => { const tt = me.touches[0]; this.drag(tt.clientX, tt.clientY); };
+    const onEnd = () => {
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+      this.endDrag();
+    };
+    document.addEventListener('touchmove', onMove);
+    document.addEventListener('touchend', onEnd);
+  }
+
+  private startDrag(cx: number, cy: number) {
+    this.isDragging = true;
+    this.dragStart = { x: cx, y: cy, posX: this.position.x, posY: this.position.y, moved: false };
+  }
+
+  private drag(cx: number, cy: number) {
+    if (!this.isDragging) return;
+    const dx = cx - this.dragStart.x;
+    const dy = cy - this.dragStart.y;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) this.dragStart.moved = true;
+    const newX = Math.max(0, Math.min(window.innerWidth - 180, this.dragStart.posX + dx));
+    const newY = Math.max(0, Math.min(window.innerHeight - 70, this.dragStart.posY + dy));
+    this.position = { x: newX, y: newY };
+  }
+
+  private endDrag() {
+    this.isDragging = false;
+    if (!this.dragStart.moved) {
+      this.toggleConsole();
+      return;
+    }
+    const x = this.position.x;
+    if (x < 50) {
+      this.isShrunk = true;
+      this.shrinkSide = 'left';
+      this.position = { x: 0, y: this.position.y };
+    } else if (x > window.innerWidth - 220) {
+      this.isShrunk = true;
+      this.shrinkSide = 'right';
+      this.position = { x: window.innerWidth - 44, y: this.position.y };
+    } else {
+      this.isShrunk = false;
+      this.shrinkSide = null;
+    }
+  }
+
+  expand() {
+    this.isShrunk = false;
+    const side = this.shrinkSide;
+    this.shrinkSide = null;
+    this.position = { x: side === 'left' ? 16 : window.innerWidth - 220, y: this.position.y };
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    if (typeof window === 'undefined' || this.position.x === -1) return;
+    if (this.isShrunk) {
+      this.position = {
+        x: this.shrinkSide === 'left' ? 0 : window.innerWidth - 44,
+        y: Math.min(this.position.y, window.innerHeight - 70)
+      };
+    } else {
+      this.position = {
+        x: Math.min(this.position.x, window.innerWidth - 180),
+        y: Math.min(this.position.y, window.innerHeight - 70)
+      };
     }
   }
 
@@ -113,24 +229,15 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
       }
       case 'projects':
         newEntries.push({ text: 'Navigating to /projects...', type: 'success' });
-        setTimeout(() => {
-          this.router.navigate(['/projects']);
-          this.isOpen = false;
-        }, 1000);
+        setTimeout(() => { this.router.navigate(['/projects']); this.isOpen = false; }, 1000);
         break;
       case 'resume':
         newEntries.push({ text: 'Navigating to Resume Section /resume...', type: 'success' });
-        setTimeout(() => {
-          this.router.navigate(['/resume']);
-          this.isOpen = false;
-        }, 1000);
+        setTimeout(() => { this.router.navigate(['/resume']); this.isOpen = false; }, 1000);
         break;
       case 'system':
         newEntries.push({ text: 'Navigating to System Architecture Section /system...', type: 'success' });
-        setTimeout(() => {
-          this.router.navigate(['/system']);
-          this.isOpen = false;
-        }, 1000);
+        setTimeout(() => { this.router.navigate(['/system']); this.isOpen = false; }, 1000);
         break;
       case 'joke': {
         const jokes = [
@@ -163,32 +270,23 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
           "Spring Boot: because XML configs weren't painful enough.",
           "Temporal workflows: for when your cron job has abandonment issues."
         ];
-        
+
         const available = jokes.map((_, i) => i).filter(i => !this.shownJokes.includes(i));
         if (available.length === 0) {
-          newEntries.push({ 
-            text: "⚠️ Humor Buffer Overflow! You've exhausted my entire stand-up routine. (Joke registry reset!)", 
-            type: 'error' 
-          });
+          newEntries.push({ text: "⚠️ Humor Buffer Overflow! You've exhausted my entire stand-up routine. (Joke registry reset!)", type: 'error' });
           this.shownJokes = [];
         } else {
-          const randomIdx = available[Math.floor(Math.random() * available.length)];
-          this.shownJokes = [...this.shownJokes, randomIdx];
-          newEntries.push({ text: jokes[randomIdx], type: 'output' });
+          const idx = available[Math.floor(Math.random() * available.length)];
+          this.shownJokes = [...this.shownJokes, idx];
+          newEntries.push({ text: jokes[idx], type: 'output' });
         }
         break;
       }
       case 'sudo':
-        newEntries.push({ 
-          text: "❌ Error: guest is not in the sudoers file. This incident will be reported to the sysadmin.", 
-          type: 'error' 
-        });
+        newEntries.push({ text: "❌ Error: guest is not in the sudoers file. This incident will be reported to the sysadmin.", type: 'error' });
         break;
       default:
-        newEntries.push({ 
-          text: `❌ bash: command not found: ${trimmed}. Type "help" for options.`, 
-          type: 'error' 
-        });
+        newEntries.push({ text: `❌ bash: command not found: ${trimmed}. Type "help" for options.`, type: 'error' });
     }
 
     this.history = [...this.history, ...newEntries];

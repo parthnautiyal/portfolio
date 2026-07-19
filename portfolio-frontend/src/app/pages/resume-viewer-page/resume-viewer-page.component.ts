@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { getPersonal, getExperience, getEducation, getSkills } from '../../utils/contentLoader';
 import { QuestService } from '../../services/quest.service';
 import { SkillIconComponent } from '../../components/skill-icon/skill-icon.component';
+import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
 
 type RecruiterFocus = 'all' | 'backend' | 'devops' | 'fullstack';
 
@@ -19,7 +20,7 @@ export type Token = {
 @Component({
   selector: 'app-resume-viewer-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SkillIconComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SkillIconComponent, SafeUrlPipe],
   templateUrl: './resume-viewer-page.component.html',
   styleUrls: ['./resume-viewer-page.component.css']
 })
