@@ -2,7 +2,7 @@
   {
     "id": "portfolio",
     "name": "portfolio",
-    "description": "Personal portfolio website featuring an interactive resume viewer, a real-time system observability cockpit, an AI-powered chatbot, and a glassmorphic design system.",
+    "description": "Personal portfolio website featuring an interactive resume viewer, a system architecture visualization dashboard, an AI-powered chatbot, and a developer terminal console.",
     "url": "https://github.com/parthnautiyal/portfolio",
     "stack": [
       "React",

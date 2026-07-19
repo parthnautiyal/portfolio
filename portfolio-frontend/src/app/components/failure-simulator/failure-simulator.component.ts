@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import type { FailureState } from '../../pages/system-cockpit-page/system-cockpit-page.component';
+import type { FailureState } from '../../pages/system-architecture-page/system-architecture-page.component';
 import { QuestService } from '../../services/quest.service';
 
 @Component({

@@ -47,7 +47,6 @@ export class ContactPageComponent {
   };
 
   errors: FormErrors = {};
-  submitting = false;
   status: 'idle' | 'success' | 'error' = 'idle';
   attachment: Attachment | null = null;
   dragActive = false;
@@ -154,39 +153,46 @@ export class ContactPageComponent {
     return Object.keys(newErrors).length === 0;
   }
 
-  async handleSubmit() {
+  handleSubmit() {
     this.status = 'idle';
     if (!this.validateForm()) return;
 
-    try {
-      this.submitting = true;
-      const body: Record<string, any> = { ...this.form };
-      if (this.attachment) {
-        body['attachment'] = {
-          name: this.attachment.file.name,
-          mimeType: this.attachment.file.type,
-          data: this.attachment.base64,
-        };
-      }
+    // Optimistic ack — show success immediately, send in background
+    const formSnapshot = { ...this.form };
+    const attachmentSnapshot = this.attachment;
+    this.status = 'success';
+    this.form = { name: '', email: '', message: '' };
+    this.removeAttachment();
 
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+    this.dispatchContactRequest(formSnapshot, attachmentSnapshot);
+  }
 
-      if (!res.ok) {
-        throw new Error('Failed to send message');
-      }
-
-      this.status = 'success';
-      this.form = { name: '', email: '', message: '' };
-      this.removeAttachment();
-    } catch {
-      this.status = 'error';
-    } finally {
-      this.submitting = false;
+  private async dispatchContactRequest(form: FormState, attachment: Attachment | null) {
+    const body: Record<string, any> = { ...form };
+    if (attachment) {
+      body['attachment'] = {
+        name: attachment.file.name,
+        mimeType: attachment.file.type,
+        data: attachment.base64,
+      };
     }
+    const payload = JSON.stringify(body);
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 3000 * attempt));
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+        });
+        if (res.ok) return;
+      } catch {
+        // retry
+      }
+    }
+    // Silent after 3 attempts — message was already ack'd to user
+    console.warn('[contact] delivery failed after 3 attempts');
   }
 
   handleWhatsAppClick() {

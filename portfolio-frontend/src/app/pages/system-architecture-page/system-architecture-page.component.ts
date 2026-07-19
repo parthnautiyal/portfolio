@@ -15,7 +15,7 @@ export type FailureState = {
 };
 
 @Component({
-  selector: 'app-system-cockpit-page',
+  selector: 'app-system-architecture-page',
   standalone: true,
   imports: [
     CommonModule,
@@ -24,10 +24,10 @@ export type FailureState = {
     ObservabilityLogsComponent,
     PipelineVisualizerComponent
   ],
-  templateUrl: './system-cockpit-page.component.html',
-  styleUrls: ['./system-cockpit-page.component.css']
+  templateUrl: './system-architecture-page.component.html',
+  styleUrls: ['./system-architecture-page.component.css']
 })
-export class SystemCockpitPageComponent implements OnInit, OnDestroy {
+export class SystemArchitecturePageComponent implements OnInit, OnDestroy {
   failureState: FailureState = {
     geminiLimit: false,
     gatewayLatency: false,
