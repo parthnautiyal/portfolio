@@ -1,0 +1,148 @@
+[
+  {
+    "id": "portfolio",
+    "name": "portfolio",
+    "description": "Personal portfolio website featuring an interactive resume viewer, a real-time system observability cockpit, an AI-powered chatbot, and a glassmorphic design system.",
+    "url": "https://github.com/parthnautiyal/portfolio",
+    "stack": [
+      "React",
+      "TypeScript",
+      "TailwindCSS",
+      "Vite"
+    ],
+    "stars": 0,
+    "forks": 0,
+    "lastUpdated": "2026-07-08T15:04:41Z",
+    "isResumeProject": true
+  },
+  {
+    "id": "parthnautiyal",
+    "name": "parthnautiyal",
+    "description": "Professional software repository showcasing scalable systems implementation.",
+    "url": "https://github.com/parthnautiyal/parthnautiyal",
+    "stack": [
+      "Software Engineering"
+    ],
+    "stars": 0,
+    "forks": 0,
+    "lastUpdated": "2026-06-26T18:31:15Z",
+    "isResumeProject": false
+  },
+  {
+    "id": "angularskillup",
+    "name": "angularSkillUp",
+    "description": "Professional software repository showcasing scalable systems implementation.",
+    "url": "https://github.com/parthnautiyal/angularSkillUp",
+    "stack": [
+      "TypeScript"
+    ],
+    "stars": 0,
+    "forks": 0,
+    "lastUpdated": "2024-04-04T06:21:56Z",
+    "isResumeProject": false
+  },
+  {
+    "id": "flutter-finance",
+    "name": "flutter-finance",
+    "description": "Finance Management App using flutter",
+    "url": "https://github.com/parthnautiyal/flutter-finance",
+    "stack": [
+      "Dart"
+    ],
+    "stars": 1,
+    "forks": 0,
+    "lastUpdated": "2023-10-20T08:07:42Z",
+    "isResumeProject": false
+  },
+  {
+    "id": "basic-portfolio",
+    "name": "basic-portfolio",
+    "description": "Responsive Portfolio using HTML and CSS only",
+    "url": "https://github.com/parthnautiyal/basic-portfolio",
+    "stack": [
+      "HTML"
+    ],
+    "stars": 0,
+    "forks": 0,
+    "lastUpdated": "2023-09-01T11:58:07Z",
+    "isResumeProject": false
+  },
+  {
+    "id": "bootstrap-project",
+    "name": "Bootstrap-Project",
+    "description": "Responsive Startup Website Using Boostrap",
+    "url": "https://github.com/parthnautiyal/Bootstrap-Project",
+    "stack": [
+      "HTML"
+    ],
+    "stars": 0,
+    "forks": 0,
+    "lastUpdated": "2023-08-29T17:23:25Z",
+    "isResumeProject": false
+  },
+  {
+    "id": "dsa-cipher_schools",
+    "name": "DSA-Cipher_Schools",
+    "description": "Professional software repository showcasing scalable systems implementation.",
+    "url": "https://github.com/parthnautiyal/DSA-Cipher_Schools",
+    "stack": [
+      "C++"
+    ],
+    "stars": 0,
+    "forks": 0,
+    "lastUpdated": "2023-07-01T17:19:35Z",
+    "isResumeProject": false
+  },
+  {
+    "id": "kubernetesproject",
+    "name": "kubernetesproject",
+    "description": "Professional software repository showcasing scalable systems implementation.",
+    "url": "https://github.com/parthnautiyal/kubernetesproject",
+    "stack": [
+      "Dockerfile"
+    ],
+    "stars": 0,
+    "forks": 0,
+    "lastUpdated": "2023-04-26T21:27:34Z",
+    "isResumeProject": false
+  },
+  {
+    "id": "kubernetes_project",
+    "name": "Kubernetes_Project",
+    "description": "Professional software repository showcasing scalable systems implementation.",
+    "url": "https://github.com/parthnautiyal/Kubernetes_Project",
+    "stack": [
+      "Dockerfile"
+    ],
+    "stars": 0,
+    "forks": 0,
+    "lastUpdated": "2023-05-30T07:14:52Z",
+    "isResumeProject": false
+  },
+  {
+    "id": "jenkinsdemo",
+    "name": "jenkinsdemo",
+    "description": "Professional software repository showcasing scalable systems implementation.",
+    "url": "https://github.com/parthnautiyal/jenkinsdemo",
+    "stack": [
+      "Software Engineering"
+    ],
+    "stars": 0,
+    "forks": 0,
+    "lastUpdated": "2023-04-19T08:10:41Z",
+    "isResumeProject": false
+  },
+  {
+    "id": "html-css-project",
+    "name": "HTML-CSS-Project",
+    "description": "Professional software repository showcasing scalable systems implementation.",
+    "url": "https://github.com/parthnautiyal/HTML-CSS-Project",
+    "stack": [
+      "HTML"
+    ],
+    "stars": 0,
+    "forks": 0,
+    "lastUpdated": "2023-02-02T15:17:12Z",
+    "isResumeProject": false
+  }
+]

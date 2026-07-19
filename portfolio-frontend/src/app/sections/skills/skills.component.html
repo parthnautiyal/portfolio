@@ -1,0 +1,28 @@
+<section id="skills" class="py-16">
+  <h2 class="section-heading animate-fade-up">Skills</h2>
+  <div class="mt-6 grid gap-6 md:grid-cols-2">
+    <div *ngFor="let category of skillCategories" class="card-elevated p-4">
+      <h3 class="text-base font-semibold text-slate-800 dark:text-slate-100">
+        {{ category.name }}
+      </h3>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <a
+          *ngFor="let skill of category.items"
+          [href]="skill.url"
+          target="_blank"
+          rel="noreferrer"
+          class="group flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)] px-3 py-1.5 text-xs text-[var(--color-text)] transition-all hover:scale-105 hover:border-[var(--border-color-hover)] hover:shadow-md"
+          [style.borderColor]="skill.color + '40'"
+        >
+          <app-skill-icon
+            [icon]="skill.icon"
+            [color]="skill.color"
+            [size]="16"
+            class="transition-colors"
+          ></app-skill-icon>
+          <span class="font-medium">{{ skill.name }}</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

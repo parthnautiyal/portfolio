@@ -1,0 +1,24 @@
+<section class="py-8 space-y-10 animate-scale-in">
+  <!-- Title -->
+  <div>
+    <h2 class="text-3xl font-extrabold tracking-tight text-[var(--color-text-bright)]">System & Build Pipeline</h2>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
+      Interactive system flowcharts, build pipeline configurations, and browser performance telemetry metrics.
+    </p>
+  </div>
+
+  <!-- Main Grid workspace -->
+  <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+    <!-- Architecture Canvas -->
+    <app-system-architecture-canvas [failureState]="failureState"></app-system-architecture-canvas>
+
+    <!-- System Simulation Control Panel -->
+    <app-failure-simulator [state]="failureState" (toggle)="handleToggleFailure($event)"></app-failure-simulator>
+  </div>
+
+  <!-- Real-time Telemetry & Log Monitor -->
+  <app-observability-logs [failureState]="failureState"></app-observability-logs>
+
+  <!-- DevOps build pipeline configuration -->
+  <app-pipeline-visualizer></app-pipeline-visualizer>
+</section>

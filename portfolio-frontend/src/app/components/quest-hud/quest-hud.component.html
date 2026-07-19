@@ -1,0 +1,219 @@
+<!-- 1. Global Floating Toast Overlay -->
+<div class="fixed bottom-24 right-6 z-[999] flex flex-col gap-3 pointer-events-none items-end">
+  <div
+    *ngFor="let toast of questService.toasts()"
+    [class]="'pointer-events-auto flex items-start gap-3 w-80 p-4 rounded-2xl shadow-2xl border backdrop-blur-md transition-all duration-300 animate-mac-zoom ' + (
+      toast.type === 'levelup'
+        ? 'bg-amber-500/90 dark:bg-amber-600/90 border-amber-400 text-white'
+        : 'bg-white/80 dark:bg-slate-900/85 border-slate-200 dark:border-slate-800 text-[var(--color-text)]'
+    )"
+  >
+    <div class="text-2xl mt-0.5 select-none">
+      {{ toast.type === 'levelup' ? '🌟' : '🏆' }}
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="text-xs font-bold leading-tight truncate">{{ toast.title }}</p>
+      <p class="text-[0.68rem] mt-1 leading-normal opacity-90">
+        {{ toast.description }}
+      </p>
+      <span *ngIf="toast.xp" class="inline-block mt-1.5 text-[0.62rem] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+        +{{ toast.xp }} XP
+      </span>
+    </div>
+    <button
+      (click)="questService.removeToast(toast.id)"
+      class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer rounded-lg hover:bg-slate-100/10"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Click Outside Transparent Overlay for closing drawer -->
+<div
+  *ngIf="isOpen"
+  class="fixed inset-0 z-[97] bg-transparent cursor-default print:hidden"
+  (click)="isOpen = false"
+></div>
+
+<!-- 2. Floating Circular Progress HUD Pill -->
+<button
+  *ngIf="isShrunk"
+  (click)="expand()"
+  [style.top.px]="position.y"
+  [style.left.px]="shrinkSide === 'left' ? 0 : null"
+  [style.right.px]="shrinkSide === 'right' ? 0 : null"
+  [class]="'fixed z-[99] w-11 h-11 bg-[var(--color-primary)] hover:scale-105 active:scale-95 text-white flex items-center justify-center shadow-2xl transition-all cursor-pointer ' + (
+    shrinkSide === 'left' ? 'rounded-r-2xl border-l-0 border border-white/20' : 'rounded-l-2xl border-r-0 border border-white/20'
+  )"
+  title="Expand Quest Tracker"
+>
+  <div *ngIf="shrinkSide === 'left'" class="flex items-center gap-0.5 pl-1.5 text-white">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+    <svg class="animate-pulse" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+  </div>
+  <div *ngIf="shrinkSide === 'right'" class="flex items-center gap-0.5 pr-1.5 text-white">
+    <svg class="animate-pulse" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+  </div>
+</button>
+
+<div
+  *ngIf="!isShrunk"
+  (mousedown)="onMouseDown($event)"
+  (touchstart)="onTouchStart($event)"
+  [style.left.px]="position.x !== -1 ? position.x : null"
+  [style.top.px]="position.y !== -1 ? position.y : null"
+  [class]="'fixed z-[99] print:hidden select-none ' + (isDragging ? 'cursor-grabbing opacity-75' : 'cursor-grab')"
+>
+  <button
+    [class]="'flex items-center gap-2.5 p-2 pr-4 rounded-full shadow-lg border backdrop-blur-md transition-all duration-300 pointer-events-none ' + (
+      isOpen
+        ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 border-slate-800 dark:border-slate-200'
+        : 'bg-white/85 dark:bg-slate-900/85 text-[var(--color-text)] border-slate-200 dark:border-slate-800'
+    ) + ' ' + (!hasOpened && !isOpen ? 'animate-highlight-pulse' : '')"
+    aria-label="Toggle Recruiter Quest HUD"
+  >
+    <!-- Circular Progress Ring -->
+    <div class="relative flex items-center justify-center w-9 h-9 select-none">
+      <svg class="absolute w-full h-full -rotate-90">
+        <circle
+          class="text-slate-200 dark:text-slate-700/60"
+          [attr.stroke-width]="stroke"
+          stroke="currentColor"
+          fill="transparent"
+          [attr.r]="normalizedRadius"
+          [attr.cx]="radius"
+          [attr.cy]="radius"
+        />
+        <circle
+          class="text-[var(--color-primary)] transition-all duration-500 ease-out"
+          [attr.stroke-width]="stroke"
+          [attr.stroke-dasharray]="circumference"
+          [attr.stroke-dashoffset]="strokeDashoffset"
+          stroke-linecap="round"
+          stroke="currentColor"
+          fill="transparent"
+          [attr.r]="normalizedRadius"
+          [attr.cx]="radius"
+          [attr.cy]="radius"
+        />
+      </svg>
+      <span class="text-[0.65rem] font-black tracking-tight">{{ questService.level() }}</span>
+    </div>
+
+    <div class="text-left min-w-[70px]">
+      <p class="text-[0.55rem] font-bold uppercase tracking-wider opacity-60">Recruiter Quest</p>
+      <p class="text-[0.68rem] font-black -mt-0.5 truncate max-w-[100px]">
+        {{ LEVEL_CLASS_NAMES[questService.level() - 1] }}
+      </p>
+    </div>
+    <svg [class]="'transition-transform duration-300 ' + (isOpen ? 'rotate-180' : '')" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+  </button>
+</div>
+
+<!-- 3. Sliding Challenges Drawer Panel -->
+<div
+  [class]="'fixed top-0 bottom-0 right-0 w-full max-w-sm z-[98] backdrop-blur-lg bg-white/90 dark:bg-slate-950/90 shadow-2xl border-l border-slate-200/50 dark:border-slate-800/50 transition-transform duration-300 ease-out print:hidden ' + (
+    isOpen ? 'translate-x-0' : 'translate-x-full'
+  )"
+>
+  <div class="flex flex-col h-full pt-20 pb-6 px-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+      <div>
+        <h3 class="text-sm font-black flex items-center gap-1.5 uppercase tracking-wider">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--color-primary)]"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+          Quest Tracker
+        </h3>
+        <p class="text-[0.62rem] text-slate-500 mt-0.5">
+          Unlocked {{ unlockedCount }} of {{ totalAchievements }} achievements
+        </p>
+      </div>
+      <button
+        (click)="isOpen = false"
+        class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <!-- Level Info HUD -->
+    <div class="py-4 space-y-2 select-none">
+      <div class="flex items-end justify-between">
+        <div>
+          <span class="text-[0.6rem] font-bold text-slate-400 uppercase tracking-widest">Recruiter Level</span>
+          <h4 class="text-lg font-black text-slate-900 dark:text-slate-50 -mt-0.5">
+            Lvl {{ questService.level() }} — {{ LEVEL_CLASS_NAMES[questService.level() - 1] }}
+          </h4>
+        </div>
+        <span class="text-[0.62rem] font-bold text-slate-400">{{ questService.xp() }}/500 XP</span>
+      </div>
+      <!-- XP progress bar -->
+      <div class="w-full bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+        <div
+          [style.width.%]="(questService.xp() / 500) * 100"
+          class="bg-[var(--color-primary)] h-full rounded-full transition-all duration-500 ease-out"
+        ></div>
+      </div>
+    </div>
+
+    <!-- Challenges Checklist Scrollable list -->
+    <div class="flex-1 overflow-y-auto py-2 pr-1 space-y-3 scrollbar-thin">
+      <div
+        *ngFor="let key of achievementKeys"
+        (click)="questService.unlockedAchievements()[key] ? null : handleAchievementClick(key)"
+        [class]="'p-3 rounded-2xl border flex gap-3 transition-all duration-300 ' + (
+          questService.unlockedAchievements()[key]
+            ? 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20'
+            : 'bg-slate-50/50 dark:bg-slate-900/40 border-slate-150 dark:border-slate-850 hover:border-[var(--color-primary)] dark:hover:border-[var(--color-primary)] cursor-pointer hover:scale-[1.01]'
+        )"
+      >
+        <div class="mt-0.5">
+          <svg *ngIf="questService.unlockedAchievements()[key]" class="text-emerald-500 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          <svg *ngIf="!questService.unlockedAchievements()[key]" class="text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p
+            [class]="'text-xs font-bold leading-snug ' + (
+              questService.unlockedAchievements()[key]
+                ? 'text-emerald-800 dark:text-emerald-300'
+                : 'text-slate-700 dark:text-slate-350'
+            )"
+          >
+            {{ achievementsData[key].title }}
+          </p>
+          <p class="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5 leading-normal">
+            {{ achievementsData[key].description }}
+          </p>
+          <span *ngIf="!questService.unlockedAchievements()[key]" class="text-[0.55rem] text-[var(--color-primary)] font-bold block mt-1">
+            Go to challenge →
+          </span>
+        </div>
+        <div class="text-right">
+          <span
+            [class]="'inline-block text-[0.6rem] font-bold px-1.5 py-0.5 rounded-full ' + (
+              questService.unlockedAchievements()[key]
+                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
+            )"
+          >
+            +{{ achievementsData[key].xp }} XP
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Reset Quests Option -->
+    <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-[0.65rem]">
+      <span class="text-slate-400 font-bold">Quest Simulator v1.0.0</span>
+      <button
+        (click)="confirmReset()"
+        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/5 hover:border-red-500/20 transition-all cursor-pointer"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        Reset Progress
+      </button>
+    </div>
+  </div>
+</div>

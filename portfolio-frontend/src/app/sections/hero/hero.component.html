@@ -1,0 +1,121 @@
+<section id="top" class="relative py-24 md:py-32">
+  <!-- Seamless decorative glows -->
+  <div class="pointer-events-none absolute inset-0 -z-10">
+    <div class="absolute right-0 top-0 h-[500px] w-[600px] rounded-full bg-orange-500/8 blur-[130px] dark:bg-indigo-500/12"></div>
+    <div class="absolute left-0 bottom-0 h-[400px] w-[500px] rounded-full bg-amber-500/8 blur-[130px] dark:bg-purple-500/10"></div>
+    <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange-500/10 to-transparent dark:via-indigo-500/15"></div>
+  </div>
+  
+  <div class="grid gap-12 md:grid-cols-[1.3fr_0.7fr] md:items-center">
+    <div class="space-y-8 animate-fade-up">
+      <p class="text-xs font-bold uppercase tracking-[0.25em] text-[var(--color-primary)]">
+        Backend Engineer
+      </p>
+      <h1 class="text-5xl font-extrabold tracking-tight md:text-6xl lg:text-7xl">
+        Hi, I'm 
+        <span class="bg-gradient-to-r from-orange-600 to-amber-500 bg-clip-text text-transparent dark:from-indigo-400 dark:to-purple-400 inline-block isolate">
+          {{ personal.name }}
+        </span>
+      </h1>
+      <p class="text-lg md:text-xl font-medium text-[var(--color-text-bright)]">
+        {{ personal.title }}
+      </p>
+      <p class="max-w-2xl text-base md:text-lg leading-relaxed text-[var(--color-text-muted)]">
+        {{ personal.summary }}
+      </p>
+      
+      <div class="flex flex-wrap gap-4 pt-4 text-sm">
+        <a
+          routerLink="/resume"
+          class="rounded-full bg-[var(--color-primary)] hover:opacity-90 text-white px-7 py-3 font-semibold shadow-lg hover:shadow-[var(--color-primary)]/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer text-center"
+        >
+          View Resume
+        </a>
+        <a
+          routerLink="/projects"
+          class="rounded-full border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-[var(--color-text-bright)] px-7 py-3 font-semibold shadow-sm transition-all hover:border-[var(--border-color-hover)] hover:scale-[1.02] active:scale-[0.98]"
+        >
+          View Projects
+        </a>
+        <a
+          routerLink="/contact"
+          class="rounded-full border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-[var(--color-text-bright)] px-7 py-3 font-semibold shadow-sm transition-all hover:border-[var(--border-color-hover)] hover:scale-[1.02] active:scale-[0.98]"
+        >
+          Contact Me
+        </a>
+      </div>
+    </div>
+
+    <div class="animate-fade-up md:delay-100 flex justify-center">
+      <div class="card-elevated flex flex-col items-center gap-6 p-8 text-sm w-full max-w-sm">
+        <a
+          [href]="personal.linkedin"
+          target="_blank"
+          rel="noreferrer"
+          (click)="onLinkClick('Cover Avatar Click', personal.linkedin)"
+          class="relative h-24 w-24 rounded-full overflow-hidden border-2 border-[var(--color-primary)] shadow-md group cursor-pointer block"
+        >
+          <img
+            src="/parth_avatar.jpg"
+            alt="Parth Nautiyal"
+            class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </a>
+        <div class="text-center space-y-2">
+          <p class="font-semibold text-[var(--color-text-bright)] text-base">SDE II @ ZopSmart</p>
+          <p class="text-xs text-[var(--color-text-muted)] leading-relaxed">
+            Building reliable backend systems, automating deployments, and
+            improving developer experience through clean tooling.
+          </p>
+        </div>
+        <div class="flex flex-wrap justify-center gap-2 pt-2">
+          <a
+            href="https://www.java.com"
+            target="_blank"
+            rel="noreferrer"
+            class="pill flex items-center gap-1.5 group/pill hover:border-[var(--color-primary)] hover:text-[var(--color-text-bright)] cursor-pointer"
+          >
+            <svg class="text-orange-600 dark:text-orange-400 group-hover/pill:scale-110 transition-all duration-200" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9.102 17.514c-.66.084-1.228.163-1.637.234l.206.634c.725-.136 1.458-.291 2.13-.427-.291-.144-.486-.282-.699-.441zm10.741-9.98c-.149-.57-.597-1.127-1.225-1.517-.557-.348-1.282-.55-1.954-.537-.367.009-.72.059-1.036.146l.245.86c.217-.06.452-.093.69-.098.539-.011 1.096.155 1.5.409.431.27.734.646.822 1.025.093.391-.019.8-.294 1.155.086-.027.172-.057.256-.089.444-.176.779-.472.923-.822.091-.219.107-.425.073-.633zm-4.708.358l.192.836c.218-.051.464-.131.696-.239-.148-.057-.306-.118-.466-.183-.131-.054-.271-.122-.422-.414zm.983-.787c-.201-.082-.414-.176-.642-.284-.131-.06-.271-.131-.422-.427l.192.846c.218-.057.464-.149.696-.257-.148-.056-.306-.116-.466-.182-.132-.053-.271-.121-.422-.414zM12 0c6.627 0 12 5.373 12 12s-5.373 12-12 12S0 18.627 0 12 5.373 0 12 0zm1.745 16.732c-.443.084-.963.176-1.52.269 1.171 1.066 3.655 1.193 4.293.308-.72.072-1.849.034-2.773-.577zm.172-.519c-.393.078-.857.164-1.345.249.771.694 2.228.847 2.871.493-.41-.014-1.042-.128-1.526-.742zm2.083-.873c-.562.062-1.25.127-2.029.191l.249.742c.866-.172 1.637-.367 2.193-.564-.134-.1-.284-.213-.413-.369zm-7.669.839l-.24.717c.502-.097 1.085-.206 1.704-.316l-.234-.73c-.496.084-.949.155-1.23.329zm6.059-3.774c-.067-.282-.249-.55-.544-.757-.424-.298-.999-.444-1.53-.408-.669.043-1.256.326-1.637.797-.333.411-.461.905-.367 1.344.093.435.39.816.804 1.045.419.231.956.31 1.488.226.669-.105 1.229-.481 1.503-.984.182-.335.21-.692.158-1.008l.125.255zm-1.81-2.18c.245.099.502.213.754.341l-.192-.835c-.218.053-.464.137-.696.246.148.057.306.118.466.183.131.054.271.122.422.414l-.192-.836c-.218.051-.464.131-.696.239.148.057.306.118.466.183.131.054.271.122.422.414l-.192-.836c-.218.051-.464.131-.696.239.148.057.306.118.466.183.131.054.271.122.422.414z"/></svg>
+            Java
+          </a>
+          <a
+            href="https://spring.io/projects/spring-boot"
+            target="_blank"
+            rel="noreferrer"
+            class="pill flex items-center gap-1.5 group/pill hover:border-[var(--color-primary)] hover:text-[var(--color-text-bright)] cursor-pointer"
+          >
+            <svg class="text-green-600 dark:text-green-400 group-hover/pill:scale-110 transition-all duration-200" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M11.979 24C5.363 24 0 18.636 0 12.021C0 5.405 5.363.042 11.979.042c3.551 0 6.945 1.579 9.176 4.3l-.008.009l-2.079 1.488a8.882 8.882 0 0 0-7.089-3.23c-4.912 0-8.906 3.993-8.906 8.906c0 4.912 3.994 8.906 8.906 8.906c3.21 0 6.136-1.721 7.7-4.503l2.253 1.258A11.417 11.417 0 0 1 11.979 24zM17.485 10.98a4.485 4.485 0 1 1-4.485-4.484a4.485 4.485 0 0 1 4.485 4.485zm-2.078 0a2.408 2.408 0 1 0-2.407 2.407a2.408 2.408 0 0 0 2.407-2.407z"/></svg>
+            Spring Boot
+          </a>
+          <a
+            href="https://kubernetes.io"
+            target="_blank"
+            rel="noreferrer"
+            class="pill flex items-center gap-1.5 group/pill hover:border-[var(--color-primary)] hover:text-[var(--color-text-bright)] cursor-pointer"
+          >
+            <svg class="text-blue-600 dark:text-blue-400 group-hover/pill:scale-110 transition-all duration-200" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.06.01a1.21 1.21 0 0 0-.6.18L1.6 5.86a1.2 1.2 0 0 0-.6 1.04v10.2a1.2 1.2 0 0 0 .6 1.04l9.86 5.67a1.2 1.2 0 0 0 1.2 0l9.86-5.67a1.2 1.2 0 0 0 .6-1.04V6.9a1.2 1.2 0 0 0-.6-1.04L12.66.19a1.21 1.21 0 0 0-.6-.18zm0 2.19l8 4.62v9.23l-8 4.62-8-4.62V6.82l8-4.62zm0 2.4a6.6 6.6 0 1 0 0 13.2 6.6 6.6 0 0 0 0-13.2zm0 2.13a4.47 4.47 0 1 1 0 8.94 4.47 4.47 0 0 1 0-8.94z"/></svg>
+            Kubernetes
+          </a>
+          <a
+            href="https://www.docker.com"
+            target="_blank"
+            rel="noreferrer"
+            class="pill flex items-center gap-1.5 group/pill hover:border-[var(--color-primary)] hover:text-[var(--color-text-bright)] cursor-pointer"
+          >
+            <svg class="text-blue-500 dark:text-blue-400 group-hover/pill:scale-110 transition-all duration-200" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M13.983 11.078h2.119c.102 0 .186-.084.186-.186V8.773c0-.102-.084-.186-.186-.186h-2.119c-.102 0-.186.084-.186.186v2.119c0 .102.084.186.186.186zM11.267 11.078h2.119c.102 0 .186-.084.186-.186V8.773c0-.102-.084-.186-.186-.186h-2.119c-.102 0-.186.084-.186.186v2.119c0 .102.084.186.186.186zM11.267 8.361h2.119c.102 0 .186-.084.186-.186V6.056c0-.102-.084-.186-.186-.186h-2.119c-.102 0-.186.084-.186.186v2.119c0 .102.084.186.186.186zM8.551 11.078h2.119c.102 0 .186-.084.186-.186V8.773c0-.102-.084-.186-.186-.186H8.551c-.102 0-.186.084-.186.186v2.119c0 .102.084.186.186.186zM8.551 8.361h2.119c.102 0 .186-.084.186-.186V6.056c0-.102-.084-.186-.186-.186H8.551c-.102 0-.186.084-.186.186v2.119c0 .102.084.186.186.186zM5.835 11.078h2.119c.102 0 .186-.084.186-.186V8.773c0-.102-.084-.186-.186-.186H5.835c-.102 0-.186.084-.186.186v2.119c0 .102.084.186.186.186zM24 12.3c-.63.92-1.9 1.1-2.92 1.1H1.583c-.888 0-1.583-.695-1.583-1.583V8.847c0-.888.695-1.583 1.583-1.583H21.08c1.02 0 2.29.18 2.92 1.1.41.6.43 1.58.4 2.18-.03.6-.17 1.15-.4 1.75z"/></svg>
+            Docker
+          </a>
+          <a
+            href="https://github.com/features/actions"
+            target="_blank"
+            rel="noreferrer"
+            class="pill flex items-center gap-1.5 group/pill hover:border-[var(--color-primary)] hover:text-[var(--color-text-bright)] cursor-pointer"
+          >
+            <svg class="text-slate-800 dark:text-slate-200 group-hover/pill:scale-110 transition-all duration-200" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.11.82-.26.82-.577v-2.234c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22v3.293c0 .319.22.694.825.576C20.565 21.795 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            CI/CD
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
