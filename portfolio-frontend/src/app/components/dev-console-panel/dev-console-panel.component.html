@@ -27,23 +27,24 @@
         ? 'bg-slate-950 text-green-400 border-green-500/30'
         : 'bg-slate-900 text-green-400 border-slate-700/50'
     ) + ' ' + (!hasOpened && !isOpen ? 'animate-highlight-pulse' : '')"
-    title="Toggle Dev CLI Console (Ctrl + `)"
+    title="Toggle Dev Console (Ctrl + `)"
   >
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
     <span class="text-[0.62rem] font-bold text-green-400/80">dev-console</span>
   </button>
 </div>
 
-<!-- Console panel — positioned above the pill -->
+<!-- Console panel -->
 <div
   *ngIf="isOpen && !isShrunk"
-  [style.left.px]="position.x !== -1 ? position.x : 16"
-  [style.bottom.px]="typeof window !== 'undefined' ? (window.innerHeight - position.y + 8) : 80"
-  class="fixed z-50 w-[92vw] sm:w-[460px] rounded-2xl border border-green-500/20 bg-slate-950/97 text-green-400 font-mono flex flex-col shadow-2xl select-text"
-  [style.bottom]="'calc(100vh - ' + position.y + 'px + 8px)'"
+  [class]="'fixed z-50 border border-green-500/20 bg-slate-950/97 text-green-400 font-mono flex flex-col shadow-2xl select-text transition-all duration-200 ' + (isMaximized ? 'rounded-xl' : 'rounded-2xl w-[92vw] sm:w-[580px]')"
+  [style.top]="isMaximized ? '8px' : 'auto'"
+  [style.right]="isMaximized ? '8px' : 'auto'"
+  [style.bottom]="isMaximized ? '8px' : 'calc(100vh - ' + position.y + 'px + 8px)'"
+  [style.left]="isMaximized ? '8px' : ((position.x !== -1 ? position.x : 16) + 'px')"
 >
-  <!-- Title bar with working mac buttons -->
-  <div class="flex items-center justify-between border-b border-green-500/10 px-3 py-2 cursor-default">
+  <!-- Title bar -->
+  <div class="flex items-center justify-between border-b border-green-500/10 px-3 py-2 cursor-default shrink-0">
     <div class="flex items-center gap-1.5">
       <!-- Red: close -->
       <button
@@ -61,48 +62,63 @@
       >
         <svg class="opacity-0 group-hover:opacity-100 transition-opacity" xmlns="http://www.w3.org/2000/svg" width="8" height="2" viewBox="0 0 10 2"><line x1="0" y1="1" x2="10" y2="1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
-      <!-- Green: maximize (fullscreen console height) -->
+      <!-- Green: maximize toggle -->
       <button
         (click)="maximize()"
         class="h-3 w-3 rounded-full bg-green-500 hover:bg-green-400 transition-colors cursor-pointer flex items-center justify-center group"
-        title="Maximize"
+        [title]="isMaximized ? 'Restore' : 'Fullscreen'"
       >
         <svg class="opacity-0 group-hover:opacity-100 transition-opacity" xmlns="http://www.w3.org/2000/svg" width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
       </button>
-      <span class="text-[0.62rem] font-bold text-slate-500 ml-1">developer-console</span>
+      <span class="text-[0.62rem] font-bold text-slate-600 ml-1">developer-console</span>
     </div>
+    <span class="text-[0.58rem] text-slate-700 tracking-wider">Parth OS v2.0.0</span>
   </div>
 
-  <!-- Console body (hidden when minimized) -->
-  <div *ngIf="!isMinimized" class="flex flex-col" style="height: 320px;">
+  <!-- Console body -->
+  <div
+    *ngIf="!isMinimized"
+    [class]="'flex flex-col min-h-0 ' + (isMaximized ? 'flex-1' : '')"
+    [style.height.px]="isMaximized ? null : 440"
+  >
     <!-- Output log -->
-    <div class="flex-1 overflow-y-auto space-y-1.5 text-[0.65rem] p-3 scrollbar-thin scrollbar-thumb-green-500/20">
+    <div class="flex-1 overflow-y-auto space-y-0.5 text-[0.65rem] p-3 pb-1 scrollbar-thin scrollbar-thumb-green-500/20">
       <div
         *ngFor="let entry of history"
-        [class]="
+        class="leading-relaxed whitespace-pre-wrap break-words"
+        [class]="entry.segs ? '' : (
           entry.type === 'error'   ? 'text-red-400' :
-          entry.type === 'success' ? 'text-blue-400 font-bold' :
+          entry.type === 'success' ? 'text-green-300 font-semibold' :
+          entry.type === 'dim'     ? 'text-slate-600' :
           entry.type === 'input'   ? 'text-slate-300' :
           'text-green-400'
-        "
-      >{{ entry.text }}</div>
+        )"
+      >
+        <ng-container *ngIf="entry.segs">
+          <span *ngFor="let seg of entry.segs" [class]="seg.c">{{ seg.t }}</span>
+        </ng-container>
+        <ng-container *ngIf="!entry.segs">{{ entry.text }}</ng-container>
+      </div>
       <div #consoleEnd></div>
     </div>
 
     <!-- Input -->
     <form
       (submit)="onSubmit($event)"
-      class="border-t border-green-500/10 px-3 py-2 flex items-center gap-1.5"
+      class="border-t border-green-500/10 px-3 py-2 flex items-center gap-1.5 shrink-0"
     >
-      <span class="text-[0.65rem] text-slate-400 shrink-0">guest@parth:~$</span>
+      <span class="text-[0.65rem] text-slate-500 shrink-0 select-none">guest@parth:~$</span>
       <input
         #cmdInput
         [(ngModel)]="inputVal"
         name="cmdInput"
-        placeholder='Try "help" or "joke"...'
-        class="flex-1 text-[0.65rem] font-mono bg-transparent border-none outline-none text-green-400 placeholder-green-900"
+        (keydown)="onKeyDown($event)"
+        placeholder='help · neofetch · exp · ping…'
+        autocomplete="off"
+        spellcheck="false"
+        class="flex-1 text-[0.65rem] font-mono bg-transparent border-none outline-none text-green-400 placeholder-slate-700 caret-green-400"
       />
-      <button type="submit" class="text-slate-600 hover:text-green-400 transition-colors cursor-pointer shrink-0">
+      <button type="submit" class="text-slate-700 hover:text-green-400 transition-colors cursor-pointer shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10l-5 5 5 5"></path><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg>
       </button>
     </form>
