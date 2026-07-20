@@ -64,7 +64,7 @@
       </div>
     </button>
 
-    <!-- Cloud Mount Offline -->
+    <!-- Resend Email Service Offline -->
     <button
       (click)="handleToggle('cloudMountOffline')"
       [class]="'flex items-start gap-3 p-3 rounded-xl border text-left transition-all hover:scale-[1.02] cursor-pointer ' + (
@@ -74,19 +74,19 @@
       )"
     >
       <div [class]="'p-2 rounded-lg shrink-0 ' + (state.cloudMountOffline ? 'bg-rose-500/20' : 'bg-blue-500/10 text-blue-500')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-15.05 1.5 6 6 0 0 0 4.22 10.08h13.43a7 7 0 0 0 3.27-14.66"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline><line x1="2" y1="2" x2="22" y2="22"></line></svg>
       </div>
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-1.5 justify-between">
-          <span class="text-xs font-bold text-[var(--color-text-bright)]">iCloud / GDrive Offline</span>
+          <span class="text-xs font-bold text-[var(--color-text-bright)]">Resend Email Offline</span>
           <span [class]="'text-[0.55rem] font-extrabold uppercase px-1.5 py-0.5 rounded-full shrink-0 ' + (
             state.cloudMountOffline ? 'bg-rose-500/20 text-rose-500 animate-pulse' : 'bg-green-500/10 text-green-500'
           )">
-            {{ state.cloudMountOffline ? 'Unmounted' : 'Healthy' }}
+            {{ state.cloudMountOffline ? 'API Unreachable' : 'Healthy' }}
           </span>
         </div>
         <p class="text-[0.6rem] text-slate-500 mt-1 leading-relaxed">
-          Simulates local cloud directories being unmounted. The local script catches the error gracefully, logs the issue, and skips copy actions.
+          Simulates the Resend email API being unreachable. Contact form submissions still succeed client-side (optimistic UI) but email delivery silently fails after 3 retry attempts.
         </p>
       </div>
     </button>

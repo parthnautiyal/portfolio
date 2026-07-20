@@ -61,12 +61,13 @@
 </button>
 
 <div
+  #dragPill
   *ngIf="!isShrunk"
   (mousedown)="onMouseDown($event)"
   (touchstart)="onTouchStart($event)"
   [style.left.px]="position.x !== -1 ? position.x : null"
   [style.top.px]="position.y !== -1 ? position.y : null"
-  [class]="'fixed z-[99] print:hidden select-none ' + (isDragging ? 'cursor-grabbing opacity-75' : 'cursor-grab')"
+  [class]="'fixed z-[99] print:hidden select-none touch-none ' + (isDragging ? 'cursor-grabbing opacity-75' : 'cursor-grab')"
 >
   <button
     [class]="'flex items-center gap-2.5 p-2 pr-4 rounded-full shadow-lg border backdrop-blur-md transition-all duration-300 pointer-events-none ' + (

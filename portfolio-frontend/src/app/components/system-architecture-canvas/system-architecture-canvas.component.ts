@@ -84,7 +84,7 @@ export class SystemArchitectureCanvasComponent implements OnChanges {
         id: 'render-backend',
         label: '⑤ Render (Spring Boot)',
         icon: 'FiCpu',
-        description: 'Spring Boot backend hosted on Render free tier as a Docker container. Handles contact form emails (SMTP), AI chat proxying (Gemini/OpenAI), and GitHub data. Sleeps after 15 min idle — first request after idle takes ~30-60s (cold start).',
+        description: 'Spring Boot backend hosted on Render free tier as a Docker container. Handles contact form delivery (via Resend HTTP API), AI chat proxying (Gemini/Ollama), and GitHub data. Sleeps after 15 min idle — first request after idle takes ~30-60s (cold start).',
         tradeOffs: 'Free persistent JVM server; cold start delay on free tier. Upgrade to Render Starter ($7/mo) to eliminate cold starts.',
         pattern: 'Containerised REST API (Docker on Render)',
         codeSnippet: '// Dockerfile (portfolio-backend/)\nFROM eclipse-temurin:21-jdk-alpine AS build\nRUN ./mvnw clean package -DskipTests\n\nFROM eclipse-temurin:21-jre-alpine\nCOPY --from=build /app/target/*.jar app.jar\nEXPOSE 8080\nENTRYPOINT ["java", "-jar", "app.jar"]',
@@ -93,15 +93,16 @@ export class SystemArchitectureCanvasComponent implements OnChanges {
         hasWarning: this.failureState?.gatewayLatency
       },
       {
-        id: 'contact-smtp',
-        label: '⑥ Gmail SMTP',
+        id: 'resend-api',
+        label: '⑥ Resend API',
         icon: 'FiCpu',
-        description: 'Spring Boot uses JavaMailSender with Gmail SMTP to deliver contact form submissions to Parth\'s inbox. Credentials (EMAIL_USER, EMAIL_PASS) stored as Render environment variables — never in code.',
-        tradeOffs: 'Zero third-party email cost; Gmail App Password required, daily send limit of 500 emails per Gmail account.',
-        pattern: 'Secure SMTP Relay',
-        codeSnippet: '// ContactController.java\n@PostMapping("/api/contact")\npublic ResponseEntity<?> submit(@RequestBody ContactRequest req) {\n  MimeMessage msg = mailSender.createMimeMessage();\n  helper.setTo(System.getenv("EMAIL_USER"));\n  helper.setReplyTo(req.getEmail());\n  mailSender.send(msg);\n  return ResponseEntity.ok().build();\n}',
-        x: 150,
-        y: 330
+        description: 'Transactional email delivery via Resend HTTP API. Spring Boot POSTs contact form submissions as JSON to api.resend.com/emails — no SMTP, no port 587, works on all cloud platforms. RESEND_API_KEY stored as a Render environment variable.',
+        tradeOffs: 'Reliable HTTP delivery, free tier (100 emails/day); requires RESEND_API_KEY env var. Custom domain verification unlocks branded from-address.',
+        pattern: 'HTTP Transactional Email (Resend)',
+        codeSnippet: '// ContactController.java\nHttpRequest req = HttpRequest.newBuilder()\n  .uri(URI.create("https://api.resend.com/emails"))\n  .header("Authorization", "Bearer " + resendKey)\n  .header("Content-Type", "application/json")\n  .POST(BodyPublishers.ofString(payload))\n  .build();\nHttpResponse<String> resp = http.send(req, ofString());\n// No SMTP — pure HTTP, never blocked by Render',
+        x: 380,
+        y: 330,
+        isOffline: this.failureState?.cloudMountOffline
       },
       {
         id: 'gemini-api',

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewChecked, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewChecked, ViewChild, ElementRef, HostListener, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -61,10 +61,14 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
   shrinkSide: 'left' | 'right' | null = null;
   position = { x: -1, y: -1 };
   private dragStart = { x: 0, y: 0, posX: 0, posY: 0, moved: false };
+  private _livePos = { x: 0, y: 0 };
+  private rafId = 0;
   private keyListener: any;
   private personal = getPersonal();
 
-  constructor(private router: Router, private questService: QuestService) {}
+  @ViewChild('dragPill') private dragPillRef!: ElementRef<HTMLElement>;
+
+  constructor(private router: Router, private questService: QuestService, private ngZone: NgZone) {}
 
   ngOnInit() {
     if (typeof window !== 'undefined') {
@@ -179,34 +183,39 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
     if (e.button !== 0) return;
     e.preventDefault();
     this.startDrag(e.clientX, e.clientY);
-
-    const onMove = (me: MouseEvent) => this.drag(me.clientX, me.clientY);
-    const onUp = () => {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-      this.endDrag();
-    };
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
+    this.ngZone.runOutsideAngular(() => {
+      const onMove = (me: MouseEvent) => this.drag(me.clientX, me.clientY);
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        this.ngZone.run(() => this.endDrag());
+      };
+      document.addEventListener('mousemove', onMove, { passive: true });
+      document.addEventListener('mouseup', onUp);
+    });
   }
 
   onTouchStart(e: TouchEvent) {
     const t = e.touches[0];
     this.startDrag(t.clientX, t.clientY);
-
-    const onMove = (me: TouchEvent) => { const tt = me.touches[0]; this.drag(tt.clientX, tt.clientY); };
-    const onEnd = () => {
-      document.removeEventListener('touchmove', onMove);
-      document.removeEventListener('touchend', onEnd);
-      this.endDrag();
-    };
-    document.addEventListener('touchmove', onMove);
-    document.addEventListener('touchend', onEnd);
+    this.ngZone.runOutsideAngular(() => {
+      const onMove = (me: TouchEvent) => { const tt = me.touches[0]; this.drag(tt.clientX, tt.clientY); };
+      const onEnd = () => {
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+        this.ngZone.run(() => this.endDrag());
+      };
+      document.addEventListener('touchmove', onMove, { passive: true });
+      document.addEventListener('touchend', onEnd);
+    });
   }
 
   private startDrag(cx: number, cy: number) {
     this.isDragging = true;
     this.dragStart = { x: cx, y: cy, posX: this.position.x, posY: this.position.y, moved: false };
+    this._livePos = { x: this.position.x, y: this.position.y };
+    const el = this.dragPillRef?.nativeElement;
+    if (el) el.style.willChange = 'left, top';
   }
 
   private drag(cx: number, cy: number) {
@@ -214,17 +223,29 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
     const dx = cx - this.dragStart.x;
     const dy = cy - this.dragStart.y;
     if (Math.abs(dx) > 5 || Math.abs(dy) > 5) this.dragStart.moved = true;
-    const newX = Math.max(0, Math.min(window.innerWidth - 180, this.dragStart.posX + dx));
-    const newY = Math.max(0, Math.min(window.innerHeight - 70, this.dragStart.posY + dy));
-    this.position = { x: newX, y: newY };
+    cancelAnimationFrame(this.rafId);
+    this.rafId = requestAnimationFrame(() => {
+      const newX = Math.max(0, Math.min(window.innerWidth - 180, this.dragStart.posX + dx));
+      const newY = Math.max(0, Math.min(window.innerHeight - 70, this.dragStart.posY + dy));
+      this._livePos = { x: newX, y: newY };
+      const el = this.dragPillRef?.nativeElement;
+      if (el) {
+        el.style.left = newX + 'px';
+        el.style.top = newY + 'px';
+      }
+    });
   }
 
   private endDrag() {
+    cancelAnimationFrame(this.rafId);
     this.isDragging = false;
+    const el = this.dragPillRef?.nativeElement;
+    if (el) el.style.willChange = '';
     if (!this.dragStart.moved) {
       this.toggleConsole();
       return;
     }
+    this.position = { ...this._livePos };
     const x = this.position.x;
     if (x < 50) {
       this.isShrunk = true;

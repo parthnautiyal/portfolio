@@ -26,7 +26,8 @@
       </defs>
 
       <!-- Connectors (Flow Paths) -->
-      <!-- PDF -> Sync Script (1 -> 2) -->
+
+      <!-- ① PDF -> ② GitHub (manual git commit, dashed) -->
       <path
         d="M 150 95 L 150 175"
         fill="none"
@@ -36,20 +37,16 @@
         marker-end="url(#arrow)"
       />
 
-      <!-- Sync Script -> iCloud / GDrive (2 -> 3) -->
+      <!-- ② GitHub -> ③ Vercel CDN (CI/CD auto-deploy) -->
       <path
-        d="M 215 190 L 315 95"
+        d="M 215 190 L 315 80"
         fill="none"
         stroke-width="2"
-        [class]="'transition-colors duration-300 ' + (
-          failureState.cloudMountOffline
-            ? 'stroke-rose-500 dark:stroke-rose-450 stroke-dashed animate-pulse'
-            : 'stroke-slate-400 dark:stroke-slate-600'
-        )"
-        [attr.marker-end]="failureState.cloudMountOffline ? 'url(#arrow-red)' : 'url(#arrow)'"
+        class="stroke-slate-400 dark:stroke-slate-600"
+        marker-end="url(#arrow)"
       />
 
-      <!-- Sync Script -> Vercel CDN (2 -> 4) -->
+      <!-- ② GitHub -> ⑤ Render (CI/CD auto-deploy) -->
       <path
         d="M 215 200 L 315 200"
         fill="none"
@@ -58,67 +55,81 @@
         marker-end="url(#arrow)"
       />
 
-      <!-- Vercel CDN -> Visitor Browser (4 -> 5) -->
+      <!-- ③ Vercel CDN -> ④ Visitor Browser (serves Angular SPA, upper lane) -->
       <path
-        d="M 445 200 L 545 200"
+        d="M 445 65 L 545 65"
         fill="none"
         stroke-width="2"
         class="stroke-slate-400 dark:stroke-slate-600"
         marker-end="url(#arrow)"
       />
 
-      <!-- Visitor Browser <-> Serverless Functions (5 -> 6) -->
+      <!-- ④ Visitor Browser -> ③ Vercel CDN (HTTP requests, lower lane) -->
       <path
-        d="M 610 225 L 445 330"
+        d="M 545 75 L 445 75"
+        fill="none"
+        stroke-width="2"
+        class="stroke-slate-400 dark:stroke-slate-600"
+        marker-end="url(#arrow)"
+      />
+
+      <!-- ③ Vercel CDN -> ⑤ Render (API proxy /api/*) -->
+      <path
+        d="M 380 95 L 380 175"
         fill="none"
         stroke-width="2"
         [class]="'transition-all duration-300 ' + (
           failureState.gatewayLatency
-            ? 'stroke-amber-500 dark:stroke-amber-400 stroke-[3px] stroke-dashed animate-pulse'
+            ? 'stroke-amber-500 dark:stroke-amber-400 stroke-[3px] animate-pulse'
             : 'stroke-slate-400 dark:stroke-slate-600'
         )"
         [attr.marker-end]="failureState.gatewayLatency ? 'url(#arrow-amber)' : 'url(#arrow)'"
       />
 
-      <!-- Serverless Functions -> Gemini API (6 -> 7) -->
+      <!-- ⑤ Render -> ⑦ Gemini API (chat proxy) -->
       <path
-        d="M 445 330 L 545 330"
+        d="M 445 200 L 545 200"
         fill="none"
         stroke-width="2"
         [class]="'transition-colors duration-300 ' + (
           failureState.geminiLimit
-            ? 'stroke-rose-500 dark:stroke-rose-450 stroke-dashed'
+            ? 'stroke-rose-500 dark:stroke-rose-450'
             : 'stroke-slate-400 dark:stroke-slate-600'
         )"
         [attr.marker-end]="failureState.geminiLimit ? 'url(#arrow-red)' : 'url(#arrow)'"
       />
 
-      <!-- Serverless Functions -> Ollama Local Fallback (6 -> 8) -->
+      <!-- ⑤ Render -> ⑥ Resend API (contact email delivery) -->
       <path
-        d="M 315 330 L 215 330"
-        fill="none"
-        stroke-width="2"
-        [class]="'transition-all duration-300 ' + (
-          failureState.geminiLimit && !failureState.ollamaOffline
-            ? 'stroke-emerald-500 dark:stroke-emerald-450 stroke-[3px] animate-pulse'
-            : failureState.ollamaOffline
-            ? 'stroke-slate-300 dark:stroke-slate-800 stroke-dashed'
-            : 'stroke-slate-400 dark:stroke-slate-600 stroke-dashed'
-        )"
-        marker-end="url(#arrow)"
-      />
-
-      <!-- Sync Script -> Ollama Local Fallback (2 -> 8) -->
-      <path
-        d="M 150 225 L 150 305"
+        d="M 380 225 L 380 305"
         fill="none"
         stroke-width="2"
         [class]="'transition-colors duration-300 ' + (
-          failureState.ollamaOffline
-            ? 'stroke-rose-500 dark:stroke-rose-450 stroke-dashed'
+          failureState.cloudMountOffline
+            ? 'stroke-rose-500 dark:stroke-rose-450 animate-pulse'
             : 'stroke-slate-400 dark:stroke-slate-600'
         )"
-        [attr.marker-end]="failureState.ollamaOffline ? 'url(#arrow-red)' : 'url(#arrow)'"
+        [attr.marker-end]="failureState.cloudMountOffline ? 'url(#arrow-red)' : 'url(#arrow)'"
+      />
+
+      <!-- ⑦ Gemini -> ⑧ Ollama (local dev fallback, dashed) -->
+      <path
+        d="M 610 225 L 610 305"
+        fill="none"
+        stroke-width="2"
+        stroke-dasharray="4,4"
+        [class]="'transition-all duration-300 ' + (
+          failureState.geminiLimit && !failureState.ollamaOffline
+            ? 'stroke-emerald-500 dark:stroke-emerald-400 stroke-[3px] animate-pulse'
+            : failureState.ollamaOffline
+            ? 'stroke-rose-500 dark:stroke-rose-450'
+            : 'stroke-slate-400 dark:stroke-slate-600'
+        )"
+        [attr.marker-end]="
+          failureState.ollamaOffline ? 'url(#arrow-red)'
+          : (failureState.geminiLimit && !failureState.ollamaOffline) ? 'url(#arrow)'
+          : 'url(#arrow)'
+        "
       />
 
       <!-- Node Render Loop -->
