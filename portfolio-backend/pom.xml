@@ -6,41 +6,28 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.5.0</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 	<groupId>com.parth.portfolio</groupId>
 	<artifactId>portfolio-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>portfolio-backend</name>
 	<description>Portfolio backend for Parth Nautiyal</description>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
+
 	<properties>
 		<java.version>21</java.version>
 	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -53,8 +40,110 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+			<!-- GraalVM native image — version managed by spring-boot-starter-parent -->
+			<plugin>
+				<groupId>org.graalvm.buildtools</groupId>
+				<artifactId>native-maven-plugin</artifactId>
+				<configuration>
+					<imageName>portfolio-backend</imageName>
+					<buildArgs>
+						<buildArg>--no-fallback</buildArg>
+						<buildArg>-H:+ReportExceptionStackTraces</buildArg>
+					</buildArgs>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<!--
+			frontend profile: active by default for local dev.
+			Builds Angular and copies output into target/classes so Spring Boot serves it.
+			Disable in Docker with -P!frontend (Angular files are pre-copied via COPY instruction).
+		-->
+		<profile>
+			<id>frontend</id>
+			<activation><activeByDefault>true</activeByDefault></activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.github.eirslett</groupId>
+						<artifactId>frontend-maven-plugin</artifactId>
+						<version>1.15.0</version>
+						<configuration>
+							<workingDirectory>../portfolio-frontend</workingDirectory>
+							<nodeVersion>v22.14.0</nodeVersion>
+						</configuration>
+						<executions>
+							<execution>
+								<id>install-node-npm</id>
+								<phase>initialize</phase>
+								<goals><goal>install-node-and-npm</goal></goals>
+							</execution>
+							<execution>
+								<id>npm-ci</id>
+								<phase>initialize</phase>
+								<goals><goal>npm</goal></goals>
+								<configuration><arguments>ci</arguments></configuration>
+							</execution>
+							<execution>
+								<id>ng-build</id>
+								<phase>initialize</phase>
+								<goals><goal>npm</goal></goals>
+								<configuration>
+									<arguments>run build -- --configuration production</arguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<artifactId>maven-resources-plugin</artifactId>
+						<executions>
+							<!-- Copy Angular output into target/classes/static (Spring Boot auto-serves it) -->
+							<execution>
+								<id>copy-angular-static</id>
+								<phase>generate-resources</phase>
+								<goals><goal>copy-resources</goal></goals>
+								<configuration>
+									<outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
+									<resources>
+										<resource>
+											<directory>../portfolio-frontend/dist/portfolio-frontend/browser</directory>
+											<filtering>false</filtering>
+										</resource>
+									</resources>
+								</configuration>
+							</execution>
+							<!-- Copy Angular content TS files for JobMatchController classpath loading -->
+							<execution>
+								<id>copy-content-ts</id>
+								<phase>generate-resources</phase>
+								<goals><goal>copy-resources</goal></goals>
+								<configuration>
+									<outputDirectory>${project.build.outputDirectory}/content</outputDirectory>
+									<resources>
+										<resource>
+											<directory>../portfolio-frontend/src/app/content</directory>
+											<filtering>false</filtering>
+											<includes><include>*.ts</include></includes>
+										</resource>
+									</resources>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>

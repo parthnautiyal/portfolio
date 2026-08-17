@@ -8,20 +8,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.io.File;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.time.Duration;
 
 @RestController
 @RequestMapping("/api/job-match")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class JobMatchController {
 
     private static final Logger log = LoggerFactory.getLogger(JobMatchController.class);
@@ -217,27 +218,19 @@ public class JobMatchController {
     }
 
     private String extractJSONFromTS(String fileName, String variableName) {
-        String baseDir = System.getProperty("user.dir");
-        
-        File file = new File(baseDir, "../portfolio-frontend/src/app/content/" + fileName);
-        if (!file.exists()) {
-            file = new File(baseDir, "../src/content/" + fileName);
-        }
-
-        if (file.exists()) {
-            try {
-                String content = Files.readString(file.toPath(), StandardCharsets.UTF_8).trim();
-                int eqIdx = content.indexOf("=");
-                if (eqIdx != -1) {
-                    String jsonPart = content.substring(eqIdx + 1).trim();
-                    if (jsonPart.endsWith(";")) {
-                        jsonPart = jsonPart.substring(0, jsonPart.length() - 1);
-                    }
-                    return jsonPart;
+        try (InputStream is = getClass().getResourceAsStream("/content/" + fileName)) {
+            if (is == null) return "";
+            String content = new String(is.readAllBytes(), StandardCharsets.UTF_8).trim();
+            int eqIdx = content.indexOf("=");
+            if (eqIdx != -1) {
+                String jsonPart = content.substring(eqIdx + 1).trim();
+                if (jsonPart.endsWith(";")) {
+                    jsonPart = jsonPart.substring(0, jsonPart.length() - 1);
                 }
-            } catch (Exception e) {
-                log.warn("Failed to extract JSON from content file: {}", file.getAbsolutePath(), e);
+                return jsonPart;
             }
+        } catch (Exception e) {
+            log.warn("Failed to load content classpath resource: /content/{}", fileName, e);
         }
         return "";
     }
