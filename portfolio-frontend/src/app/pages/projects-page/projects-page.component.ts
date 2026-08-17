@@ -31,7 +31,7 @@ const RESUME_PROJECT_OVERRIDES: Record<string, Partial<Project>> = {
     isResumeProject: true,
   },
   portfolio: {
-    description: 'Personal portfolio website featuring an interactive resume viewer, a real-time system observability cockpit, an AI-powered chatbot, and a glassmorphic design system.',
+    description: 'Personal portfolio website featuring an interactive resume viewer, a system architecture visualization dashboard, an AI-powered chatbot, and a developer terminal console.',
     stack: ['Angular', 'TypeScript', 'TailwindCSS', 'PostCSS'],
     isResumeProject: true,
   },

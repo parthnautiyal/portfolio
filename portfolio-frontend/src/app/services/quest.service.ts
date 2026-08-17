@@ -186,13 +186,20 @@ export class QuestService {
       }, 100);
     }
 
-    // Auto-remove toast after 4.5 seconds
-    setTimeout(() => {
-      this.removeToast(toastId);
-    }, 4500);
+    // Fade-out 400ms before removal
+    setTimeout(() => this.fadeToast(toastId), 4100);
+    setTimeout(() => this.removeToast(toastId), 4500);
+  }
+
+  private fadingToasts = new Set<string>();
+  isFading(id: string): boolean { return this.fadingToasts.has(id); }
+
+  fadeToast(id: string) {
+    this.fadingToasts.add(id);
   }
 
   removeToast(id: string) {
+    this.fadingToasts.delete(id);
     this.toastsSignal.update(prev => prev.filter(t => t.id !== id));
   }
 
@@ -216,12 +223,9 @@ export class QuestService {
     const confetti = (window as any).confetti;
     if (typeof confetti === 'function') {
       try {
-        confetti({
-          particleCount: 80,
-          spread: 70,
-          origin: { y: 0.75 },
-          colors: ['#6366f1', '#a855f7', '#ec4899', '#3b82f6']
-        });
+        const colors = ['#6366f1', '#a855f7', '#ec4899', '#3b82f6'];
+        confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0, y: 1 }, colors });
+        confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1, y: 1 }, colors });
       } catch (e) {
         // ignore
       }

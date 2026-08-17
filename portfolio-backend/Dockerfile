@@ -1,14 +1,29 @@
-FROM eclipse-temurin:21-jdk-alpine AS build
-WORKDIR /app
-COPY mvnw .
-COPY .mvn .mvn
-COPY pom.xml .
-RUN ./mvnw dependency:go-offline -q
-COPY src src
-RUN ./mvnw clean package -DskipTests -q
+# Backend-only native image — Angular served separately via Vercel.
+# Build context must be portfolio-backend/ directory.
 
-FROM eclipse-temurin:21-jre-alpine
+# ── Stage 1: GraalVM native image ─────────────────────────────────────────────
+FROM ghcr.io/graalvm/native-image-community:21 AS native-build
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Dependency cache layer
+COPY mvnw pom.xml ./
+COPY .mvn .mvn
+RUN chmod +x mvnw && ./mvnw dependency:go-offline -q -P!frontend
+
+COPY src ./src
+
+# No Angular files — Vercel handles the frontend
+RUN ./mvnw -P!frontend -Pnative package -DskipTests -q
+
+# ── Stage 2: Minimal runtime (~80 MB) ─────────────────────────────────────────
+FROM debian:bookworm-slim
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+RUN groupadd -r app && useradd -r -g app app
+WORKDIR /app
+COPY --from=native-build /app/target/portfolio-backend ./portfolio-backend
+RUN chmod +x ./portfolio-backend
+USER app
+EXPOSE 10000
+ENTRYPOINT ["./portfolio-backend"]

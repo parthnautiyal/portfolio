@@ -23,7 +23,7 @@ export const routes: Routes = [
   },
   {
     path: 'system',
-    loadComponent: () => import('./pages/system-cockpit-page/system-cockpit-page.component').then(m => m.SystemCockpitPageComponent)
+    loadComponent: () => import('./pages/system-architecture-page/system-architecture-page.component').then(m => m.SystemArchitecturePageComponent)
   },
   {
     path: 'chat',

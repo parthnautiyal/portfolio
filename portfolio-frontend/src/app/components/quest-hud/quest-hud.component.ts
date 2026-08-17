@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, signal, computed, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, signal, computed, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { QuestService, AchievementKey, ACHIEVEMENTS, QuestToast } from '../../services/quest.service';
@@ -30,6 +30,10 @@ export class QuestHudComponent implements OnInit, OnDestroy {
   position = { x: -1, y: -1 };
 
   private dragStart = { x: 0, y: 0, posX: 0, posY: 0, moved: false };
+  private _livePos = { x: 0, y: 0 };
+  private rafId = 0;
+
+  @ViewChild('dragPill') private dragPillRef!: ElementRef<HTMLElement>;
 
   // Circular progress config
   radius = 18;
@@ -67,7 +71,7 @@ export class QuestHudComponent implements OnInit, OnDestroy {
 
   achievementsData = ACHIEVEMENTS;
 
-  constructor(public questService: QuestService, private router: Router) {}
+  constructor(public questService: QuestService, private router: Router, private ngZone: NgZone) {}
 
   ngOnInit() {
     if (typeof window !== 'undefined') {
@@ -89,95 +93,87 @@ export class QuestHudComponent implements OnInit, OnDestroy {
 
   // Draggable logic for Mouse
   onMouseDown(e: MouseEvent) {
-    if (e.button !== 0) return; // Left click only
+    if (e.button !== 0) return;
     e.preventDefault();
     this.startDrag(e.clientX, e.clientY);
-
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      this.drag(moveEvent.clientX, moveEvent.clientY);
-    };
-
-    const onMouseUp = () => {
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-      this.endDrag();
-    };
-
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
+    this.ngZone.runOutsideAngular(() => {
+      const onMove = (me: MouseEvent) => this.drag(me.clientX, me.clientY);
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        this.ngZone.run(() => this.endDrag());
+      };
+      document.addEventListener('mousemove', onMove, { passive: true });
+      document.addEventListener('mouseup', onUp);
+    });
   }
 
   // Draggable logic for Touch
   onTouchStart(e: TouchEvent) {
     const touch = e.touches[0];
     this.startDrag(touch.clientX, touch.clientY);
-
-    const onTouchMove = (moveEvent: TouchEvent) => {
-      const t = moveEvent.touches[0];
-      this.drag(t.clientX, t.clientY);
-    };
-
-    const onTouchEnd = () => {
-      document.removeEventListener('touchmove', onTouchMove);
-      document.removeEventListener('touchend', onTouchEnd);
-      this.endDrag();
-    };
-
-    document.addEventListener('touchmove', onTouchMove);
-    document.addEventListener('touchend', onTouchEnd);
+    this.ngZone.runOutsideAngular(() => {
+      const onMove = (me: TouchEvent) => { const t = me.touches[0]; this.drag(t.clientX, t.clientY); };
+      const onEnd = () => {
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+        this.ngZone.run(() => this.endDrag());
+      };
+      document.addEventListener('touchmove', onMove, { passive: true });
+      document.addEventListener('touchend', onEnd);
+    });
   }
 
   private startDrag(clientX: number, clientY: number) {
     this.isDragging = true;
     const posX = this.position.x !== -1 ? this.position.x : window.innerWidth - 200;
     const posY = this.position.y !== -1 ? this.position.y : window.innerHeight - 76;
-    
-    this.dragStart = {
-      x: clientX,
-      y: clientY,
-      posX,
-      posY,
-      moved: false
-    };
+    this.dragStart = { x: clientX, y: clientY, posX, posY, moved: false };
+    this._livePos = { x: posX, y: posY };
+    const el = this.dragPillRef?.nativeElement;
+    if (el) el.style.willChange = 'left, top';
   }
 
   private drag(clientX: number, clientY: number) {
     if (!this.isDragging) return;
     const dx = clientX - this.dragStart.x;
     const dy = clientY - this.dragStart.y;
-
-    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-      this.dragStart.moved = true;
-    }
-
-    let newX = this.dragStart.posX + dx;
-    let newY = this.dragStart.posY + dy;
-
-    newX = Math.max(0, Math.min(window.innerWidth - 180, newX));
-    newY = Math.max(0, Math.min(window.innerHeight - 70, newY));
-
-    this.position = { x: newX, y: newY };
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) this.dragStart.moved = true;
+    cancelAnimationFrame(this.rafId);
+    this.rafId = requestAnimationFrame(() => {
+      const newX = Math.max(0, Math.min(window.innerWidth - 180, this.dragStart.posX + dx));
+      const newY = Math.max(0, Math.min(window.innerHeight - 70, this.dragStart.posY + dy));
+      this._livePos = { x: newX, y: newY };
+      const el = this.dragPillRef?.nativeElement;
+      if (el) {
+        el.style.left = newX + 'px';
+        el.style.top = newY + 'px';
+      }
+    });
   }
 
   private endDrag() {
+    cancelAnimationFrame(this.rafId);
     this.isDragging = false;
+    const el = this.dragPillRef?.nativeElement;
+    if (el) el.style.willChange = '';
     if (!this.dragStart.moved) {
       this.toggleOpen();
+      return;
+    }
+    this.position = { ...this._livePos };
+    const x = this.position.x;
+    if (x < 50) {
+      this.isShrunk = true;
+      this.shrinkSide = 'left';
+      this.position = { x: 0, y: this.position.y };
+    } else if (x > window.innerWidth - 220) {
+      this.isShrunk = true;
+      this.shrinkSide = 'right';
+      this.position = { x: window.innerWidth - 44, y: this.position.y };
     } else {
-      const x = this.position.x;
-      const threshold = 50;
-      if (x < threshold) {
-        this.isShrunk = true;
-        this.shrinkSide = 'left';
-        this.position = { x: 0, y: this.position.y };
-      } else if (x > window.innerWidth - 220) {
-        this.isShrunk = true;
-        this.shrinkSide = 'right';
-        this.position = { x: window.innerWidth - 44, y: this.position.y };
-      } else {
-        this.isShrunk = false;
-        this.shrinkSide = null;
-      }
+      this.isShrunk = false;
+      this.shrinkSide = null;
     }
   }
 

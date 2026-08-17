@@ -136,10 +136,10 @@
 
       <button
         type="submit"
-        [disabled]="submitting"
+        [disabled]="status === 'success'"
         class="rounded-full btn-gradient px-6 py-2 text-xs font-semibold shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {{ submitting ? 'Sending…' : 'Send message' }}
+        Send message
       </button>
 
       <p *ngIf="status === 'success'" class="text-xs text-emerald-500 font-medium">

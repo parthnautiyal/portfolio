@@ -4,7 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -14,7 +17,6 @@ import java.time.Duration;
 
 @RestController
 @RequestMapping("/api/github")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class GithubController {
 
     private static final Logger log = LoggerFactory.getLogger(GithubController.class);
@@ -22,8 +24,35 @@ public class GithubController {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
+    private final java.util.concurrent.ConcurrentHashMap<String, CacheEntry> cache = 
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    private static final long CACHE_DURATION_MS = 300000; // 5 minutes
+
+    private static class CacheEntry {
+        final String responseBody;
+        final long expiresAt;
+
+        CacheEntry(String responseBody, long expiresAt) {
+            this.responseBody = responseBody;
+            this.expiresAt = expiresAt;
+        }
+
+        boolean isExpired() {
+            return System.currentTimeMillis() > expiresAt;
+        }
+    }
+
     @GetMapping
     public ResponseEntity<String> getRepos(@RequestParam(value = "username", defaultValue = "parthnautiyal") String username) {
+        CacheEntry cached = cache.get(username);
+        if (cached != null && !cached.isExpired()) {
+            log.info("Returning cached GitHub repos for user: {}", username);
+            return ResponseEntity.ok()
+                    .header("Cache-Control", "s-maxage=300, stale-while-revalidate=600")
+                    .body(cached.responseBody);
+        }
+
         String token = System.getenv("GITHUB_TOKEN");
         
         HttpRequest.Builder reqBuilder = HttpRequest.newBuilder()
@@ -42,6 +71,9 @@ public class GithubController {
                 log.error("GitHub API returned error code {}: {}", response.statusCode(), response.body());
                 return ResponseEntity.status(response.statusCode()).body(response.body());
             }
+
+            // Cache the response
+            cache.put(username, new CacheEntry(response.body(), System.currentTimeMillis() + CACHE_DURATION_MS));
 
             return ResponseEntity.ok()
                     .header("Cache-Control", "s-maxage=300, stale-while-revalidate=600")

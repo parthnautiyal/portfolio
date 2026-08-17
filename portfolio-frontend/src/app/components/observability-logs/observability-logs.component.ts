@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, OnDestroy, AfterViewChecked, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import type { FailureState } from '../../pages/system-cockpit-page/system-cockpit-page.component';
+import type { FailureState } from '../../pages/system-architecture-page/system-architecture-page.component';
 
 type LogLine = {
   timestamp: string;

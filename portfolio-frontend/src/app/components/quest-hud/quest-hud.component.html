@@ -2,7 +2,9 @@
 <div class="fixed bottom-24 right-6 z-[999] flex flex-col gap-3 pointer-events-none items-end">
   <div
     *ngFor="let toast of questService.toasts()"
-    [class]="'pointer-events-auto flex items-start gap-3 w-80 p-4 rounded-2xl shadow-2xl border backdrop-blur-md transition-all duration-300 animate-mac-zoom ' + (
+    [class]="'pointer-events-auto flex items-start gap-3 w-80 p-4 rounded-2xl shadow-2xl border backdrop-blur-md transition-all duration-400 animate-mac-zoom ' + (
+      questService.isFading(toast.id) ? 'opacity-0 translate-y-2 scale-95 ' : ''
+    ) + (
       toast.type === 'levelup'
         ? 'bg-amber-500/90 dark:bg-amber-600/90 border-amber-400 text-white'
         : 'bg-white/80 dark:bg-slate-900/85 border-slate-200 dark:border-slate-800 text-[var(--color-text)]'
@@ -59,12 +61,13 @@
 </button>
 
 <div
+  #dragPill
   *ngIf="!isShrunk"
   (mousedown)="onMouseDown($event)"
   (touchstart)="onTouchStart($event)"
   [style.left.px]="position.x !== -1 ? position.x : null"
   [style.top.px]="position.y !== -1 ? position.y : null"
-  [class]="'fixed z-[99] print:hidden select-none ' + (isDragging ? 'cursor-grabbing opacity-75' : 'cursor-grab')"
+  [class]="'fixed z-[99] print:hidden select-none touch-none ' + (isDragging ? 'cursor-grabbing opacity-75' : 'cursor-grab')"
 >
   <button
     [class]="'flex items-center gap-2.5 p-2 pr-4 rounded-full shadow-lg border backdrop-blur-md transition-all duration-300 pointer-events-none ' + (
