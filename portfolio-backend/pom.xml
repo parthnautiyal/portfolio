@@ -49,22 +49,48 @@
 					</excludes>
 				</configuration>
 			</plugin>
-			<!-- GraalVM native image — version managed by spring-boot-starter-parent -->
 			<plugin>
 				<groupId>org.graalvm.buildtools</groupId>
 				<artifactId>native-maven-plugin</artifactId>
-				<configuration>
-					<imageName>portfolio-backend</imageName>
-					<buildArgs>
-						<buildArg>--no-fallback</buildArg>
-						<buildArg>-H:+ReportExceptionStackTraces</buildArg>
-					</buildArgs>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>
 
 	<profiles>
+		<!--
+			native profile: explicitly binds compile-no-fork to package phase.
+			Spring Boot parent's native profile only wires process-aot and
+			add-reachability-metadata — compile-no-fork must be declared here.
+			Activate with: ./mvnw -Pnative package -DskipTests
+		-->
+		<profile>
+			<id>native</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.graalvm.buildtools</groupId>
+						<artifactId>native-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>build-native</id>
+								<goals>
+									<goal>compile-no-fork</goal>
+								</goals>
+								<phase>package</phase>
+							</execution>
+						</executions>
+						<configuration>
+							<imageName>portfolio-backend</imageName>
+							<buildArgs>
+								<buildArg>--no-fallback</buildArg>
+								<buildArg>-H:+ReportExceptionStackTraces</buildArg>
+							</buildArgs>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
 		<!--
 			frontend profile: active by default for local dev.
 			Builds Angular and copies output into target/classes so Spring Boot serves it.

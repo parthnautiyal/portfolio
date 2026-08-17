@@ -13,7 +13,7 @@ RUN chmod +x mvnw && ./mvnw dependency:go-offline -q -P!frontend
 COPY src ./src
 
 # No Angular files — Vercel handles the frontend
-RUN ./mvnw -P!frontend -Pnative package -DskipTests -q
+RUN ./mvnw -P!frontend -Pnative package -DskipTests
 
 # ── Stage 2: Minimal runtime (~80 MB) ─────────────────────────────────────────
 FROM debian:bookworm-slim
