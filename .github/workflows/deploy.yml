@@ -45,3 +45,32 @@ jobs:
 
       - name: Trigger Render deploy
         run: curl -s "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+
+      - name: Job summary
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" = "success" ]; then BADGE="✅ deployed"; else BADGE="❌ failed"; fi
+          cat >> $GITHUB_STEP_SUMMARY <<EOF
+          ## $BADGE — portfolio-backend native image
+
+          | Field | Value |
+          |---|---|
+          | Commit | [\`${GITHUB_SHA::7}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) |
+          | Actor | ${{ github.actor }} |
+          | Image | \`ghcr.io/parthnautiyal/portfolio-backend:latest\` |
+          | Runtime | GraalVM Native Image · Java 21 · debian:bookworm-slim |
+          | Backend | https://portfolio-zs63.onrender.com |
+          | Frontend | https://parthnautiyal.vercel.app |
+
+          **Endpoints**
+          \`\`\`
+          GET  /api/github
+          GET  /api/projects
+          POST /api/chat
+          POST /api/contact
+          POST /api/job-match
+          POST /api/update-content
+          POST /api/webhook/github
+          \`\`\`
+          EOF

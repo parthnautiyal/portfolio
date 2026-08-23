@@ -1,30 +1,22 @@
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { getPersonal } from '../../utils/contentLoader';
 import { trackLinkClick } from '../../utils/analytics';
-import { OllamaDiagnosticModalComponent } from '../ollama-diagnostic-modal/ollama-diagnostic-modal.component';
-
 type ThemeMode = 'light' | 'dark';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterModule, OllamaDiagnosticModalComponent],
+  imports: [CommonModule, RouterModule],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
 })
-export class NavbarComponent implements OnInit, OnDestroy {
+export class NavbarComponent implements OnInit {
   personal = getPersonal();
   themeMode: ThemeMode = 'dark';
-  ollamaStatus: 'checking' | 'connected' | 'offline' = 'checking';
-  ollamaModel = 'llama3';
-  isOllamaModalOpen = false;
   isMobileMenuOpen = false;
   currentUrl = '';
-
-  private ollamaInterval: any;
-
 
   links = [
     { to: '/', label: 'Home' },
@@ -47,25 +39,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.currentUrl = this.router.url;
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('portfolio_theme_mode');
-      const savedTheme: ThemeMode = (saved === 'light' || saved === 'dark') ? saved : 'dark';
+      const savedTheme: ThemeMode = (saved === 'light' || saved === 'dark') ? saved : this.getTimeBasedTheme();
       this.themeMode = savedTheme;
       this.applyTheme(savedTheme);
-
-      const savedUrl = localStorage.getItem('portfolio_ollama_url') || 'http://localhost:11434';
-      const savedModel = localStorage.getItem('portfolio_ollama_model') || 'llama3';
-      this.ollamaModel = savedModel;
-
-      this.checkOllama(savedUrl);
-      this.ollamaInterval = setInterval(() => {
-        const url = localStorage.getItem('portfolio_ollama_url') || 'http://localhost:11434';
-        this.checkOllama(url);
-      }, 15000);
-
     }
   }
 
-  ngOnDestroy() {
-    if (this.ollamaInterval) clearInterval(this.ollamaInterval);
+  private getTimeBasedTheme(): ThemeMode {
+    const hour = new Date().getHours();
+    return (hour >= 6 && hour < 18) ? 'light' : 'dark';
   }
 
   private applyTheme(active: 'light' | 'dark', animate = false) {
@@ -111,15 +93,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.themeMode = next;
     localStorage.setItem('portfolio_theme_mode', next);
     this.applyTheme(next, true);
-  }
-
-  async checkOllama(url: string) {
-    try {
-      const res = await fetch(`${url}/api/tags`, { method: 'GET', headers: { 'Accept': 'application/json' } });
-      this.ollamaStatus = res.ok ? 'connected' : 'offline';
-    } catch {
-      this.ollamaStatus = 'offline';
-    }
   }
 
   toggleMobileMenu() {

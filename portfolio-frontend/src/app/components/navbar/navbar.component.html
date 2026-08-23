@@ -51,19 +51,6 @@
         <span class="hidden lg:inline capitalize">{{ themeMode }}</span>
       </button>
 
-      <!-- Local AI status badge -->
-      <button
-        type="button"
-        (click)="isOllamaModalOpen = true"
-        class="h-10 flex items-center justify-center gap-2 rounded-full border border-[var(--border-color)] px-4 text-sm font-medium hover:border-[var(--border-color-hover)] hover:bg-[var(--bg-surface-hover)] cursor-pointer transition-all duration-200 text-[var(--color-text)]"
-        [title]="'Local LLM Connectivity Setup & Status (Active Model: ' + ollamaModel + ')'"
-      >
-        <span [class]="'h-1.5 w-1.5 rounded-full ' + (ollamaStatus === 'connected' ? 'bg-green-500 animate-pulse' : ollamaStatus === 'checking' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500')"></span>
-        <span class="hidden lg:inline text-[var(--color-text)] font-medium">
-          Local AI: {{ ollamaStatus === 'connected' ? 'Online' : ollamaStatus === 'checking' ? 'Checking' : 'Offline' }}
-        </span>
-      </button>
-
       <a
         routerLink="/chat"
         [class]="'h-10 flex items-center justify-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-md border-none btn-gradient ' + (isActive('/chat') ? 'font-bold' : '')"
@@ -138,21 +125,6 @@
           </span>
         </button>
 
-        <!-- Local AI status -->
-        <button
-          type="button"
-          (click)="isOllamaModalOpen = true; isMobileMenuOpen = false"
-          class="w-full h-11 flex items-center justify-between rounded-xl border border-[var(--border-color)] px-4 text-xs font-semibold hover:border-[var(--border-color-hover)] hover:bg-[var(--bg-surface-hover)] cursor-pointer transition-all"
-        >
-          <span class="flex items-center gap-2">
-            <span [class]="'h-1.5 w-1.5 rounded-full ' + (ollamaStatus === 'connected' ? 'bg-green-500 animate-pulse' : ollamaStatus === 'checking' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500')"></span>
-            <span>Local AI Setup & Status</span>
-          </span>
-          <span class="text-[10px] text-slate-500 capitalize">
-            {{ ollamaStatus === 'connected' ? 'Online' : ollamaStatus === 'checking' ? 'Checking' : 'Offline' }}
-          </span>
-        </button>
-
         <a
           routerLink="/chat"
           class="w-full h-11 flex items-center justify-center gap-2 rounded-xl btn-gradient text-sm font-semibold shadow-md transition-all active:scale-98"
@@ -173,8 +145,4 @@
     </div>
   </div>
 
-  <app-ollama-diagnostic-modal
-    [isOpen]="isOllamaModalOpen"
-    (close)="isOllamaModalOpen = false"
-  ></app-ollama-diagnostic-modal>
 </header>

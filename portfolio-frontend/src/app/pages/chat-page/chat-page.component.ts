@@ -1,7 +1,8 @@
-import { Component, OnInit, AfterViewChecked, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewChecked, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { QuestService } from '../../services/quest.service';
+import { OllamaDiagnosticModalComponent } from '../../components/ollama-diagnostic-modal/ollama-diagnostic-modal.component';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
@@ -17,12 +18,13 @@ type KBDocument = {
 @Component({
   selector: 'app-chat-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OllamaDiagnosticModalComponent],
   templateUrl: './chat-page.component.html',
   styleUrls: ['./chat-page.component.css']
 })
-export class ChatPageComponent implements OnInit, AfterViewChecked {
-  @ViewChild('chatEnd') private chatEndRef!: ElementRef<HTMLDivElement>;
+export class ChatPageComponent implements OnInit, OnDestroy, AfterViewChecked {
+  @ViewChild('chatMessages') private chatMessagesRef!: ElementRef<HTMLDivElement>;
+  private lastMessageCount = 0;
 
   messages: ChatMessage[] = [
     {
@@ -44,8 +46,11 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
   provider: 'gemini' | 'openai' | 'ollama' = 'gemini';
   ollamaUrl = 'http://localhost:11434';
   ollamaModel = 'llama3';
+  ollamaStatus: 'checking' | 'connected' | 'offline' = 'checking';
+  isOllamaModalOpen = false;
 
   private modelNoteShown = false;
+  private ollamaInterval: any;
   private apiBaseUrl = '/api'; // Maps to Spring Boot API pathing /api
 
   constructor(private questService: QuestService) {}
@@ -65,16 +70,39 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
       this.provider = (localStorage.getItem('portfolio_api_provider') as 'gemini' | 'openai' | 'ollama') || 'gemini';
       this.ollamaUrl = localStorage.getItem('portfolio_ollama_url') || 'http://localhost:11434';
       this.ollamaModel = localStorage.getItem('portfolio_ollama_model') || 'llama3';
+
+      this.checkOllama(this.ollamaUrl);
+      this.ollamaInterval = setInterval(() => {
+        const url = localStorage.getItem('portfolio_ollama_url') || 'http://localhost:11434';
+        this.checkOllama(url);
+      }, 15000);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.ollamaInterval) clearInterval(this.ollamaInterval);
+  }
+
+  async checkOllama(url: string) {
+    try {
+      const res = await fetch(`${url}/api/tags`, { method: 'GET', headers: { 'Accept': 'application/json' } });
+      this.ollamaStatus = res.ok ? 'connected' : 'offline';
+    } catch {
+      this.ollamaStatus = 'offline';
     }
   }
 
   ngAfterViewChecked() {
-    this.scrollToBottom();
+    if (this.messages.length !== this.lastMessageCount) {
+      this.lastMessageCount = this.messages.length;
+      this.scrollToBottom();
+    }
   }
 
   scrollToBottom() {
     try {
-      this.chatEndRef.nativeElement.scrollIntoView({ behavior: 'smooth' });
+      const el = this.chatMessagesRef.nativeElement;
+      el.scrollTop = el.scrollHeight;
     } catch (err) {}
   }
 

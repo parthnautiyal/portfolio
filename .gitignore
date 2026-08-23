@@ -8,6 +8,8 @@ pnpm-debug.log*
 lerna-debug.log*
 
 portfolio-frontend/node_modules
+portfolio-frontend/node
+.idea
 dist
 dist-ssr
 *.local
@@ -21,7 +23,6 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
 .DS_Store
 *.suo
 *.ntvs*
@@ -31,4 +32,3 @@ dist-ssr
 node_modules
 .serena
 .vercel
-.env*
