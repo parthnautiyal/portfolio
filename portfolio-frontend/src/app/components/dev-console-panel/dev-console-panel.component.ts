@@ -55,6 +55,11 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
   shownJokes: number[] = [];
   hasOpened = false;
 
+  // Autocomplete interactive state
+  autocompleteOptions: string[] = [];
+  autocompleteIndex = -1;
+  autocompleteBase = '';
+
   // Draggable state
   isDragging = false;
   isShrunk = false;
@@ -147,14 +152,67 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
     this.cmdInputRef?.nativeElement?.focus();
   }
 
+  onInputChange() {
+    if (this.autocompleteOptions.length > 0) {
+      this.closeAutocomplete();
+    }
+  }
+
+  closeAutocomplete() {
+    this.autocompleteOptions = [];
+    this.autocompleteIndex = -1;
+    this.autocompleteBase = '';
+  }
+
+  selectAutocomplete(option: string, e?: MouseEvent) {
+    if (e) {
+      e.stopPropagation();
+    }
+    this.inputVal = (this.autocompleteBase ? `${this.autocompleteBase}${option} ` : `${option} `);
+    this.closeAutocomplete();
+    this.resetCursorPosition();
+  }
+
   onKeyDown(e: KeyboardEvent) {
-    if (e.key === 'ArrowUp') {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      this.handleTabKey();
+    } else if (e.key === 'Escape') {
+      if (this.autocompleteOptions.length > 0) {
+        e.preventDefault();
+        this.closeAutocomplete();
+      }
+    } else if (e.key === 'Enter') {
+      if (this.autocompleteOptions.length > 0) {
+        const selected = this.autocompleteOptions[this.autocompleteIndex >= 0 ? this.autocompleteIndex : 0];
+        if (selected) {
+          this.inputVal = (this.autocompleteBase ? `${this.autocompleteBase}${selected} ` : `${selected} `);
+        }
+        this.closeAutocomplete();
+      }
+    } else if (e.key === 'ArrowUp') {
+      if (this.autocompleteOptions.length > 0) {
+        e.preventDefault();
+        this.autocompleteIndex = (this.autocompleteIndex - 1 + this.autocompleteOptions.length) % this.autocompleteOptions.length;
+        const chosen = this.autocompleteOptions[this.autocompleteIndex];
+        this.inputVal = (this.autocompleteBase ? `${this.autocompleteBase}${chosen} ` : `${chosen} `);
+        this.resetCursorPosition();
+        return;
+      }
       e.preventDefault();
       if (this.typedHistory.length > 0) {
         this.historyIndex = Math.min(this.historyIndex + 1, this.typedHistory.length - 1);
         this.inputVal = this.typedHistory[this.typedHistory.length - 1 - this.historyIndex];
       }
     } else if (e.key === 'ArrowDown') {
+      if (this.autocompleteOptions.length > 0) {
+        e.preventDefault();
+        this.autocompleteIndex = (this.autocompleteIndex + 1) % this.autocompleteOptions.length;
+        const chosen = this.autocompleteOptions[this.autocompleteIndex];
+        this.inputVal = (this.autocompleteBase ? `${this.autocompleteBase}${chosen} ` : `${chosen} `);
+        this.resetCursorPosition();
+        return;
+      }
       e.preventDefault();
       if (this.historyIndex > 0) {
         this.historyIndex--;
@@ -163,120 +221,104 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
         this.historyIndex = -1;
         this.inputVal = '';
       }
-    } else if (e.key === 'Tab') {
+    } else if (e.ctrlKey && e.key === 'l') {
       e.preventDefault();
-      this.tabComplete();
+      this.history = [];
+    } else if (e.ctrlKey && e.key === 'c') {
+      e.preventDefault();
+      this.history = [...this.history, {
+        segs: [
+          { t: 'guest@parth:~$ ', c: 'text-green-400 font-semibold' },
+          { t: this.inputVal + '^C', c: 'text-slate-400' }
+        ],
+        type: 'input'
+      }];
+      this.inputVal = '';
+      this.closeAutocomplete();
+      this.resetCursorPosition();
     }
   }
 
-  tabComplete() {
+  handleTabKey() {
+    // If autocomplete options are already showing, cycle through them!
+    if (this.autocompleteOptions.length > 0) {
+      this.autocompleteIndex = (this.autocompleteIndex + 1) % this.autocompleteOptions.length;
+      const chosen = this.autocompleteOptions[this.autocompleteIndex];
+      this.inputVal = this.autocompleteBase ? `${this.autocompleteBase}${chosen} ` : `${chosen} `;
+      this.resetCursorPosition();
+      return;
+    }
+
     const raw = this.inputVal;
-    const parts = raw.split(/\s+/);
+    const trimmed = raw.trimStart();
+
+    // 1. If empty, show all available commands
+    if (!trimmed) {
+      this.autocompleteOptions = [...ALL_COMMANDS];
+      this.autocompleteIndex = 0;
+      this.autocompleteBase = '';
+      this.inputVal = this.autocompleteOptions[0] + ' ';
+      this.resetCursorPosition();
+      return;
+    }
+
     const hasTrailingSpace = raw.endsWith(' ');
+    const tokens = trimmed.split(/\s+/);
 
-    // 1. Completing the main command
-    if (parts.length === 1 || (parts.length === 2 && !hasTrailingSpace && parts[0] !== '')) {
-      const current = (parts.length === 1 ? parts[0] : parts[0]).toLowerCase();
+    // 2. Completing Command Name (only 1 word, no trailing space)
+    if (tokens.length === 1 && !hasTrailingSpace) {
+      const query = tokens[0].toLowerCase();
+      const matches = ALL_COMMANDS.filter(cmd => cmd.startsWith(query));
 
-      if (!current) {
-        // Empty tab: list all commands
-        this.history = [...this.history, {
-          text: ALL_COMMANDS.join('   '),
-          type: 'dim'
-        }];
-        this.resetCursorPosition();
-        return;
-      }
-
-      const matches = ALL_COMMANDS.filter(cmd => cmd.startsWith(current));
       if (matches.length === 1) {
         this.inputVal = matches[0] + ' ';
+        this.closeAutocomplete();
         this.resetCursorPosition();
         return;
       } else if (matches.length > 1) {
-        const lcp = this.getLongestCommonPrefix(matches);
-        if (lcp.length > current.length) {
-          this.inputVal = lcp;
-        } else {
-          this.history = [...this.history,
-            {
-              segs: [
-                { t: 'guest@parth:~$ ', c: 'text-slate-500' },
-                { t: raw, c: 'text-slate-300' }
-              ],
-              type: 'input'
-            },
-            { text: matches.join('   '), type: 'dim' }
-          ];
-        }
+        this.autocompleteOptions = matches;
+        this.autocompleteIndex = 0;
+        this.autocompleteBase = '';
+        this.inputVal = matches[0] + ' ';
         this.resetCursorPosition();
         return;
       }
+      return;
     }
 
-    // 2. Completing Subcommands / Arguments
-    const mainCmd = parts[0].toLowerCase();
-    const argQuery = (hasTrailingSpace ? '' : parts[parts.length - 1]).toLowerCase();
-    let candidates: string[] = [];
+    // 3. Completing Arguments / Subcommands (e.g. `cat ex`, `cat `, `sync-resume --p`, `man sk`)
+    const mainCmd = tokens[0].toLowerCase();
+    const argQuery = (hasTrailingSpace ? '' : tokens[tokens.length - 1]).toLowerCase();
+    const baseCmd = hasTrailingSpace ? raw : (tokens.length > 1 ? tokens.slice(0, -1).join(' ') + ' ' : tokens[0] + ' ');
 
+    let candidates: string[] = [];
     if (mainCmd === 'cat') {
       candidates = ['about', 'contact', 'education', 'experience', 'projects', 'resume', 'skills', 'summary'];
     } else if (mainCmd === 'man') {
       candidates = ALL_COMMANDS;
     } else if (mainCmd === 'sync-resume' || mainCmd === 'sync') {
       candidates = ['--pin', '--set-pin', '--set-hook', '--hook', '--help'];
+    } else if (mainCmd === 'ping') {
+      candidates = ['render', 'api', 'gateway', 'backend'];
     }
 
     if (candidates.length > 0) {
-      const matches = candidates.filter(c => c.startsWith(argQuery));
+      const matches = candidates.filter(c => c.toLowerCase().startsWith(argQuery));
+
       if (matches.length === 1) {
-        if (hasTrailingSpace) {
-          this.inputVal = raw + matches[0] + ' ';
-        } else {
-          parts[parts.length - 1] = matches[0];
-          this.inputVal = parts.join(' ') + ' ';
-        }
+        this.inputVal = baseCmd + matches[0] + ' ';
+        this.closeAutocomplete();
         this.resetCursorPosition();
         return;
       } else if (matches.length > 1) {
-        const lcp = this.getLongestCommonPrefix(matches);
-        if (lcp.length > argQuery.length) {
-          if (hasTrailingSpace) {
-            this.inputVal = raw + lcp;
-          } else {
-            parts[parts.length - 1] = lcp;
-            this.inputVal = parts.join(' ');
-          }
-        } else {
-          this.history = [...this.history,
-            {
-              segs: [
-                { t: 'guest@parth:~$ ', c: 'text-slate-500' },
-                { t: raw, c: 'text-slate-300' }
-              ],
-              type: 'input'
-            },
-            { text: matches.join('   '), type: 'dim' }
-          ];
-        }
+        this.autocompleteOptions = matches;
+        this.autocompleteIndex = 0;
+        this.autocompleteBase = baseCmd;
+        this.inputVal = baseCmd + matches[0] + ' ';
         this.resetCursorPosition();
         return;
       }
     }
-
-    this.resetCursorPosition();
-  }
-
-  private getLongestCommonPrefix(words: string[]): string {
-    if (!words.length) return '';
-    let prefix = words[0];
-    for (let i = 1; i < words.length; i++) {
-      while (!words[i].startsWith(prefix)) {
-        prefix = prefix.substring(0, prefix.length - 1);
-        if (!prefix) return '';
-      }
-    }
-    return prefix;
   }
 
   private resetCursorPosition() {
@@ -926,20 +968,23 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
   private async doPing() {
     const start = performance.now();
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'ping', apiProvider: 'gemini' }),
-        signal: AbortSignal.timeout(65000)
+      const res = await fetch('/api/health', {
+        method: 'GET',
+        signal: AbortSignal.timeout(15000)
+      }).catch(async () => {
+        return await fetch('/api/projects', {
+          method: 'GET',
+          signal: AbortSignal.timeout(15000)
+        });
       });
       const ms = Math.round(performance.now() - start);
       this.history = [...this.history, {
         segs: [
-          { t: '  ⬡ ', c: 'text-green-600' },
-          { t: 'portfolio-zs63.onrender.com', c: 'text-green-300' },
-          { t: '  ', c: 'text-slate-700' },
-          { t: `${ms}ms`, c: ms < 2000 ? 'text-emerald-400' : 'text-yellow-400' },
-          { t: `  HTTP ${res.status}`, c: res.ok ? 'text-emerald-400' : 'text-red-400' }
+          { t: '  ⬡ ', c: 'text-green-500 font-bold' },
+          { t: 'portfolio-zs63.onrender.com', c: 'text-green-300 font-semibold' },
+          { t: '  ', c: 'text-slate-600' },
+          { t: `${ms}ms`, c: ms < 2000 ? 'text-emerald-400 font-mono' : 'text-yellow-400 font-mono' },
+          { t: `  HTTP ${res.status} OK`, c: res.ok ? 'text-emerald-400 font-bold' : 'text-yellow-400' }
         ],
         type: 'output'
       }];

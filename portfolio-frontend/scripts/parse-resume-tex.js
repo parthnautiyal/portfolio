@@ -206,6 +206,22 @@ function parseExperience(tex) {
     });
   }
 
+  // Guarantee SDE Internship is preserved on the website even if omitted from 1-page LaTeX resume
+  const hasInternship = items.some(item => item.role.toLowerCase().includes('intern'));
+  if (!hasInternship) {
+    items.push({
+      role: 'Software Development Engineer Intern',
+      company: 'ZopSmart',
+      location: 'Bangalore, India',
+      period: 'Jan 2024 – Jul 2024',
+      bullets: [
+        'Practiced Test-Driven Development (TDD) using JUnit and Mockito, increasing unit validation and test suite coverage by 45%.',
+        'Assisted in implementing scalable REST API endpoint controllers, database entity mappings, and local service optimizations.',
+        'Collaborated with senior engineers on microservices architecture patterns, Spring Boot best practices, and CI/CD deployment automation.'
+      ]
+    });
+  }
+
   return items;
 }
 

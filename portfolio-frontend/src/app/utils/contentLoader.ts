@@ -27,7 +27,7 @@ import type { ResumeProjectItem } from '../content/resume-projects'
 // ---------------------------------------------------------------------------
 
 /** Bump whenever experience.ts, education.ts, or skills.ts schema changes. */
-export const DATA_VERSION = 'v20260826-latex-sync'
+export const DATA_VERSION = 'v20260826-experience-3roles'
 
 export const STORAGE_KEY = 'portfolio_resume_data'
 export const VERSION_KEY = 'portfolio_resume_data_version'

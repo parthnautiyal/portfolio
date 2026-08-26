@@ -307,57 +307,114 @@ ${skillsText}
   }
 
   isHighlighted(text: string, category?: string): boolean {
+    if (this.recruiterFocus === 'all' || !text) return false;
+
     const t = text.toLowerCase();
-    const c = category?.toLowerCase() ?? '';
-    
+    const c = category ? category.toLowerCase() : '';
+
     if (this.recruiterFocus === 'backend') {
-      return (
-        t.includes('spring boot') ||
-        t.includes('java') ||
-        t.includes('kafka') ||
-        t.includes('temporal') ||
-        t.includes('microservice') ||
-        t.includes('sql') ||
-        t.includes('rest api') ||
-        t.includes('idempotency') ||
-        t.includes('workflow') ||
-        c.includes('backend') ||
-        c.includes('database') ||
-        c.includes('messaging')
-      );
+      const backendKeywords = [
+        'spring boot', 'spring', 'java', 'kafka', 'temporal', 'microservice', 'microservices',
+        'postgresql', 'mysql', 'redis', 'pgvector', 'qdrant', 'sql', 'rest api', 'rest apis',
+        'api', 'apis', 'idempotency', 'workflow', 'orchestration', 'asynchronous', 'streaming',
+        'latency', 'throughput', 'concurrency', 'completablefuture', 'junit', 'mockito', 'tdd',
+        'test-driven', 'backend', 'database', 'distributed systems', 'dbms', 'object oriented',
+        'ingestion', 'retries', 'event-driven', 'rag', 'langchain4j', 'spring ai'
+      ];
+      const backendCategories = [
+        'languages & frameworks', 'databases & search', 'distributed systems & cloud',
+        'testing & methodologies', 'backend', 'database', 'messaging'
+      ];
+
+      if (c && backendCategories.some(cat => c.includes(cat) || cat.includes(c))) {
+        // Exclude frontend-only tools if in generic category
+        if (t === 'react' || t === 'angular' || t === 'html' || t === 'css') return false;
+        return true;
+      }
+
+      return backendKeywords.some(kw => {
+        if (kw.includes(' ') || kw.includes('/') || kw.includes('-')) {
+          return t.includes(kw);
+        }
+        return new RegExp(`\\b${kw}\\b`, 'i').test(t);
+      });
     }
-    
+
     if (this.recruiterFocus === 'devops') {
-      return (
-        t.includes('kubernetes') ||
-        t.includes('docker') ||
-        t.includes('helm') ||
-        t.includes('ci/cd') ||
-        t.includes('jenkins') ||
-        t.includes('ansible') ||
-        t.includes('grafana') ||
-        t.includes('prometheus') ||
-        t.includes('datadog') ||
-        t.includes('observability') ||
-        c.includes('devops') ||
-        c.includes('observability')
-      );
+      const devopsKeywords = [
+        'docker', 'kubernetes', 'k8s', 'rancher', 'helm', 'azure', 'cloud', 'ci/cd', 'ci/cd pipelines',
+        'pipeline', 'pipelines', 'jenkins', 'git', 'linux', 'sonarqube', 'snyk', 'prometheus',
+        'grafana', 'datadog', 'observability', 'mttr', 'monitoring', 'incident', 'caching',
+        'build time', 'deployment', 'retries', 'resilience', 'cloud computing', 'distributed systems'
+      ];
+      const devopsCategories = [
+        'devops & observability', 'distributed systems & cloud', 'cloud', 'infrastructure'
+      ];
+
+      if (c && devopsCategories.some(cat => c.includes(cat) || cat.includes(c))) {
+        if (t === 'java' || t === 'rest apis' || t === 'react') return false;
+        return true;
+      }
+
+      return devopsKeywords.some(kw => {
+        if (kw.includes(' ') || kw.includes('/') || kw.includes('-')) {
+          return t.includes(kw);
+        }
+        return new RegExp(`\\b${kw}\\b`, 'i').test(t);
+      });
     }
-    
+
     if (this.recruiterFocus === 'fullstack') {
-      return (
-        t.includes('react') ||
-        t.includes('typescript') ||
-        t.includes('angular') ||
-        t.includes('html') ||
-        t.includes('css') ||
-        t.includes('frontend') ||
-        c.includes('programming') ||
-        c.includes('tools')
-      );
+      const fullstackKeywords = [
+        'full-stack', 'fullstack', 'react', 'angular', 'typescript', 'javascript', 'html', 'css',
+        'frontend', 'ui', 'ux', 'web', 'client', 'rest api', 'rest apis', 'api', 'apis',
+        'claude', 'gemini', 'openai', 'ollama', 'langchain4j', 'spring ai', 'rag', 'prompt engineering',
+        'chat', 'chatbot', 'recruitment platform', 'gmail api', 'oauth', 'spring boot', 'java',
+        'postgresql', 'mysql', 'redis', 'tailwind', 'microservices', 'platform', 'fullpage',
+        'database management systems', 'web app', 'full-stack platform'
+      ];
+      const fullstackCategories = [
+        'languages & frameworks', 'ai & llm integration', 'databases & search', 'frontend', 'tools'
+      ];
+
+      if (c && fullstackCategories.some(cat => c.includes(cat) || cat.includes(c))) {
+        return true;
+      }
+
+      return fullstackKeywords.some(kw => {
+        if (kw.includes(' ') || kw.includes('/') || kw.includes('-')) {
+          return t.includes(kw);
+        }
+        return new RegExp(`\\b${kw}\\b`, 'i').test(t);
+      });
     }
-    
+
     return false;
+  }
+
+  getMatchingCount(): number {
+    if (this.recruiterFocus === 'all') return 0;
+    let count = 0;
+
+    this.experience.forEach((exp: any) => {
+      exp.bullets.forEach((b: string) => {
+        if (this.isHighlighted(b)) count++;
+      });
+    });
+
+    this.projects.forEach((p: any) => {
+      p.bullets.forEach((b: string) => {
+        if (this.isHighlighted(b)) count++;
+      });
+    });
+
+    this.skillCategories.forEach(cat => {
+      cat.items.forEach(s => {
+        if (this.isHighlighted(s.name, cat.name)) count++;
+      });
+    });
+
+    return count;
   }
 
   getRoutePath(to?: string): string {
