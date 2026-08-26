@@ -19,13 +19,15 @@ import type { ExperienceItem } from '../content/experience'
 import { education as defaultEducation } from '../content/education'
 import { skillCategories as defaultSkillCategories } from '../content/skills'
 import type { SkillCategory, SkillItem } from '../content/skills'
+import { resumeProjects as defaultResumeProjects } from '../content/resume-projects'
+import type { ResumeProjectItem } from '../content/resume-projects'
 
 // ---------------------------------------------------------------------------
 // Storage versioning
 // ---------------------------------------------------------------------------
 
 /** Bump whenever experience.ts, education.ts, or skills.ts schema changes. */
-export const DATA_VERSION = 'v20260623-sde2'
+export const DATA_VERSION = 'v20260826-latex-sync'
 
 export const STORAGE_KEY = 'portfolio_resume_data'
 export const VERSION_KEY = 'portfolio_resume_data_version'
@@ -42,9 +44,9 @@ export interface StorageAdapter {
 
 /** Default implementation backed by the browser's localStorage. */
 export const localStorageAdapter: StorageAdapter = {
-  getItem: (key) => localStorage.getItem(key),
-  setItem: (key, value) => localStorage.setItem(key, value),
-  removeItem: (key) => localStorage.removeItem(key),
+  getItem: (key) => (typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null),
+  setItem: (key, value) => { if (typeof localStorage !== 'undefined') localStorage.setItem(key, value) },
+  removeItem: (key) => { if (typeof localStorage !== 'undefined') localStorage.removeItem(key) },
 }
 
 // ---------------------------------------------------------------------------
@@ -57,7 +59,7 @@ export const localStorageAdapter: StorageAdapter = {
  */
 export function evictIfStale(storage: StorageAdapter = localStorageAdapter): void {
   const storedVersion = storage.getItem(VERSION_KEY)
-  if (storedVersion !== DATA_VERSION && storedVersion !== 'user-upload') {
+  if (storedVersion !== DATA_VERSION) {
     storage.removeItem(STORAGE_KEY)
     storage.setItem(VERSION_KEY, DATA_VERSION)
     console.info(
@@ -272,3 +274,8 @@ export function getSkills(storage: StorageAdapter = localStorageAdapter): SkillC
     .map(([name, items]) => ({ name, items }))
     .filter((cat) => cat.items.length > 0)
 }
+
+export function getResumeProjects(): ResumeProjectItem[] {
+  return defaultResumeProjects
+}
+

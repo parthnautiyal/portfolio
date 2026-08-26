@@ -3,6 +3,8 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "prebuild": "node ../scripts/parse-resume-tex.js",
+    "sync-resume": "node ../scripts/parse-resume-tex.js",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",

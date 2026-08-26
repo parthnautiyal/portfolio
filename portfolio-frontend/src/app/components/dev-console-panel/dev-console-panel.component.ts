@@ -19,7 +19,7 @@ const ALL_COMMANDS = [
   'edu', 'education', 'exp', 'experience', 'help', 'hist',
   'history', 'joke', 'ls', 'man', 'matrix', 'neofetch',
   'ping', 'projects', 'quest', 'resume', 'skills', 'sudo',
-  'system', 'whoami',
+  'sync', 'sync-resume', 'system', 'whoami',
 ].sort();
 
 @Component({
@@ -130,6 +130,23 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
     setTimeout(() => this.cmdInputRef?.nativeElement?.focus(), 60);
   }
 
+  focusInput(e?: MouseEvent) {
+    if (e) {
+      e.stopPropagation();
+    }
+    if (typeof window !== 'undefined') {
+      const selection = window.getSelection();
+      if (selection && selection.toString().length > 0) {
+        return;
+      }
+    }
+    const target = e?.target as HTMLElement;
+    if (target && (target.tagName === 'BUTTON' || target.closest('button') || target.tagName === 'INPUT')) {
+      return;
+    }
+    this.cmdInputRef?.nativeElement?.focus();
+  }
+
   onKeyDown(e: KeyboardEvent) {
     if (e.key === 'ArrowUp') {
       e.preventDefault();
@@ -153,29 +170,123 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
   }
 
   tabComplete() {
-    const prefix = this.inputVal.trim().toLowerCase();
-    if (!prefix) {
-      this.history = [...this.history, {
-        text: ALL_COMMANDS.join('   '),
-        type: 'dim'
-      }];
-      return;
+    const raw = this.inputVal;
+    const parts = raw.split(/\s+/);
+    const hasTrailingSpace = raw.endsWith(' ');
+
+    // 1. Completing the main command
+    if (parts.length === 1 || (parts.length === 2 && !hasTrailingSpace && parts[0] !== '')) {
+      const current = (parts.length === 1 ? parts[0] : parts[0]).toLowerCase();
+
+      if (!current) {
+        // Empty tab: list all commands
+        this.history = [...this.history, {
+          text: ALL_COMMANDS.join('   '),
+          type: 'dim'
+        }];
+        this.resetCursorPosition();
+        return;
+      }
+
+      const matches = ALL_COMMANDS.filter(cmd => cmd.startsWith(current));
+      if (matches.length === 1) {
+        this.inputVal = matches[0] + ' ';
+        this.resetCursorPosition();
+        return;
+      } else if (matches.length > 1) {
+        const lcp = this.getLongestCommonPrefix(matches);
+        if (lcp.length > current.length) {
+          this.inputVal = lcp;
+        } else {
+          this.history = [...this.history,
+            {
+              segs: [
+                { t: 'guest@parth:~$ ', c: 'text-slate-500' },
+                { t: raw, c: 'text-slate-300' }
+              ],
+              type: 'input'
+            },
+            { text: matches.join('   '), type: 'dim' }
+          ];
+        }
+        this.resetCursorPosition();
+        return;
+      }
     }
-    const matches = ALL_COMMANDS.filter(cmd => cmd.startsWith(prefix));
-    if (matches.length === 1) {
-      this.inputVal = matches[0] + ' ';
-    } else if (matches.length > 1) {
-      this.history = [...this.history,
-        {
-          segs: [
-            { t: 'guest@parth:~$ ', c: 'text-slate-500' },
-            { t: this.inputVal, c: 'text-slate-300' }
-          ],
-          type: 'input'
-        },
-        { text: matches.join('   '), type: 'dim' }
-      ];
+
+    // 2. Completing Subcommands / Arguments
+    const mainCmd = parts[0].toLowerCase();
+    const argQuery = (hasTrailingSpace ? '' : parts[parts.length - 1]).toLowerCase();
+    let candidates: string[] = [];
+
+    if (mainCmd === 'cat') {
+      candidates = ['about', 'contact', 'education', 'experience', 'projects', 'resume', 'skills', 'summary'];
+    } else if (mainCmd === 'man') {
+      candidates = ALL_COMMANDS;
+    } else if (mainCmd === 'sync-resume' || mainCmd === 'sync') {
+      candidates = ['--pin', '--set-pin', '--set-hook', '--hook', '--help'];
     }
+
+    if (candidates.length > 0) {
+      const matches = candidates.filter(c => c.startsWith(argQuery));
+      if (matches.length === 1) {
+        if (hasTrailingSpace) {
+          this.inputVal = raw + matches[0] + ' ';
+        } else {
+          parts[parts.length - 1] = matches[0];
+          this.inputVal = parts.join(' ') + ' ';
+        }
+        this.resetCursorPosition();
+        return;
+      } else if (matches.length > 1) {
+        const lcp = this.getLongestCommonPrefix(matches);
+        if (lcp.length > argQuery.length) {
+          if (hasTrailingSpace) {
+            this.inputVal = raw + lcp;
+          } else {
+            parts[parts.length - 1] = lcp;
+            this.inputVal = parts.join(' ');
+          }
+        } else {
+          this.history = [...this.history,
+            {
+              segs: [
+                { t: 'guest@parth:~$ ', c: 'text-slate-500' },
+                { t: raw, c: 'text-slate-300' }
+              ],
+              type: 'input'
+            },
+            { text: matches.join('   '), type: 'dim' }
+          ];
+        }
+        this.resetCursorPosition();
+        return;
+      }
+    }
+
+    this.resetCursorPosition();
+  }
+
+  private getLongestCommonPrefix(words: string[]): string {
+    if (!words.length) return '';
+    let prefix = words[0];
+    for (let i = 1; i < words.length; i++) {
+      while (!words[i].startsWith(prefix)) {
+        prefix = prefix.substring(0, prefix.length - 1);
+        if (!prefix) return '';
+      }
+    }
+    return prefix;
+  }
+
+  private resetCursorPosition() {
+    setTimeout(() => {
+      const el = this.cmdInputRef?.nativeElement;
+      if (el) {
+        el.focus();
+        el.setSelectionRange(el.value.length, el.value.length);
+      }
+    }, 10);
   }
 
   // ── Drag (mouse) ──────────────────────────────────────────────────
@@ -396,6 +507,10 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
       case 'system':
         newEntries.push({ text: '⬡ Navigating to /system...', type: 'success' });
         setTimeout(() => { this.router.navigate(['/system']); this.isOpen = false; }, 800);
+        break;
+      case 'sync':
+      case 'sync-resume':
+        newEntries.push(...this.handleSyncResumeCommand(args, rawArgs));
         break;
       default:
         newEntries.push({
@@ -859,6 +974,168 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
       this.history = [...this.history, {
         segs: [{ t: `  ⬡ Chat error: ${e.message}`, c: 'text-red-400' }],
         type: 'error'
+      }];
+    }
+  }
+
+  private handleSyncResumeCommand(args: string[], rawArgs: string): LogEntry[] {
+    const DEFAULT_PIN = '1721';
+    const storedPin = (typeof localStorage !== 'undefined' ? localStorage.getItem('portfolio_admin_pin') : null) || DEFAULT_PIN;
+    const storedHook = typeof localStorage !== 'undefined' ? localStorage.getItem('portfolio_vercel_hook') : null;
+
+    // Help / No args
+    if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
+      return [
+        { segs: [{ t: '┌── Resume Sync & Remote Deployment ─────────────────────┐', c: 'text-green-700' }], type: 'output' },
+        { segs: [{ t: '│  Usage:  ', c: 'text-slate-500' }, { t: 'sync-resume --pin <PIN> [options]', c: 'text-yellow-400' }], type: 'output' },
+        { segs: [{ t: '│  Options:', c: 'text-slate-500' }], type: 'output' },
+        { segs: [{ t: '│    --pin <pin>           ', c: 'text-cyan-400' }, { t: 'Authenticate & trigger Vercel deployment', c: 'text-slate-400' }], type: 'output' },
+        { segs: [{ t: '│    --set-hook <url>      ', c: 'text-cyan-400' }, { t: 'Save private Vercel Deploy Hook URL', c: 'text-slate-400' }], type: 'output' },
+        { segs: [{ t: '│    --set-pin <new_pin>   ', c: 'text-cyan-400' }, { t: 'Update secret admin PIN', c: 'text-slate-400' }], type: 'output' },
+        { segs: [{ t: '│    --hook <url>          ', c: 'text-cyan-400' }, { t: 'Trigger one-time deploy hook URL', c: 'text-slate-400' }], type: 'output' },
+        { segs: [{ t: '└────────────────────────────────────────────────────────┘', c: 'text-green-700' }], type: 'output' },
+      ];
+    }
+
+    // Set Hook URL: sync-resume --pin <pin> --set-hook <url>
+    const setHookIdx = args.findIndex(a => a === '--set-hook');
+    if (setHookIdx !== -1) {
+      const hookUrl = args[setHookIdx + 1];
+      const pinIdx = args.findIndex(a => a === '--pin' || a === '-p' || a === '--secret');
+      const providedPin = pinIdx !== -1 ? args[pinIdx + 1] : '';
+
+      if (!providedPin || providedPin !== storedPin) {
+        return [{ text: '❌ [AUTH_DENIED] Invalid or missing admin PIN. Usage: sync-resume --pin <PIN> --set-hook <URL>', type: 'error' }];
+      }
+
+      if (!hookUrl || !hookUrl.startsWith('http')) {
+        return [{ text: '❌ [INVALID_URL] Please provide a valid HTTP/HTTPS Vercel Deploy Hook URL.', type: 'error' }];
+      }
+
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('portfolio_vercel_hook', hookUrl.trim());
+      }
+      return [
+        { text: '✓ [CONFIG_SAVED] Vercel Deploy Hook URL saved securely to browser localStorage.', type: 'success' },
+        { segs: [{ t: '  You can now trigger builds anytime with: ', c: 'text-slate-400' }, { t: `sync-resume --pin ${storedPin}`, c: 'text-yellow-400' }], type: 'output' }
+      ];
+    }
+
+    // Set PIN: sync-resume --pin <old_pin> --set-pin <new_pin>
+    const setPinIdx = args.findIndex(a => a === '--set-pin');
+    if (setPinIdx !== -1) {
+      const newPin = args[setPinIdx + 1];
+      const pinIdx = args.findIndex(a => a === '--pin' || a === '-p');
+      const oldPin = pinIdx !== -1 ? args[pinIdx + 1] : '';
+
+      if (oldPin !== storedPin) {
+        return [{ text: '❌ [AUTH_DENIED] Current admin PIN required. Usage: sync-resume --pin <OLD_PIN> --set-pin <NEW_PIN>', type: 'error' }];
+      }
+      if (!newPin || newPin.length < 4) {
+        return [{ text: '❌ [INVALID_PIN] New PIN must be at least 4 characters.', type: 'error' }];
+      }
+
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('portfolio_admin_pin', newPin.trim());
+      }
+      return [{ text: `✓ [PIN_UPDATED] Secret admin PIN updated successfully.`, type: 'success' }];
+    }
+
+    // Authentication verification
+    const pinIdx = args.findIndex(a => a === '--pin' || a === '-p' || a === '--secret');
+    const providedPin = pinIdx !== -1 ? args[pinIdx + 1] : args[0];
+
+    if (!providedPin || (providedPin !== storedPin && !storedHook)) {
+      if (providedPin !== storedPin) {
+        return [{ text: '❌ [AUTH_DENIED] Incorrect admin PIN. Access is restricted.', type: 'error' }];
+      }
+    }
+
+    // Determine target hook URL (optional client override)
+    const hookIdx = args.findIndex(a => a === '--hook');
+    const targetHook = (hookIdx !== -1 ? args[hookIdx + 1] : storedHook) || '';
+
+    // Trigger async deployment via /api/sync-resume
+    this.triggerVercelDeploy(providedPin, targetHook);
+
+    return [
+      { text: '✓ [AUTH_SUCCESS] Admin identity confirmed.', type: 'success' },
+      { segs: [{ t: '🚀 [DEPLOY_TRIGGERED] Dispatching deployment request to /api/sync-resume...', c: 'text-cyan-400' }], type: 'output' }
+    ];
+  }
+
+  private async triggerVercelDeploy(pin: string, clientHookUrl?: string) {
+    try {
+      const res = await fetch('/api/sync-resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin, hookUrl: clientHookUrl })
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success) {
+        this.history = [...this.history, {
+          segs: [
+            { t: '✓ [BUILD_QUEUED] HTTP ', c: 'text-green-500 font-bold' },
+            { t: `${res.status} OK — `, c: 'text-green-400' },
+            { t: data.message || 'Vercel is compiling Parth_Nautiyal_Resume.tex into live site (~60s).', c: 'text-slate-300' }
+          ],
+          type: 'success'
+        }];
+      } else if (clientHookUrl) {
+        // Direct client fallback
+        const directRes = await fetch(clientHookUrl, { method: 'POST' });
+        if (directRes.ok || directRes.status === 201) {
+          this.history = [...this.history, {
+            segs: [
+              { t: '✓ [BUILD_QUEUED] HTTP ', c: 'text-green-500 font-bold' },
+              { t: `${directRes.status} OK — `, c: 'text-green-400' },
+              { t: 'Direct Vercel Deploy Hook invoked successfully (~60s build).', c: 'text-slate-300' }
+            ],
+            type: 'success'
+          }];
+          return;
+        }
+        throw new Error(data.error || `HTTP ${res.status}`);
+      } else {
+        this.history = [...this.history, {
+          segs: [{ t: `❌ [DEPLOY_FAILED] ${data.error || 'Server error'}`, c: 'text-red-400' }],
+          type: 'error'
+        }, {
+          segs: [{ t: '  Tip: Add VERCEL_DEPLOY_HOOK_URL to your Vercel Project Environment Variables, or save locally with: sync-resume --pin 1721 --set-hook <URL>', c: 'text-slate-500' }],
+          type: 'dim'
+        }];
+      }
+    } catch (err: any) {
+      if (clientHookUrl) {
+        try {
+          const directRes = await fetch(clientHookUrl, { method: 'POST' });
+          if (directRes.ok || directRes.status === 201) {
+            this.history = [...this.history, {
+              segs: [
+                { t: '✓ [BUILD_QUEUED] HTTP ', c: 'text-green-500 font-bold' },
+                { t: `${directRes.status} OK — `, c: 'text-green-400' },
+                { t: 'Direct Vercel Deploy Hook invoked successfully (~60s build).', c: 'text-slate-300' }
+              ],
+              type: 'success'
+            }];
+            return;
+          }
+        } catch (e: any) {
+          this.history = [...this.history, {
+            segs: [{ t: `❌ [NETWORK_ERROR] Direct hook trigger error: ${e.message}`, c: 'text-red-400' }],
+            type: 'error'
+          }];
+          return;
+        }
+      }
+      this.history = [...this.history, {
+        segs: [{ t: `❌ [LOCAL_MODE] /api/sync-resume is not reachable on your local dev server.`, c: 'text-red-400' }],
+        type: 'error'
+      }, {
+        segs: [{ t: '  Tip: For local testing, ensure backend is running (:8080) or pass the hook directly:\n  ', c: 'text-slate-500' }, { t: 'sync-resume --pin 1721 --hook <VERCEL_DEPLOY_HOOK_URL>', c: 'text-cyan-400' }],
+        type: 'dim'
       }];
     }
   }

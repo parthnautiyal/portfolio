@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const USERNAME = 'parthnautiyal'
-const OUTPUT = join(__dirname, '../src/content/projects.json')
+const OUTPUT = join(__dirname, '../portfolio-frontend/src/app/content/projects.json')
 
 const RESUME_PROJECT_OVERRIDES = {
   'training-upskilling-v2': {
