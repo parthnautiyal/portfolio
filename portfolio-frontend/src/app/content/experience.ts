@@ -30,5 +30,16 @@ export const experience = [
       "Enhanced system observability using Grafana, Prometheus, and Datadog, reducing MTTR and accelerating incident resolution.",
       "Maintained strict software quality standards with 85%+ test coverage using JUnit and Mockito, eliminating vulnerabilities."
     ]
+  },
+  {
+    "role": "Software Development Engineer Intern",
+    "company": "ZopSmart",
+    "location": "Bangalore, India",
+    "period": "Jan 2024 – Jul 2024",
+    "bullets": [
+      "Practiced Test-Driven Development (TDD) using JUnit and Mockito, increasing unit validation and test suite coverage by 45%.",
+      "Assisted in implementing scalable REST API endpoint controllers, database entity mappings, and local service optimizations.",
+      "Collaborated with senior engineers on microservices architecture patterns, Spring Boot best practices, and CI/CD deployment automation."
+    ]
   }
 ];

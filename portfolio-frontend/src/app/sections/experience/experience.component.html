@@ -21,24 +21,28 @@
     <!-- Horizontal Timeline Ticks -->
     <div class="relative mt-8 h-8 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-400 dark:text-slate-550 font-bold">
       <span class="absolute left-0 -bottom-1">Jan 2024</span>
-      <span class="absolute left-[20%] -bottom-1 -translate-x-1/2">Jul 2024</span>
-      <span class="absolute left-[50%] -bottom-1 -translate-x-1/2 hidden sm:inline">Jul 2025</span>
-      <span class="absolute left-[86.67%] -bottom-1 -translate-x-1/2 text-[var(--color-primary)]">Mar 2026</span>
-      <span class="absolute right-0 -bottom-1">Present</span>
+      <span class="absolute -bottom-1 -translate-x-1/2" [style.left.%]="internWidthPct">Jul 2024</span>
+      <span class="absolute -bottom-1 -translate-x-1/2 hidden sm:inline" [style.left.%]="jul2025LeftPct">Jul 2025</span>
+      <span class="absolute -bottom-1 -translate-x-1/2 text-[var(--color-primary)] font-extrabold" [style.left.%]="sde2LeftPct">Mar 2026</span>
+      <span class="absolute right-0 -bottom-1 text-emerald-600 dark:text-emerald-400 font-extrabold">Present</span>
     </div>
 
     <!-- Horizontal Trace Spans -->
     <div class="mt-5 space-y-3.5">
       <!-- Parent Trace Span -->
-      <div class="relative h-8 rounded-lg bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 flex items-center px-4 cursor-default">
-        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-          Trace: ZopSmart Career Trace Life [30 months duration]
+      <div class="relative h-8 rounded-lg bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 cursor-default flex-wrap gap-2">
+        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          Trace: ZopSmart Career Trace Life [{{ totalDurationText }} duration]
+        </span>
+        <span class="text-[0.65rem] md:text-xs font-mono font-bold text-slate-500 dark:text-slate-400">
+          {{ totalDays }} total days live
         </span>
       </div>
 
-      <!-- SDE Intern Span (Jan 2024 to Jul 2024: 20% width) -->
+      <!-- SDE Intern Span -->
       <div class="flex items-center">
-        <div class="w-[20%]">
+        <div [style.width.%]="internWidthPct">
           <button
             (click)="scrollToCard('SDE-INTERN')"
             [class]="'w-full text-left h-8 rounded-lg bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-between px-4 cursor-pointer shadow transition-all duration-300 hover:scale-[1.005] ' + (
@@ -48,14 +52,16 @@
             <span class="text-[0.65rem] md:text-xs font-bold uppercase tracking-wider truncate">
               span.sde_intern : SDE Intern
             </span>
-            <span class="text-[0.6rem] md:text-xs font-extrabold opacity-95 shrink-0">6 months (20.0%)</span>
+            <span class="text-[0.6rem] md:text-xs font-extrabold opacity-95 shrink-0 ml-2">
+              {{ internDurationText }} ({{ internWidthPct }}%)
+            </span>
           </button>
         </div>
       </div>
 
-      <!-- SDE I Span (Jul 2024 to Mar 2026: 66.67% width) -->
+      <!-- SDE I Span -->
       <div class="flex items-center">
-        <div class="w-[66.67%] ml-[20%]">
+        <div [style.width.%]="sde1WidthPct" [style.margin-left.%]="sde1LeftPct">
           <button
             (click)="scrollToCard('SDE-I')"
             [class]="'w-full text-left h-8 rounded-lg bg-blue-600 hover:bg-blue-750 text-white flex items-center justify-between px-4 cursor-pointer shadow transition-all duration-300 hover:scale-[1.005] ' + (
@@ -65,14 +71,16 @@
             <span class="text-[0.65rem] md:text-xs font-bold uppercase tracking-wider truncate">
               span.sde_1 : Software Development Engineer I
             </span>
-            <span class="text-[0.6rem] md:text-xs font-extrabold opacity-95 shrink-0">20 months (66.7%)</span>
+            <span class="text-[0.6rem] md:text-xs font-extrabold opacity-95 shrink-0 ml-2">
+              {{ sde1DurationText }} ({{ sde1WidthPct }}%)
+            </span>
           </button>
         </div>
       </div>
 
-      <!-- SDE II Span (Mar 2026 to Present: 13.33% width) -->
+      <!-- SDE II Span -->
       <div class="flex items-center">
-        <div class="w-[13.33%] ml-[86.67%]">
+        <div [style.width.%]="sde2WidthPct" [style.margin-left.%]="sde2LeftPct">
           <button
             (click)="scrollToCard('SDE-II')"
             [class]="'w-full text-left h-8 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-between px-4 cursor-pointer shadow transition-all duration-300 hover:scale-[1.005] ' + (
@@ -82,7 +90,9 @@
             <span class="text-[0.65rem] md:text-xs font-bold uppercase tracking-wider truncate">
               span.sde_2 : Software Development Engineer II
             </span>
-            <span class="text-[0.6rem] md:text-xs font-extrabold opacity-95 shrink-0">4 months (13.3%)</span>
+            <span class="text-[0.6rem] md:text-xs font-extrabold opacity-95 shrink-0 ml-2">
+              {{ sde2DurationText }} ({{ sde2WidthPct }}%)
+            </span>
           </button>
         </div>
       </div>
