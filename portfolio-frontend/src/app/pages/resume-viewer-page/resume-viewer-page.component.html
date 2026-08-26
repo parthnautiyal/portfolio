@@ -174,14 +174,14 @@
         </h2>
         <p class="text-sm leading-relaxed text-[var(--color-text)] dark:text-slate-300 print:text-slate-800">
           <ng-container *ngFor="let token of summaryTokens">
-            <a *ngIf="token.isLink" [routerLink]="token.to" class="text-[var(--color-primary)] hover:underline font-semibold">
-              <mark *ngIf="token.isMatch" [id]="token.matchIndex === activeMatchIndex ? 'search-match-' + token.matchIndex : null" [class]="'px-0.5 rounded transition-all duration-200 ' + (token.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">
+            <a *ngIf="token.isLink" [routerLink]="getRoutePath(token.to)" [queryParams]="getQueryParams(token.to)" class="text-[var(--color-primary)] hover:underline font-semibold">
+              <mark *ngIf="token.isMatch" [id]="'search-match-' + token.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (token.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">
                 {{ token.text }}
               </mark>
               <ng-container *ngIf="!token.isMatch">{{ token.text }}</ng-container>
             </a>
             <span *ngIf="!token.isLink">
-              <mark *ngIf="token.isMatch" [id]="token.matchIndex === activeMatchIndex ? 'search-match-' + token.matchIndex : null" [class]="'px-0.5 rounded transition-all duration-200 ' + (token.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">
+              <mark *ngIf="token.isMatch" [id]="'search-match-' + token.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (token.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">
                 {{ token.text }}
               </mark>
               <ng-container *ngIf="!token.isMatch">{{ token.text }}</ng-container>
@@ -200,24 +200,24 @@
             <div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between">
               <h3 class="text-sm font-bold text-[var(--color-text-bright)] print:text-black">
                 <ng-container *ngFor="let t of exp.role">
-                  <a *ngIf="t.isLink" [routerLink]="t.to" class="text-[var(--color-primary)] hover:underline font-semibold">
-                    <mark *ngIf="t.isMatch" [id]="t.matchIndex === activeMatchIndex ? 'search-match-' + t.matchIndex : null" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
+                  <a *ngIf="t.isLink" [routerLink]="getRoutePath(t.to)" [queryParams]="getQueryParams(t.to)" class="text-[var(--color-primary)] hover:underline font-semibold">
+                    <mark *ngIf="t.isMatch" [id]="'search-match-' + t.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
                     <ng-container *ngIf="!t.isMatch">{{ t.text }}</ng-container>
                   </a>
                   <span *ngIf="!t.isLink">
-                    <mark *ngIf="t.isMatch" [id]="t.matchIndex === activeMatchIndex ? 'search-match-' + t.matchIndex : null" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
+                    <mark *ngIf="t.isMatch" [id]="'search-match-' + t.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
                     <ng-container *ngIf="!t.isMatch">{{ t.text }}</ng-container>
                   </span>
                 </ng-container>
                 <span class="font-semibold text-slate-500 dark:text-slate-400 print:text-slate-700">
                   at 
                   <ng-container *ngFor="let t of exp.company">
-                    <a *ngIf="t.isLink" [routerLink]="t.to" class="text-[var(--color-primary)] hover:underline font-semibold">
-                      <mark *ngIf="t.isMatch" [id]="t.matchIndex === activeMatchIndex ? 'search-match-' + t.matchIndex : null" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
+                    <a *ngIf="t.isLink" [routerLink]="getRoutePath(t.to)" [queryParams]="getQueryParams(t.to)" class="text-[var(--color-primary)] hover:underline font-semibold">
+                      <mark *ngIf="t.isMatch" [id]="'search-match-' + t.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
                       <ng-container *ngIf="!t.isMatch">{{ t.text }}</ng-container>
                     </a>
                     <span *ngIf="!t.isLink">
-                      <mark *ngIf="t.isMatch" [id]="t.matchIndex === activeMatchIndex ? 'search-match-' + t.matchIndex : null" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
+                      <mark *ngIf="t.isMatch" [id]="'search-match-' + t.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
                       <ng-container *ngIf="!t.isMatch">{{ t.text }}</ng-container>
                     </span>
                   </ng-container>
@@ -237,12 +237,74 @@
                 )"
               >
                 <ng-container *ngFor="let t of bulletTokens">
-                  <a *ngIf="t.isLink" [routerLink]="t.to" class="text-[var(--color-primary)] hover:underline font-semibold">
-                    <mark *ngIf="t.isMatch" [id]="t.matchIndex === activeMatchIndex ? 'search-match-' + t.matchIndex : null" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
+                  <a *ngIf="t.isLink" [routerLink]="getRoutePath(t.to)" [queryParams]="getQueryParams(t.to)" class="text-[var(--color-primary)] hover:underline font-semibold">
+                    <mark *ngIf="t.isMatch" [id]="'search-match-' + t.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
                     <ng-container *ngIf="!t.isMatch">{{ t.text }}</ng-container>
                   </a>
                   <span *ngIf="!t.isLink">
-                    <mark *ngIf="t.isMatch" [id]="t.matchIndex === activeMatchIndex ? 'search-match-' + t.matchIndex : null" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
+                    <mark *ngIf="t.isMatch" [id]="'search-match-' + t.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
+                    <ng-container *ngIf="!t.isMatch">{{ t.text }}</ng-container>
+                  </span>
+                </ng-container>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Projects -->
+      <div *ngIf="projectsTokens.length > 0" class="space-y-4 print:text-black">
+        <h2 class="text-xs font-extrabold uppercase tracking-wider text-[var(--color-primary)] border-b border-[var(--border-color-hover)] pb-1 print:text-black print:border-black/20">
+          Projects
+        </h2>
+        <div class="space-y-5">
+          <div *ngFor="let proj of projectsTokens; let idx = index" class="space-y-2">
+            <div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between">
+              <h3 class="text-sm font-bold text-[var(--color-text-bright)] print:text-black flex flex-wrap items-center gap-1.5">
+                <ng-container *ngFor="let t of proj.title">
+                  <a *ngIf="t.isLink" [routerLink]="getRoutePath(t.to)" [queryParams]="getQueryParams(t.to)" class="text-[var(--color-primary)] hover:underline font-semibold">
+                    <mark *ngIf="t.isMatch" [id]="'search-match-' + t.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
+                    <ng-container *ngIf="!t.isMatch">{{ t.text }}</ng-container>
+                  </a>
+                  <span *ngIf="!t.isLink">
+                    <mark *ngIf="t.isMatch" [id]="'search-match-' + t.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
+                    <ng-container *ngIf="!t.isMatch">{{ t.text }}</ng-container>
+                  </span>
+                </ng-container>
+
+                <span *ngFor="let link of proj.links" class="inline-flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline font-normal">
+                  <a [href]="link.url" target="_blank" rel="noopener noreferrer">({{ link.label }})</a>
+                </span>
+              </h3>
+            </div>
+            <p class="text-xs italic text-slate-500 dark:text-slate-400 print:text-slate-700">
+              <ng-container *ngFor="let t of proj.tech">
+                <a *ngIf="t.isLink" [routerLink]="getRoutePath(t.to)" [queryParams]="getQueryParams(t.to)" class="text-[var(--color-primary)] hover:underline font-semibold">
+                  <mark *ngIf="t.isMatch" [id]="'search-match-' + t.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
+                  <ng-container *ngIf="!t.isMatch">{{ t.text }}</ng-container>
+                </a>
+                <span *ngIf="!t.isLink">
+                  <mark *ngIf="t.isMatch" [id]="'search-match-' + t.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
+                  <ng-container *ngIf="!t.isMatch">{{ t.text }}</ng-container>
+                </span>
+              </ng-container>
+            </p>
+            <ul class="list-disc list-outside pl-4 space-y-2">
+              <li
+                *ngFor="let bulletTokens of proj.bullets"
+                [class]="'text-sm leading-relaxed transition-all duration-300 rounded-lg p-1 -ml-1 ' + (
+                  recruiterFocus !== 'all' && isHighlighted(getBulletPlainString(bulletTokens))
+                    ? 'bg-orange-600/10 dark:bg-indigo-600/10 text-[var(--color-text-bright)] font-medium border-l-2 border-orange-500 dark:border-indigo-500 pl-2'
+                    : 'text-[var(--color-text)] dark:text-slate-300 print:text-slate-800'
+                )"
+              >
+                <ng-container *ngFor="let t of bulletTokens">
+                  <a *ngIf="t.isLink" [routerLink]="getRoutePath(t.to)" [queryParams]="getQueryParams(t.to)" class="text-[var(--color-primary)] hover:underline font-semibold">
+                    <mark *ngIf="t.isMatch" [id]="'search-match-' + t.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
+                    <ng-container *ngIf="!t.isMatch">{{ t.text }}</ng-container>
+                  </a>
+                  <span *ngIf="!t.isLink">
+                    <mark *ngIf="t.isMatch" [id]="'search-match-' + t.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
                     <ng-container *ngIf="!t.isMatch">{{ t.text }}</ng-container>
                   </span>
                 </ng-container>
@@ -334,31 +396,35 @@
       </div>
     </div>
   </div>
-
-  <!-- Fullscreen PDF overlay -->
-  <div
-    *ngIf="isPdfFullscreen"
-    [class]="'fixed inset-0 z-[100] bg-slate-950/95 flex flex-col print:hidden backdrop-blur-md overflow-hidden ' + (
-      isPdfFullscreenClosing ? 'animate-fade-out' : 'animate-fade-in'
-    )"
-  >
-    <!-- Floating Close Button -->
-    <button
-      (click)="handleClosePdfFullscreen()"
-      class="absolute top-4 right-4 z-[110] flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-xs font-bold text-white cursor-pointer shadow-2xl transition-all active:scale-95 backdrop-blur-sm"
-      title="Close Fullscreen"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4"></path></svg>
-      Close Fullscreen
-    </button>
-
-    <!-- Full Screen PDF Render Container -->
-    <div class="w-full h-full flex justify-center items-center bg-slate-950">
-      <iframe
-        [src]="personal.resumeUrl + '#toolbar=1&navpanes=0' | safeUrl"
-        class="w-full h-full border-none"
-        title="Resume PDF Fullscreen"
-      ></iframe>
-    </div>
-  </div>
 </section>
+
+<!-- Fullscreen PDF overlay (Outside section to prevent transform containing-block interference) -->
+<div
+  *ngIf="isPdfFullscreen"
+  (click)="handleClosePdfFullscreen()"
+  [class]="'fixed inset-0 z-[99999] w-screen h-screen bg-slate-950/90 flex flex-col items-center justify-center p-3 sm:p-6 print:hidden backdrop-blur-md overflow-hidden cursor-pointer ' + (
+    isPdfFullscreenClosing ? 'animate-fade-out' : 'animate-fade-in'
+  )"
+>
+  <!-- Floating Close Button -->
+  <button
+    (click)="handleClosePdfFullscreen(); $event.stopPropagation()"
+    class="absolute top-4 right-4 sm:top-6 sm:right-6 z-[100000] flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900/95 hover:bg-slate-800 border border-slate-700/80 text-xs font-bold text-white cursor-pointer shadow-2xl transition-all active:scale-95 backdrop-blur-sm"
+    title="Close Fullscreen"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+    Close Fullscreen
+  </button>
+
+  <!-- Full Screen PDF Render Container (Centered, responsive max dimensions) -->
+  <div
+    (click)="$event.stopPropagation()"
+    class="w-full max-w-4xl h-[90vh] relative rounded-2xl overflow-hidden shadow-2xl border border-slate-800/80 bg-slate-900 cursor-default flex flex-col"
+  >
+    <iframe
+      [src]="personal.resumeUrl + '#toolbar=1&navpanes=0&zoom=page-fit' | safeUrl"
+      class="w-full h-full border-none"
+      title="Resume PDF Fullscreen"
+    ></iframe>
+  </div>
+</div>

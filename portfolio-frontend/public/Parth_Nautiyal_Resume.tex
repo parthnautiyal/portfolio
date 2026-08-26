@@ -1,0 +1,153 @@
+%------------------------
+% Resume Template
+% Author : Parth Nautiyal
+% Github : https://github.com/parthnautiyal
+%------------------------
+
+\documentclass[a4paper,10pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[pdftex,hidelinks]{hyperref}
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\fancyhf{} % clear all header and footer fields
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins for 1-page fit
+\addtolength{\oddsidemargin}{-0.55in}
+\addtolength{\evensidemargin}{-0.55in}
+\addtolength{\textwidth}{1.1in}
+\addtolength{\topmargin}{-0.65in}
+\addtolength{\textheight}{1.3in}
+
+\urlstyle{rm}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-7pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-4pt}]
+
+% Custom commands
+\newcommand{\resumeItem}[2]{
+  \item\small{
+    \textbf{#1}{: #2 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{#3} & \textit{#4} \\
+    \end{tabular*}\vspace{-4pt}
+}
+
+\renewcommand{\labelitemii}{$\circ$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=*]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-4pt}}
+
+\pdfgentounicode=1
+
+%-----------------------------
+%%%%%%  CV STARTS HERE  %%%%%%
+
+\begin{document}
+
+%----------HEADING-----------------
+\begin{center}
+  \textbf{{\LARGE Parth Nautiyal}} \\ \vspace{2pt}
+  \small
+  +91 7453886885 \ \textbar\ \ \href{mailto:parthnautiyal2002@gmail.com}{parthnautiyal2002@gmail.com} \ \textbar\ \ Bangalore, India \\ \vspace{1pt}
+  \href{https://parthnautiyal.vercel.app/}{Portfolio} \ \textbar\ \ 
+  \href{https://linkedin.com/in/parthnautiyal}{LinkedIn} \ \textbar\ \ 
+  \href{https://github.com/parthnautiyal}{GitHub} \ \textbar\ \ 
+  \href{https://leetcode.com/u/parth_nautiyal/}{LeetCode}
+\end{center}
+
+\vspace{-4pt}
+\section*{Summary}
+\vspace{1pt}
+\begin{small}
+Backend Engineer with 2+ years of experience architecting resilient, distributed microservices, event-driven streaming pipelines (Kafka), and workflow orchestrations (Temporal) powering high-scale systems and AI integration layers. Optimized 25+ Spring Boot APIs achieving a 50\% latency reduction and engineered automated CI/CD pipelines cutting deployment failures by 90\%.
+\end{small}
+
+\vspace{1pt}
+\section{Technical Skills}
+\begin{itemize}[leftmargin=0.15in, label={}]
+  \small{\item{
+    \textbf{Languages \& Frameworks:}{ Java (17/21), Spring Boot, Spring Security, Spring AI, TypeScript, React, Angular} \\ \vspace{1pt}
+    \textbf{AI \& LLM Integration:}{ Claude API, Google Gemini API, OpenAI API, Ollama, LangChain4j, RAG, Prompt Engineering} \\ \vspace{1pt}
+    \textbf{Databases \& Search:}{ PostgreSQL, MySQL, Redis, pgvector, Qdrant} \\ \vspace{1pt}
+    \textbf{Distributed Systems \& Cloud:}{ Apache Kafka, Temporal, Docker, Kubernetes, Rancher, Helm, Azure, REST APIs} \\ \vspace{1pt}
+    \textbf{DevOps \& Observability:}{ CI/CD Pipelines, Datadog, Prometheus, Grafana, Linux, Git, SonarQube, Snyk} \\ \vspace{1pt}
+    \textbf{Testing \& Methodologies:}{ JUnit 5, Mockito, Test-Driven Development (TDD), Microservices Architecture}
+  }}
+\end{itemize}
+\vspace{-6pt}
+
+\section{Professional Experience}
+
+\vspace{1pt}
+\textbf{ZopSmart} \hfill \textit{Bangalore, India} \\
+\textit{Software Development Engineer II} \hfill \textit{Mar 2026 – Present}
+\begin{itemize}[label={\textbullet}, itemsep=0.02em, leftmargin=*]
+\item Architected and scaled 20+ Spring Boot microservices with event-driven \textbf{Kafka} streaming pipelines, reducing API latency by \textbf{50\%} and optimizing high-throughput data ingestion pipelines.
+\item Refactored distributed workflow orchestration using \textbf{Temporal}, decomposing monolithic logic into 11+ activities; implemented retries, idempotency, and state persistence critical for long-running workflows and multi-step agent pipelines.
+\item Orchestrated asynchronous data processing across 7+ high-volume use cases, enabling parallel execution and increasing pipeline throughput by \textbf{40\%}.
+\item Spearheaded platform-level architectural standards, reducing onboarding friction for new services; mentored engineers and conducted technical sessions on distributed system resilience.
+\end{itemize}
+
+\vspace{2pt}
+\textit{Software Development Engineer I} \hfill \textit{Jul 2024 – Mar 2026}
+\begin{itemize}[label={\textbullet}, itemsep=0.02em, leftmargin=*]
+\item Built 3+ production-grade microservices with automated CI/CD pipelines; reduced build time from \textbf{9 to 4 mins} via caching and parallelized stages, cutting deployment failures by \textbf{90\%}.
+\item Engineered high-performance backend REST APIs in Spring Boot, handling high concurrency with \textbf{99.9\% uptime}.
+\item Enhanced system observability using Grafana, Prometheus, and Datadog, reducing MTTR and accelerating incident resolution.
+\item Maintained strict software quality standards with \textbf{85\%+ test coverage} using JUnit and Mockito, eliminating vulnerabilities.
+\end{itemize}
+
+\vspace{1pt}
+\section{Projects}
+
+\vspace{1pt}
+\textbf{OutreachIQ – AI-Powered Job Discovery \& Cold Outreach Platform} \href{https://github.com/parthnautiyal/email-automator-springboot}{\textit{(GitHub)}} \\
+\textit{Java 17, Spring Boot, Claude API, Gemini API, PostgreSQL, Docker}
+\begin{itemize}[label={\textbullet}, itemsep=0.02em, leftmargin=*]
+\item Built an autonomous recruitment platform integrating \textbf{Claude 3.5} and \textbf{Gemini API} for automated job parsing, ATS compatibility scoring (0--100 match rating), and candidate-to-role skill gap analysis.
+\item Engineered concurrent multi-worker search pipelines using \textbf{CompletableFuture} for parallel platform sourcing and automated cold email campaigns via Gmail API (OAuth 2.0) with MX/DNS verification algorithms.
+\end{itemize}
+
+\vspace{2pt}
+\textbf{AI Portfolio \& Multi-LLM RAG Chatbot} \href{https://parthnautiyal.vercel.app/}{\textit{(Live)}} \textbar\ \href{https://github.com/parthnautiyal/portfolio}{\textit{(GitHub)}} \\
+\textit{Spring Boot, React, TypeScript, Gemini API, OpenAI API, Ollama}
+\begin{itemize}[label={\textbullet}, itemsep=0.02em, leftmargin=*]
+\item Developed a full-stack platform featuring a RAG-powered conversational assistant orchestrating multiple LLM providers (\textbf{Google Gemini, OpenAI, and local Ollama/Llama 3}) with dynamic resume knowledge-base context injection.
+\end{itemize}
+
+\vspace{1pt}
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Lovely Professional University}{Punjab, India}
+      {Bachelor of Technology in Computer Science; CGPA: 8.9}{Jul 2020 – Jun 2024}
+    \resumeItemListStart
+      \item \textbf{Coursework}: Data Structures \& Algorithms, Distributed Systems, Cloud Computing, Database Management Systems (DBMS), Operating Systems, Object Oriented Programming (OOP)
+    \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+\end{document}

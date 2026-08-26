@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="cardGrad3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="960" height="480" rx="16" fill="url(#bgGrad3)" stroke="#334155" stroke-width="1.5"/>
+  <text x="480" y="38" text-anchor="middle" fill="#f8fafc" font-family="sans-serif" font-size="18" font-weight="700">INTERACTIVE FEATURES &amp; STATE MANAGEMENT</text>
+  <line x1="40" y1="52" x2="920" y2="52" stroke="#334155" stroke-dasharray="4 4"/>
+
+  <!-- Left: Developer Console State Machine -->
+  <rect x="40" y="75" width="425" height="370" rx="10" fill="url(#cardGrad3)" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="252" y="105" text-anchor="middle" fill="#38bdf8" font-family="sans-serif" font-size="14" font-weight="700">Developer Console (macOS-Style CLI)</text>
+
+  <rect x="65" y="130" width="170" height="45" rx="6" fill="#0f172a" stroke="#0284c7" stroke-width="1"/>
+  <text x="150" y="157" text-anchor="middle" fill="#e2e8f0" font-family="sans-serif" font-size="12" font-weight="600">1. Closed State</text>
+
+  <text x="250" y="157" fill="#38bdf8" font-family="sans-serif" font-size="14" font-weight="700">⇄</text>
+
+  <rect x="270" y="130" width="170" height="45" rx="6" fill="#0f172a" stroke="#0284c7" stroke-width="1"/>
+  <text x="355" y="157" text-anchor="middle" fill="#e2e8f0" font-family="sans-serif" font-size="12" font-weight="600">2. Floating Window</text>
+
+  <rect x="65" y="200" width="170" height="45" rx="6" fill="#0f172a" stroke="#0284c7" stroke-width="1"/>
+  <text x="150" y="227" text-anchor="middle" fill="#e2e8f0" font-family="sans-serif" font-size="12" font-weight="600">3. Minimized Pill</text>
+
+  <text x="250" y="227" fill="#38bdf8" font-family="sans-serif" font-size="14" font-weight="700">⇄</text>
+
+  <rect x="270" y="200" width="170" height="45" rx="6" fill="#0f172a" stroke="#0284c7" stroke-width="1"/>
+  <text x="355" y="227" text-anchor="middle" fill="#e2e8f0" font-family="sans-serif" font-size="12" font-weight="600">4. Fullscreen Mode</text>
+
+  <rect x="65" y="270" width="375" height="150" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="80" y="295" fill="#facc15" font-family="sans-serif" font-size="11" font-weight="700">Supported CLI Command Categories:</text>
+  <text x="80" y="320" fill="#94a3b8" font-family="sans-serif" font-size="10">• Navigation: resume, system, projects, chat</text>
+  <text x="80" y="340" fill="#94a3b8" font-family="sans-serif" font-size="10">• Data: whoami, about, exp, skills, education, cat</text>
+  <text x="80" y="360" fill="#94a3b8" font-family="sans-serif" font-size="10">• Admin: sync-resume --pin 1721 [--set-pin / --set-hook]</text>
+  <text x="80" y="380" fill="#94a3b8" font-family="sans-serif" font-size="10">• System: ping, quest, matrix, joke, clear, history</text>
+  <text x="80" y="400" fill="#34d399" font-family="sans-serif" font-size="10">Features: Anywhere focus · Tab autocomplete · Double-click maximize</text>
+
+  <!-- Right: Quest & Interactive Tokenizer -->
+  <rect x="495" y="75" width="425" height="370" rx="10" fill="url(#cardGrad3)" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="707" y="105" text-anchor="middle" fill="#c084fc" font-family="sans-serif" font-size="14" font-weight="700">Zone-Safe State &amp; Quest Gamification</text>
+
+  <rect x="520" y="130" width="375" height="135" rx="6" fill="#0f172a" stroke="#7c3aed" stroke-width="1"/>
+  <text x="535" y="155" fill="#38bdf8" font-family="sans-serif" font-size="12" font-weight="700">Zone-Safe Angular Change Detection</text>
+  <text x="535" y="180" fill="#94a3b8" font-family="sans-serif" font-size="10">• NgZone.run(): Wraps async button handlers &amp; reset timers</text>
+  <text x="535" y="200" fill="#94a3b8" font-family="sans-serif" font-size="10">• ChangeDetectorRef.markForCheck(): Instant UI re-render</text>
+  <text x="535" y="220" fill="#94a3b8" font-family="sans-serif" font-size="10">• Click-Outside Detection: Backdrop event isolation for PDF</text>
+  <text x="535" y="240" fill="#34d399" font-family="sans-serif" font-size="10">Fixes repeat-click &amp; persistent fullscreen navigation bugs</text>
+
+  <rect x="520" y="280" width="375" height="140" rx="6" fill="#0f172a" stroke="#7c3aed" stroke-width="1"/>
+  <text x="535" y="305" fill="#facc15" font-family="sans-serif" font-size="12" font-weight="700">Quest &amp; Achievement System (QuestService)</text>
+  <text x="535" y="330" fill="#94a3b8" font-family="sans-serif" font-size="10">• 10+ Interactive Developer Achievements to unlock</text>
+  <text x="535" y="350" fill="#94a3b8" font-family="sans-serif" font-size="10">• Level Progression: Novice Recruit → Systems Architect</text>
+  <text x="535" y="370" fill="#94a3b8" font-family="sans-serif" font-size="10">• Reactive Signals: Header XP pill &amp; toast alerts</text>
+  <text x="535" y="390" fill="#c084fc" font-family="sans-serif" font-size="10">• Persistent state stored in localStorage</text>
+
+</svg>

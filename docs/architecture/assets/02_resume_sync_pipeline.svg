@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="cardGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="960" height="480" rx="16" fill="url(#bgGrad2)" stroke="#334155" stroke-width="1.5"/>
+  <text x="480" y="38" text-anchor="middle" fill="#f8fafc" font-family="sans-serif" font-size="18" font-weight="700">LATEX RESUME SYNCHRONIZATION PIPELINE</text>
+  <line x1="40" y1="52" x2="920" y2="52" stroke="#334155" stroke-dasharray="4 4"/>
+
+  <!-- Step 1: Overleaf Source -->
+  <rect x="40" y="75" width="260" height="150" rx="10" fill="url(#cardGrad2)" stroke="#facc15" stroke-width="1.5"/>
+  <text x="170" y="105" text-anchor="middle" fill="#facc15" font-family="sans-serif" font-size="14" font-weight="700">1. Resume Authoring</text>
+  <rect x="55" y="125" width="230" height="80" rx="6" fill="#0f172a" stroke="#ca8a04" stroke-width="1"/>
+  <text x="170" y="152" text-anchor="middle" fill="#f8fafc" font-family="sans-serif" font-size="12" font-weight="600">Parth_Nautiyal_Resume.tex</text>
+  <text x="170" y="172" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="11">Overleaf LaTeX Source</text>
+  <text x="170" y="190" text-anchor="middle" fill="#38bdf8" font-family="sans-serif" font-size="10">Single Source of Truth</text>
+
+  <!-- Arrow 1 to 2 -->
+  <path d="M 300 150 L 350 150" stroke="#facc15" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="325" y="142" text-anchor="middle" fill="#facc15" font-family="sans-serif" font-size="16" font-weight="700">→</text>
+
+  <!-- Step 2: Trigger Channels -->
+  <rect x="350" y="75" width="260" height="150" rx="10" fill="url(#cardGrad2)" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="480" y="105" text-anchor="middle" fill="#38bdf8" font-family="sans-serif" font-size="14" font-weight="700">2. Trigger Channels</text>
+  <rect x="365" y="125" width="230" height="26" rx="4" fill="#0f172a" stroke="#0284c7" stroke-width="1"/>
+  <text x="480" y="142" text-anchor="middle" fill="#e2e8f0" font-family="sans-serif" font-size="10">Option A: Git Push (main)</text>
+  <rect x="365" y="155" width="230" height="26" rx="4" fill="#0f172a" stroke="#0284c7" stroke-width="1"/>
+  <text x="480" y="172" text-anchor="middle" fill="#e2e8f0" font-family="sans-serif" font-size="10">Option B: CLI (sync-resume --pin 1721)</text>
+  <rect x="365" y="185" width="230" height="26" rx="4" fill="#0f172a" stroke="#0284c7" stroke-width="1"/>
+  <text x="480" y="202" text-anchor="middle" fill="#e2e8f0" font-family="sans-serif" font-size="10">Option C: GitHub Action Workflow</text>
+
+  <!-- Arrow 2 to 3 -->
+  <text x="635" y="142" text-anchor="middle" fill="#38bdf8" font-family="sans-serif" font-size="16" font-weight="700">→</text>
+
+  <!-- Step 3: Vercel Prebuild -->
+  <rect x="660" y="75" width="260" height="150" rx="10" fill="url(#cardGrad2)" stroke="#10b981" stroke-width="1.5"/>
+  <text x="790" y="105" text-anchor="middle" fill="#34d399" font-family="sans-serif" font-size="14" font-weight="700">3. Vercel Prebuild &amp; Parse</text>
+  <rect x="675" y="125" width="230" height="80" rx="6" fill="#0f172a" stroke="#059669" stroke-width="1"/>
+  <text x="790" y="152" text-anchor="middle" fill="#f8fafc" font-family="sans-serif" font-size="12" font-weight="600">scripts/parse-resume-tex.js</text>
+  <text x="790" y="172" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="11">Regex Macro Stripping</text>
+  <text x="790" y="190" text-anchor="middle" fill="#34d399" font-family="sans-serif" font-size="10">Generates 5 Type-Safe TS Files</text>
+
+  <!-- Bottom Section: Live Site Rendering -->
+  <rect x="40" y="255" width="880" height="195" rx="10" fill="url(#cardGrad2)" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="480" y="285" text-anchor="middle" fill="#c084fc" font-family="sans-serif" font-size="14" font-weight="700">4. Live Application Hydration Across the Entire Website</text>
+  
+  <rect x="55" y="305" width="160" height="120" rx="6" fill="#0f172a" stroke="#7c3aed" stroke-width="1"/>
+  <text x="135" y="335" text-anchor="middle" fill="#38bdf8" font-family="sans-serif" font-size="12" font-weight="600">Interactive Resume</text>
+  <text x="135" y="360" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">Deep Linking</text>
+  <text x="135" y="380" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">Role Highlight</text>
+  <text x="135" y="400" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">PDF Modal</text>
+
+  <rect x="230" y="305" width="160" height="120" rx="6" fill="#0f172a" stroke="#7c3aed" stroke-width="1"/>
+  <text x="310" y="335" text-anchor="middle" fill="#34d399" font-family="sans-serif" font-size="12" font-weight="600">Jaeger Trace</text>
+  <text x="310" y="360" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">SDE II &amp; I Spans</text>
+  <text x="310" y="380" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">Latency Metrics</text>
+  <text x="310" y="400" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">Promotion History</text>
+
+  <rect x="405" y="305" width="160" height="120" rx="6" fill="#0f172a" stroke="#7c3aed" stroke-width="1"/>
+  <text x="485" y="335" text-anchor="middle" fill="#fb923c" font-family="sans-serif" font-size="12" font-weight="600">Technical Skills</text>
+  <text x="485" y="360" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">6 Categorized Grids</text>
+  <text x="485" y="380" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">SimpleIcons Match</text>
+  <text x="485" y="400" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">Brand Colors</text>
+
+  <rect x="580" y="305" width="160" height="120" rx="6" fill="#0f172a" stroke="#7c3aed" stroke-width="1"/>
+  <text x="660" y="335" text-anchor="middle" fill="#facc15" font-family="sans-serif" font-size="12" font-weight="600">Developer CLI</text>
+  <text x="660" y="360" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">whoami &amp; cat exp</text>
+  <text x="660" y="380" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">Autocomplete</text>
+  <text x="660" y="400" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">sync-resume</text>
+
+  <rect x="755" y="305" width="150" height="120" rx="6" fill="#0f172a" stroke="#7c3aed" stroke-width="1"/>
+  <text x="830" y="335" text-anchor="middle" fill="#f43f5e" font-family="sans-serif" font-size="12" font-weight="600">RAG Chatbot</text>
+  <text x="830" y="360" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">Ground-truth Context</text>
+  <text x="830" y="380" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">AI Job Match</text>
+  <text x="830" y="400" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="10">Multi-LLM</text>
+
+</svg>

@@ -1,6 +1,6 @@
-import { personal } from '../src/content/personal.ts';
-import { experience } from '../src/content/experience.ts';
-import { skillCategories } from '../src/content/skills.ts';
+import { personal } from '../portfolio-frontend/src/app/content/personal.ts';
+import { experience } from '../portfolio-frontend/src/app/content/experience.ts';
+import { skillCategories } from '../portfolio-frontend/src/app/content/skills.ts';
 
 export default async function handler(req, res) {
   // Handle CORS

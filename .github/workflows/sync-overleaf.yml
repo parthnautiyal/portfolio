@@ -1,0 +1,114 @@
+name: Sync Overleaf Resume
+
+on:
+  workflow_dispatch:
+    inputs:
+      overleaf_url:
+        description: 'Overleaf Share URL (e.g. https://www.overleaf.com/read/xxxx)'
+        required: false
+        type: string
+  schedule:
+    # Optional daily trigger at 06:00 UTC
+    - cron: '0 6 * * *'
+
+jobs:
+  sync-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Determine Overleaf URL
+        id: get_url
+        run: |
+          OVERLEAF_LINK="${{ inputs.overleaf_url }}"
+          if [ -z "$OVERLEAF_LINK" ]; then
+            OVERLEAF_LINK="${{ secrets.OVERLEAF_SHARE_URL }}"
+          fi
+          echo "url=$OVERLEAF_LINK" >> $GITHUB_OUTPUT
+
+      - name: Download & Extract Overleaf Resume Source & PDF
+        if: steps.get_url.outputs.url != ''
+        run: |
+          URL="${{ steps.get_url.outputs.url }}"
+          echo "Syncing from Overleaf source: $URL"
+          mkdir -p /tmp/overleaf-sync
+          
+          if [[ "$URL" == *"overleaf.com/read/"* ]]; then
+            TOKEN=$(echo "$URL" | sed -E 's/.*overleaf\.com\/read\/([a-zA-Z0-9_-]+).*/\1/')
+            ZIP_URL="https://www.overleaf.com/read/${TOKEN}/download/zip"
+            PDF_URL="https://www.overleaf.com/docs/${TOKEN}/pdf"
+          elif [[ "$URL" == *"overleaf.com/project/"* ]]; then
+            PROJ_ID=$(echo "$URL" | sed -E 's/.*overleaf\.com\/project\/([a-zA-Z0-9_-]+).*/\1/')
+            ZIP_URL="https://www.overleaf.com/project/${PROJ_ID}/download/zip"
+            PDF_URL="https://www.overleaf.com/project/${PROJ_ID}/output/output.pdf"
+          else
+            ZIP_URL="$URL"
+            PDF_URL=""
+          fi
+          
+          # 1. Download & Extract Source Code (.tex)
+          echo "Downloading source package from: $ZIP_URL"
+          curl -sL "$ZIP_URL" -o /tmp/overleaf-sync/project.zip
+          
+          if [ -f /tmp/overleaf-sync/project.zip ] && unzip -t /tmp/overleaf-sync/project.zip > /dev/null 2>&1; then
+            unzip -o /tmp/overleaf-sync/project.zip -d /tmp/overleaf-sync/extracted/
+            TEX_FOUND=$(find /tmp/overleaf-sync/extracted/ -name "*.tex" | head -n 1)
+            if [ -n "$TEX_FOUND" ]; then
+              cp "$TEX_FOUND" Parth_Nautiyal_Resume.tex
+              echo "Updated Parth_Nautiyal_Resume.tex successfully."
+            fi
+          else
+            curl -sL "$URL" -o /tmp/overleaf-sync/resume.tex
+            if grep -q "\\begin{document}" /tmp/overleaf-sync/resume.tex; then
+              cp /tmp/overleaf-sync/resume.tex Parth_Nautiyal_Resume.tex
+              echo "Updated Parth_Nautiyal_Resume.tex directly."
+            else
+              echo "Warning: Downloaded content was not a valid LaTeX or zip archive. Skipping overwrite."
+            fi
+          fi
+
+          # 2. Download Compiled Binary PDF from Overleaf (if available)
+          if [ -n "$PDF_URL" ]; then
+            echo "Attempting to fetch compiled PDF from Overleaf: $PDF_URL"
+            curl -sL "$PDF_URL" -o /tmp/overleaf-sync/latest.pdf
+            if [ -f /tmp/overleaf-sync/latest.pdf ] && head -n 1 /tmp/overleaf-sync/latest.pdf | grep -q "%PDF"; then
+              cp /tmp/overleaf-sync/latest.pdf portfolio-frontend/public/Parth_Nautiyal_Resume.pdf
+              echo "Updated portfolio-frontend/public/Parth_Nautiyal_Resume.pdf successfully."
+            else
+              echo "Note: Direct PDF endpoint not reachable or private. Public PDF remains current."
+            fi
+          fi
+
+      - name: Parse Resume & Sync TypeScript Content
+        run: |
+          node scripts/parse-resume-tex.js
+
+      - name: Commit & Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add portfolio-frontend/public/Parth_Nautiyal_Resume.tex portfolio-frontend/src/app/content/ portfolio-frontend/public/Parth_Nautiyal_Resume.pdf
+          if git diff --staged --quiet; then
+            echo "No changes detected in resume data or PDF."
+          else
+            git commit -m "chore(resume): automated sync from Overleaf [skip ci]"
+            git push origin main
+          fi
+
+      - name: Trigger Vercel Deploy Hook
+        if: env.VERCEL_HOOK != ''
+        env:
+          VERCEL_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          echo "Triggering Vercel deployment..."
+          curl -sf -X POST "$VERCEL_HOOK"
+          echo "Vercel deploy triggered successfully."
