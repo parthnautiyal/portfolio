@@ -19,91 +19,109 @@ type Stage = {
   styleUrls: ['./pipeline-visualizer.component.css']
 })
 export class PipelineVisualizerComponent {
-  activeStageId = 'vite-compile';
+  activeStageId = 'latex-ast';
 
   pipelineStages: Stage[] = [
     {
-      id: 'git-commit',
-      name: 'GitHub Webhook',
+      id: 'git-trigger',
+      name: 'Trigger & Webhook Ingestion',
       icon: 'FiGitCommit',
-      description: 'Vercel GitHub integration detects push triggers to main branch and initiates automatic build.',
+      description: 'Accepts 3 trigger channels: Git push (main), In-Browser Dev Console PIN hook, or Overleaf sync workflow.',
       status: 'success',
-      configTitle: 'GitHub Repository push event webhook logs',
-      configContent: `[10:45:12 AM] Git Commit Detected: 8af1a392 ("Refactor system architecture dashboard")
-[10:45:13 AM] Triggering Vercel deployment pipeline...
-[10:45:14 AM] Deploying branch: main (commit author: Parth Nautiyal)
+      configTitle: 'Deployment Trigger & Webhook Ingestion Log',
+      configContent: `[10:45:12 AM] Trigger Received: Webhook Channel B (Dev Console PIN Authorized)
+[10:45:13 AM] Triggering Vercel serverless deployment pipeline...
+[10:45:14 AM] Deploying branch: main (Commit ref: 8af1a392)
 [10:45:15 AM] Cloning repository from GitHub parthnautiyal/portfolio...
-[10:45:16 AM] Environment variables successfully injected (GEMINI_API_KEY = encrypted)`
+[10:45:16 AM] Secure Environment Variables Injected:
+  - VERCEL_DEPLOY_HOOK_URL = [encrypted]
+  - OVERLEAF_SHARE_URL = [encrypted]
+  - ADMIN_PIN = [verified constant-time]`
     },
     {
-      id: 'vite-compile',
-      name: 'Vite Compilation',
+      id: 'latex-ast',
+      name: 'LaTeX Parser & AST Tokenizer',
       icon: 'FiCode',
-      description: 'Runs npm run build compiling TypeScript, minifying assets, and bundling modules via Vite.',
+      description: 'Executes npm run prebuild (scripts/parse-resume-tex.js) to parse LaTeX source and emit strongly-typed TS models.',
       status: 'success',
-      configTitle: 'Vite static site compiler log output',
-      configContent: `> portfolio-frontend@0.0.0 build
-> tsc -b && vite build
+      configTitle: 'Deterministic LaTeX AST Parser Log (parse-resume-tex.js)',
+      configContent: `> portfolio-frontend@0.0.0 prebuild
+> node ../scripts/parse-resume-tex.js
 
-vite v7.3.1 building for production...
-transforming...
-✓ 457 modules transformed.
-rendering chunks...
-computing html, css and js bundles...
-
-dist/index.html                     3.45 kB │ gzip: 1.21 kB
-dist/assets/index-D7b3e21a.css      18.42 kB │ gzip: 4.88 kB
-dist/assets/index-B9e8f4c2.js      142.10 kB │ gzip: 44.52 kB
-✓ built in 1.84s`
+[parse-resume-tex] Reading LaTeX file: public/Parth_Nautiyal_Resume.tex
+[parse-resume-tex] Tokenizing AST:
+  ✓ Personal Header & Contacts: Parth Nautiyal (parthnautiyal2002@gmail.com)
+  ✓ Experience Block: 3 production roles (ZopSmart SDE II, SDE I, SDE Intern)
+  ✓ Projects Block: 2 featured systems (OutreachIQ, Multi-LLM RAG Portfolio)
+  ✓ Skills Block: 6 categories, 39 skills mapped to icons & brand colors
+  ✓ Education Block: Lovely Professional University (B.Tech CSE, 8.9 CGPA)
+[parse-resume-tex] Emitted TypeScript models:
+  → src/app/content/personal.ts
+  → src/app/content/experience.ts
+  → src/app/content/resume-projects.ts
+  → src/app/content/skills.ts
+  → src/app/content/education.ts
+[parse-resume-tex] Generated razor-sharp preview via pdf2png: 1488x2104 (574 KB)
+[parse-resume-tex] 100% synchronized with Parth_Nautiyal_Resume.tex!`
     },
     {
-      id: 'postcss-purge',
-      name: 'Tailwind CSS processing',
+      id: 'angular-build',
+      name: 'Angular 21 Application Compiler',
       icon: 'FiLayers',
-      description: 'Processes utility classes using Tailwind CSS v4 and PostCSS autoprefixer, purging unused styles.',
+      description: 'Compiles Angular 21 Standalone Components, Signal state, and code-split chunks using the modern esbuild pipeline.',
       status: 'success',
-      configTitle: 'PostCSS Tailwind v4 compiler stats',
-      configContent: `[INFO] PostCSS processing initiated for src/index.css
-[INFO] Resolving @tailwindcss/postcss compiler directives
-[INFO] Scanning source code files for active classes (src/**/*.{ts,tsx,html})
-[INFO] Purging unused tailwind components & utility classes
-[INFO] CSS assets optimization & minification completed
-[INFO] Generated styles bundle size: 18.42 kB (74.2% size reduction)`
-    },
-    {
-      id: 'serverless-map',
-      name: 'Serverless Bundling',
-      icon: 'FiCpu',
-      description: 'Bundles Spring Boot proxy application configuration into Vercel runtime mappings.',
-      status: 'success',
-      configTitle: 'Vercel Routing maps & Spring Boot proxies',
-      configContent: `{
-  "version": 2,
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "http://localhost:8080/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}
+      configTitle: 'Angular 21 Application Builder Log (@angular/build:application)',
+      configContent: `> portfolio-frontend@0.0.0 build
+> ng build --configuration production
 
-[INFO] Binding /api/chat (Target: ChatController.java)
-[INFO] Binding /api/contact (Target: ContactController.java)
-[INFO] Binding /api/job-match (Target: JobMatchController.java)
-[INFO] Binding /api/update-content (Target: UpdateContentController.java)`
+Initial chunk files                       | Names                                  |  Raw size
+spec-app-app.js                           | spec-app-app                           | 180.01 kB
+styles.css                                | styles                                 | 157.92 kB
+chunk-KWG36TWR.js                         | -                                      |  15.26 kB
+spec-app-utils-contentLoader.js           | spec-app-utils-contentLoader           |   9.89 kB
+chunk-RSTWSNOR.js                         | -                                      |   4.75 kB
+spec-app-utils-analytics.js               | spec-app-utils-analytics               |   4.42 kB
+
+Application bundle generation complete. [1.706 seconds]
+✓ 0 errors, 0 compilation warnings
+✓ Static prerender & asset hashing complete`
     },
     {
-      id: 'edge-cdn',
-      name: 'Edge CDN Deploy',
-      icon: 'FiCheckCircle',
-      description: 'Deploys static files to 80+ Edge PoPs global Anycast network and runs a Core Web Vitals audit.',
+      id: 'tailwind-v4',
+      name: 'Tailwind CSS v4 & PostCSS Engine',
+      icon: 'FiCpu',
+      description: 'Resolves Tailwind CSS v4 design system, color tokens, and container queries via @tailwindcss/postcss.',
       status: 'success',
-      configTitle: 'Edge caching status & Web Vitals audit results',
-      configContent: `[INFO] Deployed static workspace assets to global Vercel CDN.
-[INFO] Routing tables updated. Edge caching active (Cache-Control: public, max-age=0, must-revalidate)
-[INFO] Verifying performance vitals:
-  - FCP (First Contentful Paint): 0.4s
-  - LCP (Largest Contentful Paint): 0.8s
-  - CLS (Cumulative Layout Shift): 0.01
-[INFO] Edge Deployment SUCCESSFUL. Live URL: https://parthnautiyal.com`
+      configTitle: 'Tailwind CSS v4 & PostCSS Processing Stats',
+      configContent: `[INFO] Tailwind CSS v4 engine initialized for src/styles.css
+[INFO] Resolving @import "tailwindcss" directives & @variant dark (.dark &)
+[INFO] Scanning template markup (src/app/**/*.{html,ts})
+[INFO] High-performance CSS tree-shaking & JIT compilation:
+  - Base utility styles compiled
+  - Custom design tokens: --bg-main, --bg-glow, --color-primary
+  - Responsive breakpoint variants generated: sm, md, lg, xl
+[INFO] Final optimized stylesheet: styles.css (157 kB, ~28 kB gzip)`
+    },
+    {
+      id: 'edge-distribution',
+      name: 'Global Edge Anycast Deployment',
+      icon: 'FiCheckCircle',
+      description: 'Distributes static assets and serverless functions across 80+ Edge PoPs worldwide with sub-10ms TTFB.',
+      status: 'success',
+      configTitle: 'Edge Routing & Core Web Vitals Audit',
+      configContent: `[INFO] Deploying static bundles and serverless API routes to Vercel Global Edge:
+  ✓ /api/sync-resume.js   (Deploy Hook Webhook Controller)
+  ✓ /api/job-match.js     (AI Job Description Parser)
+  ✓ /api/chat.js          (Multi-LLM Fallback Orchestrator)
+  ✓ /api/github.js        (Stale-While-Revalidate Repo Stats)
+  ✓ /api/health.js        (Synthetic Latency & Health Probes)
+[INFO] Edge caching active (Cache-Control: public, s-maxage=31536000, immutable)
+[INFO] Performance Web Vitals Verification:
+  - FCP (First Contentful Paint): 0.4s  [EXCELLENT]
+  - LCP (Largest Contentful Paint): 0.8s [OPTIMIZED]
+  - CLS (Cumulative Layout Shift): 0.00  [ZERO SHIFT]
+  - TTFB (Time to First Byte):    0.08s [EDGE FAST]
+[INFO] Production deployment LIVE: https://parthnautiyal.vercel.app`
     }
   ];
 

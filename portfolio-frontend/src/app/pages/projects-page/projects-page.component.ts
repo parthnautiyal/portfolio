@@ -48,7 +48,7 @@ const RESUME_PROJECT_NAMES = Object.keys(RESUME_PROJECT_OVERRIDES);
 })
 export class ProjectsPageComponent implements OnInit {
   projects: Project[] = staticProjectsRaw as Project[];
-  loading = true;
+  loading = false;
   sortBy: 'updated' | 'stars' | 'forks' = 'updated';
 
   ngOnInit() {

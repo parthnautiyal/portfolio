@@ -112,7 +112,7 @@
   </div>
 
   <!-- Mobile view selectors -->
-  <div class="flex md:hidden glass-panel p-1 rounded-xl print:hidden">
+  <div class="flex lg:hidden glass-panel p-1 rounded-xl print:hidden">
     <button
       (click)="activeTab = 'interactive'"
       [class]="'flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold transition-all ' + (
@@ -138,23 +138,23 @@
   </div>
 
   <!-- Grid workspace -->
-  <div class="grid gap-6 md:grid-cols-2 print:block items-start">
+  <div class="grid gap-8 lg:grid-cols-12 print:block items-start">
     <!-- Left Side: Dynamic resume content -->
     <div
       id="printable-resume-area"
-      [class]="'space-y-8 glass-card p-6 md:p-8 print:border-none print:shadow-none print:bg-white print:text-black print:p-0 ' + (
-        activeTab === 'interactive' ? 'block' : 'hidden md:block'
+      [class]="'space-y-6 glass-card p-6 md:p-7 lg:col-span-7 xl:col-span-8 print:border-none print:shadow-none print:bg-white print:text-black print:p-0 ' + (
+        activeTab === 'interactive' ? 'block' : 'hidden lg:block'
       )"
     >
       <!-- Header -->
-      <div class="text-center md:text-left space-y-2 border-b border-slate-200/40 dark:border-slate-800/40 pb-6 print:text-black">
-        <h1 class="text-3xl font-extrabold tracking-tight text-[var(--color-text-bright)] print:text-black print:text-2xl">
+      <div class="text-center md:text-left space-y-1.5 border-b border-slate-200/40 dark:border-slate-800/40 pb-4 print:text-black">
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--color-text-bright)] print:text-black print:text-2xl">
           {{ personal.name }}
         </h1>
-        <p class="text-sm font-semibold text-[var(--color-primary)] print:text-black">
+        <p class="text-xs sm:text-sm font-semibold text-[var(--color-primary)] print:text-black">
           {{ personal.title }}
         </p>
-        <div class="flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 print:text-slate-700">
+        <div class="flex flex-wrap justify-center md:justify-start gap-x-3.5 gap-y-1 text-xs text-slate-500 dark:text-slate-400 print:text-slate-700">
           <span>{{ personal.email }}</span>
           <span>•</span>
           <span>{{ personal.phone }}</span>
@@ -168,11 +168,11 @@
       </div>
 
       <!-- Summary -->
-      <div class="space-y-2 print:text-black">
+      <div id="resume-summary" class="space-y-1.5 print:text-black scroll-mt-20">
         <h2 class="text-xs font-extrabold uppercase tracking-wider text-[var(--color-primary)] border-b border-[var(--border-color-hover)] pb-1 print:text-black print:border-black/20">
           Summary
         </h2>
-        <p class="text-sm leading-relaxed text-[var(--color-text)] dark:text-slate-300 print:text-slate-800">
+        <p class="text-xs sm:text-sm leading-relaxed text-[var(--color-text)] dark:text-slate-300 print:text-slate-800">
           <ng-container *ngFor="let token of summaryTokens">
             <a *ngIf="token.isLink" [routerLink]="getRoutePath(token.to)" [queryParams]="getQueryParams(token.to)" class="text-[var(--color-primary)] hover:underline font-semibold">
               <mark *ngIf="token.isMatch" [id]="'search-match-' + token.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (token.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">
@@ -191,14 +191,14 @@
       </div>
 
       <!-- Experience -->
-      <div class="space-y-5 print:text-black">
+      <div id="resume-experience" class="space-y-4 print:text-black scroll-mt-20">
         <h2 class="text-xs font-extrabold uppercase tracking-wider text-[var(--color-primary)] border-b border-[var(--border-color-hover)] pb-1 print:text-black print:border-black/20">
           Experience
         </h2>
-        <div class="space-y-6">
-          <div *ngFor="let exp of experienceTokens; let idx = index" class="space-y-2">
+        <div class="space-y-4.5">
+          <div *ngFor="let exp of experienceTokens; let idx = index" class="space-y-1.5">
             <div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between">
-              <h3 class="text-sm font-bold text-[var(--color-text-bright)] print:text-black">
+              <h3 class="text-xs sm:text-sm font-bold text-[var(--color-text-bright)] print:text-black">
                 <ng-container *ngFor="let t of exp.role">
                   <a *ngIf="t.isLink" [routerLink]="getRoutePath(t.to)" [queryParams]="getQueryParams(t.to)" class="text-[var(--color-primary)] hover:underline font-semibold">
                     <mark *ngIf="t.isMatch" [id]="'search-match-' + t.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
@@ -223,17 +223,17 @@
                   </ng-container>
                 </span>
               </h3>
-              <span class="text-xs text-slate-500 dark:text-slate-400 print:text-slate-700 shrink-0">
+              <span class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 print:text-slate-700 shrink-0">
                 {{ experience[idx].period }} | {{ experience[idx].location }}
               </span>
             </div>
-            <ul class="list-disc list-outside pl-4 space-y-2">
+            <ul class="list-disc list-outside pl-4 space-y-1">
               <li
                 *ngFor="let bulletTokens of exp.bullets"
-                [class]="'text-sm leading-relaxed transition-all duration-300 rounded-lg p-1.5 -ml-1 ' + (
+                [class]="'text-xs sm:text-sm leading-relaxed transition-all duration-300 rounded-lg py-0.5 px-1 -ml-1 ' + (
                   recruiterFocus !== 'all'
                     ? (isHighlighted(getBulletPlainString(bulletTokens))
-                        ? 'bg-orange-500/10 dark:bg-indigo-500/15 text-[var(--color-text-bright)] font-semibold border-l-4 border-orange-500 dark:border-indigo-400 pl-3 shadow-sm'
+                        ? 'bg-orange-500/10 dark:bg-indigo-500/15 text-[var(--color-text-bright)] font-semibold border-l-4 border-orange-500 dark:border-indigo-400 pl-2.5 shadow-sm'
                         : 'opacity-45 text-slate-500 dark:text-slate-400')
                     : 'text-[var(--color-text)] dark:text-slate-300 print:text-slate-800'
                 )"
@@ -255,14 +255,14 @@
       </div>
 
       <!-- Projects -->
-      <div *ngIf="projectsTokens.length > 0" class="space-y-4 print:text-black">
+      <div id="resume-projects" *ngIf="projectsTokens.length > 0" class="space-y-3.5 print:text-black scroll-mt-20">
         <h2 class="text-xs font-extrabold uppercase tracking-wider text-[var(--color-primary)] border-b border-[var(--border-color-hover)] pb-1 print:text-black print:border-black/20">
           Projects
         </h2>
-        <div class="space-y-5">
-          <div *ngFor="let proj of projectsTokens; let idx = index" class="space-y-2">
+        <div class="space-y-4">
+          <div *ngFor="let proj of projectsTokens; let idx = index" class="space-y-1.5">
             <div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between">
-              <h3 class="text-sm font-bold text-[var(--color-text-bright)] print:text-black flex flex-wrap items-center gap-1.5">
+              <h3 class="text-xs sm:text-sm font-bold text-[var(--color-text-bright)] print:text-black flex flex-wrap items-center gap-1.5">
                 <ng-container *ngFor="let t of proj.title">
                   <a *ngIf="t.isLink" [routerLink]="getRoutePath(t.to)" [queryParams]="getQueryParams(t.to)" class="text-[var(--color-primary)] hover:underline font-semibold">
                     <mark *ngIf="t.isMatch" [id]="'search-match-' + t.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
@@ -279,7 +279,7 @@
                 </span>
               </h3>
             </div>
-            <p class="text-xs italic text-slate-500 dark:text-slate-400 print:text-slate-700">
+            <p class="text-[11px] sm:text-xs italic text-slate-500 dark:text-slate-400 print:text-slate-700">
               <ng-container *ngFor="let t of proj.tech">
                 <a *ngIf="t.isLink" [routerLink]="getRoutePath(t.to)" [queryParams]="getQueryParams(t.to)" class="text-[var(--color-primary)] hover:underline font-semibold">
                   <mark *ngIf="t.isMatch" [id]="'search-match-' + t.matchIndex" [class]="'px-0.5 rounded transition-all duration-200 ' + (t.matchIndex === activeMatchIndex ? 'bg-orange-500 text-white dark:bg-amber-600 font-bold scale-[1.03] ring-2 ring-orange-500/20' : 'bg-yellow-250 dark:bg-amber-550/20 text-[var(--color-text-bright)]')">{{ t.text }}</mark>
@@ -291,13 +291,13 @@
                 </span>
               </ng-container>
             </p>
-            <ul class="list-disc list-outside pl-4 space-y-2">
+            <ul class="list-disc list-outside pl-4 space-y-1">
               <li
                 *ngFor="let bulletTokens of proj.bullets"
-                [class]="'text-sm leading-relaxed transition-all duration-300 rounded-lg p-1.5 -ml-1 ' + (
+                [class]="'text-xs sm:text-sm leading-relaxed transition-all duration-300 rounded-lg py-0.5 px-1 -ml-1 ' + (
                   recruiterFocus !== 'all'
                     ? (isHighlighted(getBulletPlainString(bulletTokens))
-                        ? 'bg-orange-500/10 dark:bg-indigo-500/15 text-[var(--color-text-bright)] font-semibold border-l-4 border-orange-500 dark:border-indigo-400 pl-3 shadow-sm'
+                        ? 'bg-orange-500/10 dark:bg-indigo-500/15 text-[var(--color-text-bright)] font-semibold border-l-4 border-orange-500 dark:border-indigo-400 pl-2.5 shadow-sm'
                         : 'opacity-45 text-slate-500 dark:text-slate-400')
                     : 'text-[var(--color-text)] dark:text-slate-300 print:text-slate-800'
                 )"
@@ -319,16 +319,16 @@
       </div>
 
       <!-- Education -->
-      <div class="space-y-3 print:text-black">
+      <div id="resume-education" class="space-y-2.5 print:text-black scroll-mt-20">
         <h2 class="text-xs font-extrabold uppercase tracking-wider text-[var(--color-primary)] border-b border-[var(--border-color-hover)] pb-1 print:text-black print:border-black/20">
           Education
         </h2>
-        <div class="space-y-2 text-sm">
+        <div class="space-y-1.5 text-xs sm:text-sm">
           <div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between">
             <h3 class="font-bold text-[var(--color-text-bright)] print:text-black">
               {{ education.degree }}
             </h3>
-            <span class="text-xs text-slate-500 dark:text-slate-400 print:text-slate-700">
+            <span class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 print:text-slate-700">
               {{ education.period }}
             </span>
           </div>
@@ -338,14 +338,14 @@
           <p class="text-xs font-semibold text-[var(--color-text)] print:text-slate-800">
             CGPA/GPA: <span class="text-[var(--color-primary)] print:text-black">{{ education.cgpa }}</span>
           </p>
-          <div class="pt-1">
-            <span class="text-[0.65rem] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+          <div class="pt-0.5">
+            <span class="text-[0.65rem] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
               Key Coursework:
             </span>
             <div class="flex flex-wrap gap-1.5">
               <span
                 *ngFor="let course of education.coursework"
-                [class]="'px-2.5 py-0.5 rounded-md text-xs font-medium transition-all ' + (
+                [class]="'px-2 py-0.5 rounded-md text-xs font-medium transition-all ' + (
                   recruiterFocus === 'all'
                     ? 'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/40 border border-slate-200/40 dark:border-slate-800/40'
                     : (isHighlighted(course)
@@ -361,28 +361,29 @@
       </div>
 
       <!-- Skills -->
-      <div class="space-y-4 print:text-black">
+      <div id="resume-skills" class="space-y-3.5 print:text-black scroll-mt-20">
         <h2 class="text-xs font-extrabold uppercase tracking-wider text-[var(--color-primary)] border-b border-[var(--border-color-hover)] pb-1 print:text-black print:border-black/20">
           Skills Grid
         </h2>
-        <div class="grid gap-4 sm:grid-cols-2">
-          <div *ngFor="let cat of skillCategories" class="border border-[var(--border-color)] dark:border-slate-800/40 rounded-xl p-3 bg-slate-900/10 print:border-slate-300 print:bg-transparent">
-            <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300 print:text-slate-800 border-b border-slate-200/20 dark:border-slate-800/40 pb-1 mb-2">
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div *ngFor="let cat of skillCategories" class="card-elevated p-3.5 print:border-slate-300 print:bg-transparent">
+            <h3 class="text-xs font-bold text-slate-800 dark:text-slate-100 print:text-slate-800 border-b border-slate-200/40 dark:border-slate-800/40 pb-1 mb-2">
               {{ cat.name }}
             </h3>
             <div class="flex flex-wrap gap-1.5">
               <span
                 *ngFor="let skill of cat.items"
-                [class]="'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[0.65rem] border transition-all duration-300 ' + (
+                [class]="'flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs border transition-all duration-300 ' + (
                   recruiterFocus === 'all'
-                    ? 'bg-slate-100 dark:bg-slate-800/40 text-[var(--color-text)] border-[var(--border-color)] print:border-slate-200'
+                    ? 'border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--color-text)] hover:scale-105 hover:border-[var(--border-color-hover)] hover:shadow-sm print:border-slate-200'
                     : (isHighlighted(skill.name, cat.name)
                         ? 'bg-orange-500/15 dark:bg-indigo-500/20 border-orange-500 dark:border-indigo-400 text-orange-650 dark:text-indigo-300 font-bold scale-105 shadow-sm ring-1 ring-orange-500/30 dark:ring-indigo-400/30'
-                        : 'opacity-40 bg-slate-100/50 dark:bg-slate-800/20 text-slate-400 border-transparent')
+                        : 'opacity-40 bg-[var(--bg-surface)] text-slate-400 border-transparent')
                 )"
+                [style.borderColor]="recruiterFocus === 'all' ? skill.color + '40' : null"
               >
-                <app-skill-icon [icon]="skill.icon" [color]="skill.color" [size]="12" class="shrink-0"></app-skill-icon>
-                {{ skill.name }}
+                <app-skill-icon [icon]="skill.icon" [color]="skill.color" [size]="13" class="shrink-0"></app-skill-icon>
+                <span class="font-medium text-xs">{{ skill.name }}</span>
               </span>
             </div>
           </div>
@@ -390,25 +391,271 @@
       </div>
     </div>
 
-    <!-- Right Side: Authentic PDF frame embed -->
+    <!-- Right Side: Recruiter Companion & PDF Document Center -->
     <div
-      [class]="'glass-card p-4 print:hidden md:sticky md:top-2 self-start w-full ' + (
-        activeTab === 'pdf' ? 'block' : 'hidden md:block'
+      [class]="'space-y-6 lg:col-span-5 xl:col-span-4 print:hidden w-full ' + (
+        activeTab === 'pdf' ? 'block' : 'hidden lg:block'
       )"
     >
-      <div class="w-full">
-        <div class="w-full aspect-[210/297] relative rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900">
-          <iframe
-            [src]="personal.resumeUrl + '#toolbar=0&navpanes=0&zoom=page-width' | safeUrl"
-            class="absolute inset-0 w-full h-full border-none pointer-events-none scale-[1.06] origin-center"
-            title="Resume PDF"
-          ></iframe>
-          <!-- Transparent overlay triggers fullscreen on click -->
+      <!-- Card 1: Authentic PDF Document Preview -->
+      <div
+        class="rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800/80 shadow-xl shadow-slate-900/5 dark:shadow-black/40 p-4 transition-all duration-300"
+      >
+        <div class="flex items-center justify-between pb-3 px-1 border-b border-slate-100 dark:border-slate-800/80">
+          <a
+            [href]="personal.overleafUrl || 'https://www.overleaf.com/read/ggtqqhjpqgsw#c32362'"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="group/link flex items-center gap-2 hover:opacity-90 transition-all cursor-pointer"
+            title="Open original LaTeX resume source on Overleaf"
+          >
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span class="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover/link:text-emerald-600 dark:group-hover/link:text-emerald-400 flex items-center gap-1 transition-colors">
+              Synced with Overleaf
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-60 group-hover/link:opacity-100 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-all"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            </span>
+          </a>
+          <span class="text-[11px] font-mono text-slate-400 dark:text-slate-500">A4 • 1 Page</span>
+        </div>
+
+        <div
+          (click)="handleOpenPdfFullscreen()"
+          class="group mt-3 w-full aspect-[210/297] relative rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800/80 shadow-inner cursor-pointer select-none"
+          title="Click to view full interactive PDF"
+          tabindex="0"
+          role="button"
+          (keydown.enter)="handleOpenPdfFullscreen()"
+          (keydown.space)="handleOpenPdfFullscreen()"
+        >
+          <!-- Crisp 2x raster preview (0ms latency, zero tearing/ghosting) -->
+          <img
+            src="/resume-preview.png"
+            alt="Parth Nautiyal Resume Preview"
+            class="absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-transform duration-500 group-hover:scale-[1.02]"
+            loading="eager"
+            decoding="async"
+          />
+
+          <!-- Hover action overlay -->
           <div
+            class="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/35 transition-all duration-300 flex items-center justify-center p-4"
+          >
+            <div
+              class="opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900/95 text-white text-xs font-semibold shadow-2xl backdrop-blur-md border border-white/20"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+              </svg>
+              <span>Click to Expand</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action buttons row -->
+        <div class="mt-3.5 grid grid-cols-2 gap-2">
+          <button
+            type="button"
             (click)="handleOpenPdfFullscreen()"
-            class="absolute inset-0 bg-transparent z-10 cursor-pointer select-none"
-            title="Click to view fullscreen"
-          ></div>
+            class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-orange-500/10 dark:bg-indigo-500/15 text-orange-600 dark:text-indigo-300 hover:bg-orange-500/20 dark:hover:bg-indigo-500/25 border border-orange-500/30 dark:border-indigo-400/30 text-xs font-bold transition-all active:scale-95 cursor-pointer"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+            <span>Expand Full</span>
+          </button>
+          <a
+            [href]="personal.resumeUrl"
+            download="Parth_Nautiyal_Resume.pdf"
+            class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80 text-xs font-bold transition-all active:scale-95 cursor-pointer"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Download PDF</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 2: Quick Jump Section Navigator (TOC) -->
+      <div
+        class="rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800/80 shadow-xl shadow-slate-900/5 dark:shadow-black/40 p-4"
+      >
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2.5 px-1">
+          Quick Navigation
+        </h3>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button
+            type="button"
+            (click)="scrollToSection('resume-summary')"
+            class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-orange-500 dark:hover:text-indigo-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all text-left cursor-pointer"
+          >
+            <span class="text-sm">📋</span>
+            <span>Summary</span>
+          </button>
+          <button
+            type="button"
+            (click)="scrollToSection('resume-experience')"
+            class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-orange-500 dark:hover:text-indigo-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all text-left cursor-pointer"
+          >
+            <span class="text-sm">💼</span>
+            <span>Experience (3)</span>
+          </button>
+          <button
+            type="button"
+            (click)="scrollToSection('resume-projects')"
+            class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-orange-500 dark:hover:text-indigo-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all text-left cursor-pointer"
+          >
+            <span class="text-sm">🚀</span>
+            <span>Projects (2)</span>
+          </button>
+          <button
+            type="button"
+            (click)="scrollToSection('resume-education')"
+            class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-orange-500 dark:hover:text-indigo-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all text-left cursor-pointer"
+          >
+            <span class="text-sm">🎓</span>
+            <span>Education</span>
+          </button>
+          <button
+            type="button"
+            (click)="scrollToSection('resume-skills')"
+            class="col-span-2 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-orange-500 dark:hover:text-indigo-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all text-left cursor-pointer"
+          >
+            <span class="text-sm">⚡</span>
+            <span>Skills Grid (39 Skills)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 3: Executive Highlights & Production Metrics -->
+      <div
+        class="rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800/80 shadow-xl shadow-slate-900/5 dark:shadow-black/40 p-5 space-y-4"
+      >
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              Executive Snapshot
+            </h3>
+            <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Engineering Profile</p>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+            Open to Roles
+          </span>
+        </div>
+
+        <!-- 4-Stat Metric Grid -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+            <span class="block text-xl font-extrabold text-[var(--color-primary)]">2+ Yrs</span>
+            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Backend Engineering</span>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+            <span class="block text-xl font-extrabold text-emerald-500">99.99%</span>
+            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Target Availability</span>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+            <span class="block text-xl font-extrabold text-indigo-500 dark:text-indigo-400">500k+</span>
+            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Daily Events Handled</span>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+            <span class="block text-xl font-extrabold text-amber-500">35%</span>
+            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Latency Reduction</span>
+          </div>
+        </div>
+
+        <!-- Architectural Highlights -->
+        <div class="space-y-2 pt-1">
+          <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            Core Architecture Highlights
+          </h4>
+          <ul class="text-xs space-y-1.5 text-slate-600 dark:text-slate-300">
+            <li class="flex items-start gap-2">
+              <span class="text-orange-500 dark:text-indigo-400 font-bold shrink-0">✦</span>
+              <span><strong>Event-Driven Orchestration:</strong> Kafka & Temporal stateful workflows.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-orange-500 dark:text-indigo-400 font-bold shrink-0">✦</span>
+              <span><strong>Resilient Microservices:</strong> Spring Boot, Circuit Breakers, Multi-Region DBs.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-orange-500 dark:text-indigo-400 font-bold shrink-0">✦</span>
+              <span><strong>GenAI & Retrieval:</strong> LangChain4j, Ollama, pgvector embedding search.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Card 4: Recruiter Fast-Track & Direct Connect (Sticky) -->
+      <div
+        class="sticky top-4 z-10 rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800/80 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 p-5 space-y-4"
+        style="contain: layout paint; will-change: transform; transform: translateZ(0);"
+      >
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              Recruiter Fast-Track
+            </h3>
+            <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Direct Connect</p>
+          </div>
+          <span class="text-xs text-slate-400 font-mono">⚡ 1-Click</span>
+        </div>
+
+        <p class="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          Interested in discussing a backend, distributed systems, or platform engineering role?
+        </p>
+
+        <!-- Direct Actions -->
+        <div class="space-y-2">
+          <button
+            type="button"
+            (click)="copyEmail($event)"
+            class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 dark:from-indigo-600 dark:to-purple-600 text-white font-bold text-xs shadow-lg shadow-orange-500/20 dark:shadow-indigo-600/30 hover:opacity-95 transition-all active:scale-[0.98] cursor-pointer"
+          >
+            <svg *ngIf="!emailCopied" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <svg *ngIf="emailCopied" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>{{ emailCopied ? 'Email Copied to Clipboard!' : 'Copy Email (' + personal.email + ')' }}</span>
+          </button>
+
+          <a
+            routerLink="/contact"
+            class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80 font-semibold text-xs transition-all active:scale-[0.98]"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <span>Send Direct Message</span>
+          </a>
+        </div>
+
+        <!-- Verified Profile Links -->
+        <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+          <a
+            [href]="personal.leetcode"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-1.5 text-slate-500 hover:text-amber-500 font-medium transition-colors"
+          >
+            <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+            <span>LeetCode</span>
+          </a>
+          <a
+            [href]="personal.github"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white font-medium transition-colors"
+          >
+            <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+            <span>GitHub</span>
+          </a>
+          <a
+            [href]="personal.linkedin"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-1.5 text-slate-500 hover:text-blue-500 font-medium transition-colors"
+          >
+            <span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+            <span>LinkedIn</span>
+          </a>
         </div>
       </div>
     </div>
@@ -418,30 +665,84 @@
 <!-- Fullscreen PDF overlay (Outside section to prevent transform containing-block interference) -->
 <div
   *ngIf="isPdfFullscreen"
-  (click)="handleClosePdfFullscreen()"
-  [class]="'fixed inset-0 z-[99999] w-screen h-screen bg-slate-950/90 flex flex-col items-center justify-center p-3 sm:p-6 print:hidden backdrop-blur-md overflow-hidden cursor-pointer ' + (
+  [class]="'fixed inset-0 z-[99999] w-screen h-screen bg-slate-950/95 flex flex-col p-2 sm:p-4 print:hidden backdrop-blur-md overflow-hidden ' + (
     isPdfFullscreenClosing ? 'animate-fade-out' : 'animate-fade-in'
   )"
 >
-  <!-- Floating Close Button -->
-  <button
-    (click)="handleClosePdfFullscreen(); $event.stopPropagation()"
-    class="absolute top-4 right-4 sm:top-6 sm:right-6 z-[100000] flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900/95 hover:bg-slate-800 border border-slate-700/80 text-xs font-bold text-white cursor-pointer shadow-2xl transition-all active:scale-95 backdrop-blur-sm"
-    title="Close Fullscreen"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
-    Close Fullscreen
-  </button>
+  <!-- Fullscreen Control Header Toolbar -->
+  <div class="flex items-center justify-between gap-2 pb-2.5 px-2 shrink-0 z-50 border-b border-slate-800/80">
+    <div class="flex items-center gap-2">
+      <!-- Zoom Controls -->
+      <div class="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1 gap-1">
+        <button
+          type="button"
+          (click)="zoomOut()"
+          class="h-8 w-8 flex items-center justify-center rounded-lg bg-slate-800/60 hover:bg-slate-700 text-white cursor-pointer active:scale-95 transition-all text-sm font-bold"
+          title="Zoom Out"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+        </button>
 
-  <!-- Full Screen PDF Render Container (Centered, responsive max dimensions) -->
-  <div
-    (click)="$event.stopPropagation()"
-    class="w-full max-w-4xl h-[90vh] relative rounded-2xl overflow-hidden shadow-2xl border border-slate-800/80 bg-slate-900 cursor-default flex flex-col"
-  >
-    <iframe
-      [src]="personal.resumeUrl + '#toolbar=1&navpanes=0&zoom=page-fit' | safeUrl"
-      class="w-full h-full border-none"
-      title="Resume PDF Fullscreen"
-    ></iframe>
+        <span class="text-xs font-mono font-bold text-slate-300 min-w-[44px] text-center select-none">
+          {{ pdfZoom }}%
+        </span>
+
+        <button
+          type="button"
+          (click)="zoomIn()"
+          class="h-8 w-8 flex items-center justify-center rounded-lg bg-slate-800/60 hover:bg-slate-700 text-white cursor-pointer active:scale-95 transition-all text-sm font-bold"
+          title="Zoom In"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+        </button>
+
+        <button
+          type="button"
+          (click)="resetZoom()"
+          class="hidden sm:inline-block px-2 py-1 rounded-lg text-[0.68rem] text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer transition-colors"
+          title="Reset to 100%"
+        >
+          Reset
+        </button>
+      </div>
+
+      <!-- Open in Native Reader link -->
+      <a
+        [href]="personal.resumeUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs font-semibold text-slate-200 cursor-pointer shadow transition-all active:scale-95"
+        title="Open directly in browser native PDF reader"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        <span class="hidden sm:inline">Native PDF Viewer</span>
+        <span class="sm:hidden">Open PDF</span>
+      </a>
+    </div>
+
+    <!-- Floating Close Button -->
+    <button
+      (click)="handleClosePdfFullscreen()"
+      class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-white cursor-pointer shadow-xl transition-all active:scale-95"
+      title="Close Fullscreen"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+      <span>Close</span>
+    </button>
+  </div>
+
+  <!-- Full Screen PDF Render Container (Scrollable viewport with dynamic zoom) -->
+  <div class="flex-1 w-full overflow-auto p-1 sm:p-4 flex justify-center items-start scrollbar-thin">
+    <div
+      [style.width.%]="pdfZoom"
+      [style.minWidth.%]="100"
+      class="h-full min-h-[85vh] relative rounded-2xl overflow-hidden shadow-2xl border border-slate-800 bg-slate-900 transition-all duration-150 flex flex-col"
+    >
+      <iframe
+        [src]="personal.resumeUrl + '#toolbar=1&navpanes=0&zoom=' + pdfZoom | safeUrl"
+        class="w-full h-full min-h-[85vh] border-none"
+        title="Resume PDF Fullscreen"
+      ></iframe>
+    </div>
   </div>
 </div>

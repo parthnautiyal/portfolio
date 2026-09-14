@@ -35,9 +35,11 @@ export class ResumeViewerPageComponent implements OnInit, OnDestroy {
   recruiterFocus: RecruiterFocus = 'all';
   focusOptions: RecruiterFocus[] = ['all', 'backend', 'devops', 'fullstack'];
   copied = false;
+  emailCopied = false;
   searchTerm = '';
   isPdfFullscreen = false;
   isPdfFullscreenClosing = false;
+  pdfZoom = 100;
   activeMatchIndex = 0;
   totalMatches = 0;
 
@@ -215,12 +217,28 @@ export class ResumeViewerPageComponent implements OnInit, OnDestroy {
   }
 
   handleOpenPdfFullscreen() {
+    this.pdfZoom = 100;
     this.isPdfFullscreenClosing = false;
     this.isPdfFullscreen = true;
     this.questService.unlockAchievement('FULLSCREEN_PDF');
     if (typeof document !== 'undefined') {
       document.body.classList.add('overflow-hidden');
     }
+    this.cdr.markForCheck();
+  }
+
+  zoomIn() {
+    this.pdfZoom = Math.min(220, this.pdfZoom + 20);
+    this.cdr.markForCheck();
+  }
+
+  zoomOut() {
+    this.pdfZoom = Math.max(60, this.pdfZoom - 20);
+    this.cdr.markForCheck();
+  }
+
+  resetZoom() {
+    this.pdfZoom = 100;
     this.cdr.markForCheck();
   }
 
@@ -302,8 +320,36 @@ ${skillsText}
   }
 
   setRecruiterFocus(focus: RecruiterFocus) {
-    this.recruiterFocus = focus;
+    this.recruiterFocus = this.recruiterFocus === focus ? 'all' : focus;
     this.cdr.markForCheck();
+  }
+
+  async copyEmail(e?: Event) {
+    if (e) e.stopPropagation();
+    try {
+      if (typeof navigator !== 'undefined') {
+        await navigator.clipboard.writeText(this.personal.email);
+        this.emailCopied = true;
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.ngZone.run(() => {
+            this.emailCopied = false;
+            this.cdr.markForCheck();
+          });
+        }, 2000);
+      }
+    } catch (err) {
+      console.error('Failed to copy email:', err);
+    }
+  }
+
+  scrollToSection(sectionId: string) {
+    if (typeof document !== 'undefined') {
+      const el = document.getElementById(sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
   }
 
   isHighlighted(text: string, category?: string): boolean {

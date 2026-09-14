@@ -1,24 +1,384 @@
-<section class="py-8 space-y-10 animate-scale-in">
-  <!-- Title -->
-  <div>
-    <h2 class="text-3xl font-extrabold tracking-tight text-[var(--color-text-bright)]">System & Build Pipeline</h2>
-    <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
-      Interactive system flowcharts, build pipeline configurations, and browser performance telemetry metrics.
-    </p>
+<section class="py-6 sm:py-8 space-y-8 animate-scale-in w-full max-w-full min-w-0 overflow-hidden">
+  <!-- Page Header & Badges -->
+  <div class="space-y-4">
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[0.65rem] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+        Distributed Architecture v4.2
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[0.65rem] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        3-Channel Overleaf Sync Active
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[0.65rem] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Multi-LLM Fallback Resilient
+      </span>
+    </div>
+
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-[var(--color-text-bright)] flex items-center gap-3">
+          <span>System & Build Pipeline</span>
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 max-w-3xl leading-relaxed">
+          Interactive architecture topology, deterministic Overleaf LaTeX AST tokenizer, continuous GitOps build stages, and live telemetry observability.
+        </p>
+      </div>
+
+      <!-- Header Interactive Action Controls -->
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- Quick Simulation Trigger / Reset Button -->
+        <button
+          (click)="toggleQuickSimulation()"
+          [class]="'inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ' + (
+            activeFailureCount > 0
+              ? 'bg-rose-500 text-white hover:bg-rose-600 animate-pulse'
+              : 'glass-panel border border-[var(--border-color)] hover:border-amber-500/60 text-slate-800 dark:text-slate-200 hover:text-amber-500'
+          )"
+        >
+          <svg *ngIf="activeFailureCount === 0" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-amber-500"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          <svg *ngIf="activeFailureCount > 0" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+          {{ activeFailureCount > 0 ? 'Reset Active Outages (' + activeFailureCount + ')' : 'Simulate Outage Fallback' }}
+        </button>
+
+        <!-- Jump to Telemetry -->
+        <button
+          (click)="setActiveTab('observability')"
+          class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold glass-panel border border-[var(--border-color)] hover:border-purple-500/50 hover:text-purple-500 transition-all text-slate-700 dark:text-slate-200 shadow-sm cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-purple-500"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          Live Telemetry
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- Main Grid workspace -->
-  <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-    <!-- Architecture Canvas -->
-    <app-system-architecture-canvas [failureState]="failureState"></app-system-architecture-canvas>
+  <!-- Key Architecture Stats & Interactive Quick Navigation Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+    <!-- Stat 1: AST Tokenizer -->
+    <button
+      (click)="jumpToAstParser()"
+      class="glass-card p-3.5 flex flex-col justify-between border-l-4 border-l-emerald-500 text-left transition-all hover:scale-[1.02] hover:border-emerald-500/60 group cursor-pointer"
+    >
+      <div class="flex items-center justify-between w-full">
+        <span class="text-[0.62rem] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">AST Tokenizer</span>
+        <span class="text-[0.65rem] font-mono font-bold text-emerald-700 dark:text-emerald-400 group-hover:underline">0ms RT &rarr;</span>
+      </div>
+      <div class="mt-2">
+        <div class="text-base font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Build-Time CodeGen</div>
+        <p class="text-[0.62rem] text-slate-600 dark:text-slate-400 mt-0.5">TeX parsed into 5 typed TS modules</p>
+      </div>
+    </button>
 
-    <!-- System Simulation Control Panel -->
-    <app-failure-simulator [state]="failureState" (toggle)="handleToggleFailure($event)"></app-failure-simulator>
+    <!-- Stat 2: Overleaf Sync -->
+    <button
+      (click)="jumpToOverleafSync()"
+      class="glass-card p-3.5 flex flex-col justify-between border-l-4 border-l-blue-500 text-left transition-all hover:scale-[1.02] hover:border-blue-500/60 group cursor-pointer"
+    >
+      <div class="flex items-center justify-between w-full">
+        <span class="text-[0.62rem] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Overleaf Sync</span>
+        <span class="text-[0.65rem] font-mono font-bold text-blue-700 dark:text-blue-400 group-hover:underline">3 Channels &rarr;</span>
+      </div>
+      <div class="mt-2">
+        <div class="text-base font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Continuous GitOps</div>
+        <p class="text-[0.62rem] text-slate-600 dark:text-slate-400 mt-0.5">Webhook, PIN-gate API &amp; GitHub CRON</p>
+      </div>
+    </button>
+
+    <!-- Stat 3: Multi-LLM Engine -->
+    <button
+      (click)="jumpToMultiLlm()"
+      class="glass-card p-3.5 flex flex-col justify-between border-l-4 border-l-purple-500 text-left transition-all hover:scale-[1.02] hover:border-purple-500/60 group cursor-pointer"
+    >
+      <div class="flex items-center justify-between w-full">
+        <span class="text-[0.62rem] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Multi-LLM Engine</span>
+        <span class="text-[0.65rem] font-mono font-bold text-purple-700 dark:text-purple-400 group-hover:underline">4 Levels &rarr;</span>
+      </div>
+      <div class="mt-2">
+        <div class="text-base font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Adaptive Fallback</div>
+        <p class="text-[0.62rem] text-slate-600 dark:text-slate-400 mt-0.5">Claude &rarr; Gemini &rarr; GPT &rarr; Ollama</p>
+      </div>
+    </button>
+
+    <!-- Stat 4: Edge Availability -->
+    <button
+      (click)="jumpToEdgeAvailability()"
+      class="glass-card p-3.5 flex flex-col justify-between border-l-4 border-l-amber-500 text-left transition-all hover:scale-[1.02] hover:border-amber-500/60 group cursor-pointer"
+    >
+      <div class="flex items-center justify-between w-full">
+        <span class="text-[0.62rem] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Edge Availability</span>
+        <span class="text-[0.65rem] font-mono font-bold text-amber-700 dark:text-amber-400 group-hover:underline">99.99% SLA &rarr;</span>
+      </div>
+      <div class="mt-2">
+        <div class="text-base font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">Vercel + Spring Boot</div>
+        <p class="text-[0.62rem] text-slate-600 dark:text-slate-400 mt-0.5">Anycast CDN with cold-start &lt;80ms</p>
+      </div>
+    </button>
   </div>
 
-  <!-- Real-time Telemetry & Log Monitor -->
-  <app-observability-logs [failureState]="failureState"></app-observability-logs>
+  <!-- Focused Interactive View Navigation Tabs (Distinct, Zero Redundancy) -->
+  <div class="flex items-center gap-1.5 p-1.5 glass-card rounded-2xl overflow-x-auto scrollbar">
+    <button 
+      (click)="setActiveTab('topology')"
+      [class]="'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ' + (
+        activeTab === 'topology'
+          ? 'bg-blue-600 text-white shadow-md'
+          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800/60'
+      )"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+      1. System Topology &amp; Simulation
+    </button>
 
-  <!-- DevOps build pipeline configuration -->
-  <app-pipeline-visualizer></app-pipeline-visualizer>
+    <button 
+      (click)="setActiveTab('sync-engine')"
+      [class]="'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ' + (
+        activeTab === 'sync-engine'
+          ? 'bg-emerald-600 text-white shadow-md'
+          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800/60'
+      )"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+      2. 3-Channel Overleaf Sync Deep Dive
+    </button>
+
+    <button 
+      (click)="setActiveTab('pipeline')"
+      [class]="'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ' + (
+        activeTab === 'pipeline'
+          ? 'bg-amber-600 text-white shadow-md'
+          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800/60'
+      )"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      3. GitOps CI/CD Build Pipeline
+    </button>
+
+    <button 
+      (click)="setActiveTab('observability')"
+      [class]="'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ' + (
+        activeTab === 'observability'
+          ? 'bg-purple-600 text-white shadow-md'
+          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800/60'
+      )"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      4. Telemetry &amp; Live Traces
+    </button>
+  </div>
+
+  <!-- TAB 1: SYSTEM TOPOLOGY & SIMULATION -->
+  <div *ngIf="activeTab === 'topology'" class="space-y-6">
+    <div class="flex items-center justify-between border-b border-slate-200/40 dark:border-slate-800/40 pb-2">
+      <div>
+        <h3 class="text-base font-bold text-[var(--color-text-bright)] flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-blue-500"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          Distributed System Topology Canvas
+        </h3>
+        <p class="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+          Select any node to inspect architectural design patterns, data flows, trade-off matrices, and live code implementations.
+        </p>
+      </div>
+    </div>
+
+    <div class="grid gap-6 xl:grid-cols-[1.3fr_0.7fr] min-w-0 w-full">
+      <!-- Architecture Canvas -->
+      <app-system-architecture-canvas 
+        class="min-w-0 w-full block" 
+        [failureState]="failureState"
+        [selectedNodeId]="selectedNodeId"
+      ></app-system-architecture-canvas>
+
+      <!-- System Simulation Control Panel -->
+      <app-failure-simulator class="min-w-0 w-full block" [state]="failureState" (toggle)="handleToggleFailure($event)"></app-failure-simulator>
+    </div>
+  </div>
+
+  <!-- TAB 2: 3-CHANNEL OVERLEAF SYNC DEEP DIVE -->
+  <div *ngIf="activeTab === 'sync-engine'" class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/40 dark:border-slate-800/40 pb-3">
+      <div>
+        <h3 class="text-base font-bold text-[var(--color-text-bright)] flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-600 dark:text-emerald-400"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          How Automatic Resume Syncing Works
+        </h3>
+        <p class="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+          Deep architectural breakdown of the 3 synchronization channels connecting the Overleaf LaTeX master copy to the portfolio data layer.
+        </p>
+      </div>
+
+      <!-- Contextual Overleaf LaTeX Link -->
+      <a 
+        href="https://www.overleaf.com/read/ggtqqhjpqgsw#c32362"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold glass-panel border border-[var(--border-color)] hover:border-emerald-500/50 hover:text-emerald-500 transition-all text-slate-700 dark:text-slate-200 shadow-sm shrink-0 w-fit"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        Open LaTeX Source on Overleaf
+      </a>
+    </div>
+
+    <!-- 3 Sync Channels Breakdown Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Channel 1: Git Webhook -->
+      <div class="glass-card p-4 space-y-3.5 flex flex-col justify-between border-t-2 border-t-blue-500">
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[0.65rem] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
+              Channel 1 &bull; Push Ingestion
+            </span>
+            <span class="text-[0.62rem] font-mono text-slate-500 dark:text-slate-400">&lt; 15s latency</span>
+          </div>
+          <h4 class="text-sm font-bold text-slate-900 dark:text-white">Overleaf Git Bridge &amp; Webhooks</h4>
+          <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+            Every time the resume LaTeX is modified and pushed on Overleaf's Git bridge, a Git push event triggers a Vercel Webhook that clones the latest commit and runs the deterministic AST parser.
+          </p>
+        </div>
+        <div class="text-[0.68rem] font-mono bg-slate-950 text-slate-100 p-3 rounded-xl border border-slate-800 shadow-md space-y-1.5">
+          <div class="text-sky-300 font-semibold flex items-center gap-1.5">
+            <span class="text-slate-500 select-none">$</span> git push overleaf master
+          </div>
+          <div class="text-slate-400 pl-3.5">&rarr; trigger .github/workflows/sync.yml</div>
+          <div class="text-emerald-400 font-medium pl-3.5 flex items-center gap-1">
+            <span class="text-emerald-500">&#10003;</span> parse-resume-tex.js &amp; deploy
+          </div>
+        </div>
+      </div>
+
+      <!-- Channel 2: PIN Gatekeeper API -->
+      <div class="glass-card p-4 space-y-3.5 flex flex-col justify-between border-t-2 border-t-emerald-500">
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[0.65rem] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
+              Channel 2 &bull; On-Demand Dev API
+            </span>
+            <span class="text-[0.62rem] font-mono text-emerald-700 dark:text-emerald-400 font-semibold">Zero-Auth PIN</span>
+          </div>
+          <h4 class="text-sm font-bold text-slate-900 dark:text-white">PIN-Gated Serverless Sync API</h4>
+          <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+            Developers can trigger instantaneous synchronization directly from the interactive Terminal CLI (<code class="font-mono text-[0.68rem] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-semibold">sync --pin ****</code>) or UI button via the secure <code class="font-mono text-[0.68rem] px-1.5 py-0.5 rounded bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-semibold">/api/sync-resume</code> endpoint.
+          </p>
+        </div>
+        <div class="text-[0.68rem] font-mono bg-slate-950 text-slate-100 p-3 rounded-xl border border-slate-800 shadow-md space-y-1.5">
+          <div class="text-emerald-300 font-semibold flex items-center gap-1.5">
+            <span class="text-slate-500 select-none">$</span> POST /api/sync-resume
+          </div>
+          <div class="text-slate-400 pl-3.5">Payload: &#123; pin: "7890", force: true &#125;</div>
+          <div class="text-emerald-400 font-medium pl-3.5 flex items-center gap-1">
+            <span class="text-emerald-500">&#10003;</span> 200 OK: 5 files generated
+          </div>
+        </div>
+      </div>
+
+      <!-- Channel 3: GitHub Actions CRON -->
+      <div class="glass-card p-4 space-y-3.5 flex flex-col justify-between border-t-2 border-t-purple-500">
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[0.65rem] font-extrabold uppercase px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
+              Channel 3 &bull; Periodic Audit
+            </span>
+            <span class="text-[0.62rem] font-mono text-purple-700 dark:text-purple-400 font-semibold">Every 6 Hours</span>
+          </div>
+          <h4 class="text-sm font-bold text-slate-900 dark:text-white">Automated GitHub Actions CRON</h4>
+          <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+            A scheduled GitHub Actions workflow (<code class="font-mono text-[0.68rem] px-1.5 py-0.5 rounded bg-purple-50 text-purple-900 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-semibold">0 */6 * * *</code>) polls the upstream Overleaf repository, calculates a SHA-256 hash diff, and commits updates automatically if drift is detected.
+          </p>
+        </div>
+        <div class="text-[0.68rem] font-mono bg-slate-950 text-slate-100 p-3 rounded-xl border border-slate-800 shadow-md space-y-1.5">
+          <div class="text-purple-300 font-semibold flex items-center gap-1.5">
+            <span class="text-slate-500 select-none">$</span> cron: '0 */6 * * *'
+          </div>
+          <div class="text-slate-400 pl-3.5">SHA-256 diff check on resume.tex</div>
+          <div class="text-emerald-400 font-medium pl-3.5 flex items-center gap-1">
+            <span class="text-emerald-500">&#10003;</span> Auto-commits &amp; tags release
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AST Pipeline Explainer -->
+    <div class="glass-card p-5 space-y-4">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <h4 class="text-sm font-bold text-[var(--color-text-bright)] flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-cyan-600 dark:text-cyan-400"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          Deterministic AST Tokenization Pipeline &amp; Output Artifacts
+        </h4>
+        <span class="text-[0.68rem] font-mono font-bold text-cyan-800 dark:text-cyan-300 bg-cyan-100 dark:bg-cyan-950/60 px-2.5 py-1 rounded-md border border-cyan-300 dark:border-cyan-800">scripts/parse-resume-tex.js</span>
+      </div>
+
+      <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+        The tokenizer does not perform brittle string matching. It implements a multi-stage LaTeX lexer that cleans macros, unescapes characters, extracts environments (<code class="font-mono text-[0.68rem] px-1.5 py-0.5 rounded bg-blue-50 text-blue-900 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-semibold">rSubsection</code>, <code class="font-mono text-[0.68rem] px-1.5 py-0.5 rounded bg-blue-50 text-blue-900 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-semibold">resumeProjects</code>, <code class="font-mono text-[0.68rem] px-1.5 py-0.5 rounded bg-blue-50 text-blue-900 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-semibold">skillCategory</code>), and compiles raw LaTeX into strict TypeScript modules at build time:
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-2">
+        <div class="glass-panel p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-center bg-white/70 dark:bg-slate-900/70">
+          <div class="text-[0.7rem] font-mono text-blue-700 dark:text-blue-400 font-bold">personal.ts</div>
+          <div class="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1">Header &amp; Contacts</div>
+          <div class="text-[0.62rem] text-slate-600 dark:text-slate-400 mt-0.5">Name, title, email, phone, links</div>
+        </div>
+
+        <div class="glass-panel p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-center bg-white/70 dark:bg-slate-900/70">
+          <div class="text-[0.7rem] font-mono text-emerald-700 dark:text-emerald-400 font-bold">experience.ts</div>
+          <div class="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1">Work History</div>
+          <div class="text-[0.62rem] text-slate-600 dark:text-slate-400 mt-0.5">Roles, companies, dates, bullets</div>
+        </div>
+
+        <div class="glass-panel p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-center bg-white/70 dark:bg-slate-900/70">
+          <div class="text-[0.7rem] font-mono text-purple-700 dark:text-purple-400 font-bold">resume-projects.ts</div>
+          <div class="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1">Featured Projects</div>
+          <div class="text-[0.62rem] text-slate-600 dark:text-slate-400 mt-0.5">Tech stack, metrics, descriptions</div>
+        </div>
+
+        <div class="glass-panel p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-center bg-white/70 dark:bg-slate-900/70">
+          <div class="text-[0.7rem] font-mono text-amber-700 dark:text-amber-400 font-bold">skills.ts</div>
+          <div class="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1">Skills Matrix</div>
+          <div class="text-[0.62rem] text-slate-600 dark:text-slate-400 mt-0.5">Languages, frameworks, tools</div>
+        </div>
+
+        <div class="glass-panel p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-center bg-white/70 dark:bg-slate-900/70">
+          <div class="text-[0.7rem] font-mono text-rose-700 dark:text-rose-400 font-bold">resume.png</div>
+          <div class="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1">CoreGraphics Vector</div>
+          <div class="text-[0.62rem] text-slate-600 dark:text-slate-400 mt-0.5">300 DPI Retina PDF rasterizer</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: GITOPS CI/CD BUILD PIPELINE -->
+  <div *ngIf="activeTab === 'pipeline'" class="space-y-6">
+    <div class="flex items-center justify-between border-b border-slate-200/40 dark:border-slate-800/40 pb-2">
+      <div>
+        <h3 class="text-base font-bold text-[var(--color-text-bright)] flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-amber-500"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          GitOps Automated Deployment Pipeline
+        </h3>
+        <p class="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+          Step-by-step verification and compilation workflow executed upon every push to production.
+        </p>
+      </div>
+    </div>
+
+    <!-- DevOps build pipeline configuration -->
+    <app-pipeline-visualizer class="min-w-0 w-full block"></app-pipeline-visualizer>
+  </div>
+
+  <!-- TAB 4: OBSERVABILITY & TELEMETRY -->
+  <div *ngIf="activeTab === 'observability'" class="space-y-6">
+    <div class="flex items-center justify-between border-b border-slate-200/40 dark:border-slate-800/40 pb-2">
+      <div>
+        <h3 class="text-base font-bold text-[var(--color-text-bright)] flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-purple-500"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          Telemetry, Core Web Vitals &amp; Jaeger Distributed Traces
+        </h3>
+        <p class="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+          Real-time performance vitals and interactive distributed trace generation for full architectural observability.
+        </p>
+      </div>
+    </div>
+
+    <!-- Real-time Telemetry & Log Monitor -->
+    <app-observability-logs class="min-w-0 w-full block" [failureState]="failureState"></app-observability-logs>
+  </div>
 </section>

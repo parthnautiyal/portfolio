@@ -1,248 +1,291 @@
-<div class="glass-card p-6 space-y-6">
-  <div class="border-b border-slate-200/40 dark:border-slate-800/40 pb-3">
-    <h3 class="text-sm font-bold flex items-center gap-2 text-[var(--color-text-bright)]">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--color-primary)]"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-      Interactive System Architecture
-    </h3>
-    <p class="text-xs text-slate-500 mt-1">
-      Click on any node in the interactive flowchart below to inspect details, trade-offs, design patterns, and code snippets.
-    </p>
+<div class="glass-card p-5 sm:p-6 space-y-6">
+  <div class="border-b border-slate-200/40 dark:border-slate-800/40 pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+    <div>
+      <h3 class="text-sm sm:text-base font-bold flex items-center gap-2 text-[var(--color-text-bright)]">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--color-primary)]"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+        Interactive Multi-Tier System Architecture
+      </h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        Click on any node in the interactive topology below to inspect design patterns, architectural trade-offs, and live production code.
+      </p>
+    </div>
+    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 w-max">
+      <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+      Live Topology Active
+    </span>
   </div>
 
   <!-- SVG Interactive Canvas -->
-  <div class="overflow-x-auto rounded-xl glass-panel p-4 bg-slate-50/50 dark:bg-slate-950/20">
-    <svg viewBox="0 0 760 400" class="w-[760px] mx-auto select-none">
-      <!-- Defs for gradients and markers -->
-      <defs>
-        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" class="fill-slate-400 dark:fill-slate-600" />
-        </marker>
-        <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" class="fill-rose-500 dark:fill-rose-450" />
-        </marker>
-        <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" class="fill-amber-500 dark:fill-amber-400" />
-        </marker>
-      </defs>
+  <div class="rounded-xl glass-panel p-2 sm:p-4 bg-slate-50/50 dark:bg-slate-950/20 w-full max-w-full min-w-0">
+    <div class="flex items-center justify-between text-[0.65rem] text-slate-500 mb-2 sm:hidden px-1">
+      <span class="flex items-center gap-1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        <span>Swipe horizontally to explore architecture</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </span>
+    </div>
+    <div class="overflow-x-auto w-full max-w-full scrollbar-thin pb-2">
+      <svg viewBox="0 0 840 310" class="min-w-[780px] w-full max-w-[840px] mx-auto select-none">
+        <!-- Defs for gradients and markers -->
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="fill-slate-400 dark:fill-slate-600" />
+          </marker>
+          <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="fill-emerald-500 dark:fill-emerald-400" />
+          </marker>
+          <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="fill-rose-500 dark:fill-rose-450" />
+          </marker>
+          <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="fill-amber-500 dark:fill-amber-400" />
+          </marker>
+        </defs>
 
-      <!-- Connectors (Flow Paths) -->
+        <!-- Tier Column Labels -->
+        <text x="120" y="22" font-size="7.5" font-weight="extrabold" letter-spacing="1" class="fill-slate-400 dark:fill-slate-500 uppercase text-center" text-anchor="middle">
+          Tier 1 • Authoring & Triggers
+        </text>
+        <text x="320" y="22" font-size="7.5" font-weight="extrabold" letter-spacing="1" class="fill-slate-400 dark:fill-slate-500 uppercase text-center" text-anchor="middle">
+          Tier 2 • AST Parser & Edge CDN
+        </text>
+        <text x="520" y="22" font-size="7.5" font-weight="extrabold" letter-spacing="1" class="fill-slate-400 dark:fill-slate-500 uppercase text-center" text-anchor="middle">
+          Tier 3 • Client SPA & Backend
+        </text>
+        <text x="700" y="22" font-size="7.5" font-weight="extrabold" letter-spacing="1" class="fill-slate-400 dark:fill-slate-500 uppercase text-center" text-anchor="middle">
+          Tier 4 • AI & Telemetry
+        </text>
 
-      <!-- ① PDF -> ② GitHub (manual git commit, dashed) -->
-      <path
-        d="M 150 95 L 150 175"
-        fill="none"
-        stroke-width="2"
-        stroke-dasharray="4,4"
-        class="stroke-slate-400 dark:stroke-slate-600"
-        marker-end="url(#arrow)"
-      />
+        <!-- Flow Connections -->
 
-      <!-- ② GitHub -> ③ Vercel CDN (CI/CD auto-deploy) -->
-      <path
-        d="M 215 190 L 315 80"
-        fill="none"
-        stroke-width="2"
-        class="stroke-slate-400 dark:stroke-slate-600"
-        marker-end="url(#arrow)"
-      />
-
-      <!-- ② GitHub -> ⑤ Render (CI/CD auto-deploy) -->
-      <path
-        d="M 215 200 L 315 200"
-        fill="none"
-        stroke-width="2"
-        class="stroke-slate-400 dark:stroke-slate-600"
-        marker-end="url(#arrow)"
-      />
-
-      <!-- ③ Vercel CDN -> ④ Visitor Browser (serves Angular SPA, upper lane) -->
-      <path
-        d="M 445 65 L 545 65"
-        fill="none"
-        stroke-width="2"
-        class="stroke-slate-400 dark:stroke-slate-600"
-        marker-end="url(#arrow)"
-      />
-
-      <!-- ④ Visitor Browser -> ③ Vercel CDN (HTTP requests, lower lane) -->
-      <path
-        d="M 545 75 L 445 75"
-        fill="none"
-        stroke-width="2"
-        class="stroke-slate-400 dark:stroke-slate-600"
-        marker-end="url(#arrow)"
-      />
-
-      <!-- ③ Vercel CDN -> ⑤ Render (API proxy /api/*) -->
-      <path
-        d="M 380 95 L 380 175"
-        fill="none"
-        stroke-width="2"
-        [class]="'transition-all duration-300 ' + (
-          failureState.gatewayLatency
-            ? 'stroke-amber-500 dark:stroke-amber-400 stroke-[3px] animate-pulse'
-            : 'stroke-slate-400 dark:stroke-slate-600'
-        )"
-        [attr.marker-end]="failureState.gatewayLatency ? 'url(#arrow-amber)' : 'url(#arrow)'"
-      />
-
-      <!-- ⑤ Render -> ⑦ Gemini API (chat proxy) -->
-      <path
-        d="M 445 200 L 545 200"
-        fill="none"
-        stroke-width="2"
-        [class]="'transition-colors duration-300 ' + (
-          failureState.geminiLimit
-            ? 'stroke-rose-500 dark:stroke-rose-450'
-            : 'stroke-slate-400 dark:stroke-slate-600'
-        )"
-        [attr.marker-end]="failureState.geminiLimit ? 'url(#arrow-red)' : 'url(#arrow)'"
-      />
-
-      <!-- ⑤ Render -> ⑥ Resend API (contact email delivery) -->
-      <path
-        d="M 380 225 L 380 305"
-        fill="none"
-        stroke-width="2"
-        [class]="'transition-colors duration-300 ' + (
-          failureState.cloudMountOffline
-            ? 'stroke-rose-500 dark:stroke-rose-450 animate-pulse'
-            : 'stroke-slate-400 dark:stroke-slate-600'
-        )"
-        [attr.marker-end]="failureState.cloudMountOffline ? 'url(#arrow-red)' : 'url(#arrow)'"
-      />
-
-      <!-- ⑦ Gemini -> ⑧ Ollama (local dev fallback, dashed) -->
-      <path
-        d="M 610 225 L 610 305"
-        fill="none"
-        stroke-width="2"
-        stroke-dasharray="4,4"
-        [class]="'transition-all duration-300 ' + (
-          failureState.geminiLimit && !failureState.ollamaOffline
-            ? 'stroke-emerald-500 dark:stroke-emerald-400 stroke-[3px] animate-pulse'
-            : failureState.ollamaOffline
-            ? 'stroke-rose-500 dark:stroke-rose-450'
-            : 'stroke-slate-400 dark:stroke-slate-600'
-        )"
-        [attr.marker-end]="
-          failureState.ollamaOffline ? 'url(#arrow-red)'
-          : (failureState.geminiLimit && !failureState.ollamaOffline) ? 'url(#arrow)'
-          : 'url(#arrow)'
-        "
-      />
-
-      <!-- Node Render Loop -->
-      <g
-        *ngFor="let node of systemNodes"
-        [attr.transform]="'translate(' + (node.x - 65) + ', ' + (node.y - 25) + ')'"
-        (click)="selectNode(node.id)"
-        class="cursor-pointer group"
-      >
-        <!-- Node Box background -->
-        <rect
-          width="130"
-          height="50"
-          rx="12"
-          [class]="'transition-all duration-300 group-hover:scale-[1.03] ' + (
-            selectedNode === node.id
-              ? 'fill-[var(--color-primary)] stroke-[var(--color-primary)]'
-              : node.isOffline
-              ? 'fill-rose-500/5 dark:fill-rose-950/20 stroke-rose-500/40 dark:stroke-rose-500/40'
-              : node.hasWarning
-              ? 'fill-amber-500/5 dark:fill-amber-950/20 stroke-amber-500/50 dark:stroke-amber-500/40'
-              : 'fill-white dark:fill-slate-900 stroke-slate-200 dark:stroke-slate-800'
-          )"
-          [attr.stroke-width]="selectedNode === node.id ? '2' : '1.5'"
+        <!-- ① Overleaf -> ② Sync Engine (Trigger Channel, vertical dashed) -->
+        <path
+          d="M 120 95 L 120 175"
+          fill="none"
+          stroke-width="2"
+          stroke-dasharray="4,4"
+          class="stroke-slate-400 dark:stroke-slate-600"
+          marker-end="url(#arrow)"
         />
 
-        <!-- Node Icon container -->
-        <g transform="translate(10, 15)">
+        <!-- ① Overleaf -> ③ AST Parser (LaTeX source ingestion) -->
+        <path
+          d="M 195 65 L 245 65"
+          fill="none"
+          stroke-width="2"
+          class="stroke-slate-400 dark:stroke-slate-600"
+          marker-end="url(#arrow)"
+        />
+
+        <!-- ② Sync Engine -> ④ Vercel Edge (Deploy Hook trigger) -->
+        <path
+          d="M 195 205 L 245 205"
+          fill="none"
+          stroke-width="2"
+          [class]="'transition-all duration-300 ' + (
+            failureState.cloudMountOffline ? 'stroke-rose-500 stroke-[3px] animate-pulse' : 'stroke-slate-400 dark:stroke-slate-600'
+          )"
+          [attr.marker-end]="failureState.cloudMountOffline ? 'url(#arrow-red)' : 'url(#arrow)'"
+        />
+
+        <!-- ③ AST Parser -> ⑤ Angular SPA (TypeScript models injection) -->
+        <path
+          d="M 395 65 L 445 65"
+          fill="none"
+          stroke-width="2"
+          class="stroke-emerald-500 dark:stroke-emerald-400 stroke-[2.5px]"
+          marker-end="url(#arrow-green)"
+        />
+
+        <!-- ④ Vercel Edge -> ⑥ Spring Boot (Serverless API Proxy) -->
+        <path
+          d="M 395 205 L 445 205"
+          fill="none"
+          stroke-width="2"
+          [class]="'transition-all duration-300 ' + (
+            failureState.gatewayLatency
+              ? 'stroke-amber-500 dark:stroke-amber-400 stroke-[3px] animate-pulse'
+              : 'stroke-slate-400 dark:stroke-slate-600'
+          )"
+          [attr.marker-end]="failureState.gatewayLatency ? 'url(#arrow-amber)' : 'url(#arrow)'"
+        />
+
+        <!-- ⑤ Angular SPA -> ④ Vercel Edge (Client HTTP /api/* requests, diagonal) -->
+        <path
+          d="M 465 95 L 375 175"
+          fill="none"
+          stroke-width="1.5"
+          stroke-dasharray="3,3"
+          class="stroke-slate-350 dark:stroke-slate-600"
+          marker-end="url(#arrow)"
+        />
+
+        <!-- ⑤ Angular SPA -> ⑦ Multi-LLM (RAG Chat Assistant) -->
+        <path
+          d="M 595 65 L 635 65"
+          fill="none"
+          stroke-width="2"
+          [class]="'transition-colors duration-300 ' + (
+            failureState.geminiLimit ? 'stroke-rose-500 dark:stroke-rose-450 stroke-[2.5px] animate-pulse' : 'stroke-slate-400 dark:stroke-slate-600'
+          )"
+          [attr.marker-end]="failureState.geminiLimit ? 'url(#arrow-red)' : 'url(#arrow)'"
+        />
+
+        <!-- ⑥ Spring Boot -> ⑧ Dispatcher & Jaeger (Transactional Mail & Spans) -->
+        <path
+          d="M 595 205 L 635 205"
+          fill="none"
+          stroke-width="2"
+          class="stroke-slate-400 dark:stroke-slate-600"
+          marker-end="url(#arrow)"
+        />
+
+        <!-- ⑦ Multi-LLM -> ⑧ Dispatcher & Jaeger (AI Telemetry & Spans) -->
+        <path
+          d="M 700 95 L 700 175"
+          fill="none"
+          stroke-width="1.5"
+          stroke-dasharray="3,3"
+          class="stroke-slate-400 dark:stroke-slate-600"
+          marker-end="url(#arrow)"
+        />
+
+        <!-- Node Render Loop -->
+        <g
+          *ngFor="let node of systemNodes"
+          [attr.transform]="'translate(' + (node.x - 75) + ', ' + (node.y - 30) + ')'"
+          (click)="selectNode(node.id)"
+          class="cursor-pointer group"
+        >
+          <!-- Node Box background -->
           <rect
-            width="20"
-            height="20"
-            rx="6"
-            [class]="selectedNode === node.id ? 'fill-white/20' : node.isOffline ? 'fill-rose-500/10' : node.hasWarning ? 'fill-amber-500/10' : 'fill-[var(--color-primary)]/10'"
+            width="150"
+            height="60"
+            rx="14"
+            [class]="'transition-all duration-300 group-hover:scale-[1.03] ' + (
+              selectedNode === node.id
+                ? 'fill-[var(--color-primary)] stroke-[var(--color-primary)]'
+                : node.isOffline
+                ? 'fill-rose-500/10 dark:fill-rose-950/30 stroke-rose-500/60'
+                : node.hasWarning
+                ? 'fill-amber-500/10 dark:fill-amber-950/30 stroke-amber-500/60'
+                : 'fill-white dark:fill-slate-900 stroke-slate-200/90 dark:stroke-slate-800'
+            )"
+            [attr.stroke-width]="selectedNode === node.id ? '2.5' : '1.5'"
           />
-          <foreignObject x="2" y="2" width="16" height="16">
-            <span [class]="selectedNode === node.id ? 'text-white' : node.isOffline ? 'text-rose-500' : node.hasWarning ? 'text-amber-500' : 'text-[var(--color-primary)]'">
-              <!-- Embedded switch for icons -->
-              <svg *ngIf="node.icon === 'FiHardDrive'" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="m-0.5"><line x1="22" y1="12" x2="2" y2="12"></line><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path><line x1="6" y1="16" x2="6.01" y2="16"></line><line x1="10" y1="16" x2="10.01" y2="16"></line></svg>
-              <svg *ngIf="node.icon === 'FiCode'" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="m-0.5"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-              <svg *ngIf="node.icon === 'FiFolder'" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="m-0.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-              <svg *ngIf="node.icon === 'FiGlobe'" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="m-0.5"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-              <svg *ngIf="node.icon === 'FiNavigation'" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="m-0.5"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
-              <svg *ngIf="node.icon === 'FiCpu'" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="m-0.5"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>
-            </span>
-          </foreignObject>
-        </g>
 
-        <!-- Node Text -->
-        <text
-          x="38"
-          y="26"
-          font-size="8"
-          font-weight="bold"
-          [class]="selectedNode === node.id ? 'fill-white' : 'fill-slate-700 dark:fill-slate-200'"
-        >
-          {{ node.label.split(' (')[0] }}
-        </text>
-        <text
-          x="38"
-          y="36"
-          font-size="6.5"
-          [class]="selectedNode === node.id ? 'fill-white/80' : 'fill-slate-400 dark:fill-slate-500'"
-        >
-          {{ node.label.includes('(') ? '(' + node.label.split(' (')[1] : '' }}
-        </text>
+          <!-- Node Icon container -->
+          <g transform="translate(10, 15)">
+            <rect
+              width="24"
+              height="24"
+              rx="7"
+              [class]="selectedNode === node.id ? 'fill-white/20' : node.isOffline ? 'fill-rose-500/20' : node.hasWarning ? 'fill-amber-500/20' : 'fill-[var(--color-primary)]/15'"
+            />
+            <foreignObject x="2" y="2" width="20" height="20">
+              <span [class]="selectedNode === node.id ? 'text-white' : node.isOffline ? 'text-rose-500' : node.hasWarning ? 'text-amber-500' : 'text-[var(--color-primary)]'">
+                <svg *ngIf="node.icon === 'FiCode'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="m-0.5"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                <svg *ngIf="node.icon === 'FiGlobe'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="m-0.5"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                <svg *ngIf="node.icon === 'FiNavigation'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="m-0.5"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+                <svg *ngIf="node.icon === 'FiCpu'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="m-0.5"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>
+              </span>
+            </foreignObject>
+          </g>
 
-        <!-- Status Badges -->
-        <g *ngIf="node.isOffline" transform="translate(118, 8)">
-          <circle r="5" class="fill-rose-500 stroke-white dark:stroke-slate-900" stroke-width="1.5" />
+          <!-- Node Text -->
+          <text
+            x="42"
+            y="28"
+            font-size="8.5"
+            font-weight="bold"
+            [class]="selectedNode === node.id ? 'fill-white' : 'fill-slate-800 dark:fill-slate-100'"
+          >
+            {{ node.label.split(' (')[0] }}
+          </text>
+          <text
+            x="42"
+            y="41"
+            font-size="7"
+            [class]="selectedNode === node.id ? 'fill-white/80' : 'fill-slate-400 dark:fill-slate-400'"
+          >
+            {{ node.label.includes('(') ? '(' + node.label.split(' (')[1] : (node.pattern.length > 20 ? node.pattern.substring(0, 18) + '...' : node.pattern) }}
+          </text>
+
+          <!-- Status Indicators -->
+          <g *ngIf="node.isOffline" transform="translate(138, 10)">
+            <circle r="5" class="fill-rose-500 stroke-white dark:stroke-slate-900" stroke-width="1.5" />
+          </g>
+          <g *ngIf="node.hasWarning" transform="translate(138, 10)">
+            <circle r="5" class="fill-amber-500 stroke-white dark:stroke-slate-900 animate-pulse" stroke-width="1.5" />
+          </g>
         </g>
-        <g *ngIf="node.hasWarning" transform="translate(118, 8)">
-          <circle r="5" class="fill-amber-500 stroke-white dark:stroke-slate-900 animate-pulse" stroke-width="1.5" />
-        </g>
-      </g>
-    </svg>
+      </svg>
+    </div>
   </div>
 
-  <!-- Selected Node Details Panel -->
-  <div class="glass-panel p-5 rounded-2xl space-y-4 animate-fade-up relative z-10">
-    <div class="flex justify-between items-start gap-3">
+  <!-- Selected Node Details Inspector -->
+  <div class="glass-panel p-5 sm:p-6 rounded-2xl space-y-4 animate-fade-up relative z-10 border border-slate-200/60 dark:border-slate-800">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200/40 dark:border-slate-800/40 pb-3">
       <div class="min-w-0">
-        <span class="text-[0.65rem] font-bold uppercase tracking-wider text-[var(--color-primary)] bg-[var(--color-primary)]/10 px-2 py-0.5 rounded">
-          Pattern: {{ activeNode.pattern }}
+        <span class="inline-block text-[0.65rem] font-bold uppercase tracking-wider text-[var(--color-primary)] bg-[var(--color-primary)]/10 px-2 py-0.5 rounded">
+          Architecture Pattern: {{ activeNode.pattern }}
         </span>
-        <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-1 truncate">{{ activeNode.label.substring(2) }}</h4>
+        <h4 class="text-base font-bold text-slate-900 dark:text-white mt-1">{{ activeNode.label }}</h4>
       </div>
-      <button
-        (click)="toggleShowCode()"
-        class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[0.65rem] font-semibold bg-slate-900 text-slate-550 dark:bg-slate-50 dark:text-slate-900 hover:opacity-90 transition-opacity cursor-pointer shrink-0"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-        {{ showCode ? 'Description' : 'Show Snippet' }}
-      </button>
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          (click)="showCode = false"
+          [class]="'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ' + (
+            !showCode ? 'bg-orange-500 dark:bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+          )"
+        >
+          Overview & Trade-Offs
+        </button>
+        <button
+          (click)="showCode = true"
+          [class]="'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ' + (
+            showCode ? 'bg-orange-500 dark:bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+          )"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          Production Snippet
+        </button>
+      </div>
     </div>
 
     <div class="text-xs">
-      <div *ngIf="!showCode" class="space-y-2">
-        <p class="leading-relaxed text-slate-600 dark:text-slate-300">
+      <div *ngIf="!showCode" class="space-y-3">
+        <p class="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
           {{ activeNode.description }}
         </p>
-        <div *ngIf="activeNode.isOffline" class="flex items-center gap-1.5 text-rose-500 font-semibold mt-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-          <span>Outage simulated: system has suspended normal operations for this component.</span>
+        
+        <div *ngIf="activeNode.isOffline" class="flex items-center gap-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 font-semibold">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <span>Active Failure Simulation: Outage injected on this node. Fallback routes engaged.</span>
         </div>
-        <div *ngIf="activeNode.hasWarning" class="flex items-center gap-1.5 text-amber-500 font-semibold mt-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-          <span>Latency warning: performance is currently degraded.</span>
+
+        <div *ngIf="activeNode.hasWarning" class="flex items-center gap-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 font-semibold">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <span>Latency Simulation: Synthetic gateway delay injected. Observing stale-while-revalidate client behavior.</span>
         </div>
-        <div class="border-t border-slate-200/40 dark:border-slate-800/40 pt-2 text-[0.7rem] text-slate-500 dark:text-slate-400">
-          <strong class="text-slate-700 dark:text-slate-300">Architectural Trade-Off:</strong> {{ activeNode.tradeOffs }}
+
+        <div class="rounded-xl p-3.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
+          <span class="text-[0.7rem] font-bold uppercase tracking-wider text-[var(--color-primary)] block mb-1">
+            Architectural Trade-Off & Engineering Decision
+          </span>
+          <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+            {{ activeNode.tradeOffs }}
+          </p>
         </div>
       </div>
-      <pre *ngIf="showCode" class="p-4 rounded-xl bg-slate-950 text-emerald-400 text-[0.65rem] font-mono overflow-x-auto overflow-y-auto leading-relaxed max-h-[180px] w-full border border-slate-800">{{ activeNode.codeSnippet }}</pre>
+
+      <div *ngIf="showCode" class="space-y-2">
+        <div class="flex items-center justify-between text-[11px] text-slate-400 font-mono px-1">
+          <span>Source Code / Configuration</span>
+          <span>Syntax: Production / TypeScript / Java / JSON</span>
+        </div>
+        <pre class="p-4 rounded-xl bg-slate-950 text-emerald-400 font-mono text-xs overflow-x-auto leading-relaxed max-h-[260px] w-full border border-slate-800 scrollbar-thin">{{ activeNode.codeSnippet }}</pre>
+      </div>
     </div>
   </div>
 </div>

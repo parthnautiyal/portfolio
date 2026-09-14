@@ -5,6 +5,7 @@ import { FooterComponent } from './components/footer/footer.component';
 import { DevConsolePanelComponent } from './components/dev-console-panel/dev-console-panel.component';
 import { QuestHudComponent } from './components/quest-hud/quest-hud.component';
 import { StructuredDataComponent } from './components/structured-data/structured-data.component';
+import { BottomNavComponent } from './components/bottom-nav/bottom-nav.component';
 
 @Component({
   selector: 'app-root',
@@ -15,7 +16,8 @@ import { StructuredDataComponent } from './components/structured-data/structured
     FooterComponent,
     DevConsolePanelComponent,
     QuestHudComponent,
-    StructuredDataComponent
+    StructuredDataComponent,
+    BottomNavComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'

@@ -15,6 +15,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -159,7 +160,8 @@ function parsePersonal(tex) {
     github,
     linkedin,
     leetcode,
-    resumeUrl: '/Parth_Nautiyal_Resume.pdf'
+    resumeUrl: '/Parth_Nautiyal_Resume.pdf',
+    overleafUrl: process.env.OVERLEAF_SHARE_URL || 'https://www.overleaf.com/read/ggtqqhjpqgsw#c32362'
   };
 }
 
@@ -447,6 +449,48 @@ export type SkillCategory = {
     fs.writeFileSync(path.join(targetDir, 'education.ts'), generateTSFile('education', educationTypeDef, educationData), 'utf-8');
 
     console.log(`[parse-resume-tex] Wrote content files to: ${targetDir}`);
+  }
+
+  // Generate razor-sharp CoreGraphics vector raster preview if PDF exists
+  try {
+    const candidatePdfPaths = [
+      path.join(rootDir, 'portfolio-frontend', 'public', 'Parth_Nautiyal_Resume.pdf'),
+      path.join(rootDir, 'public', 'Parth_Nautiyal_Resume.pdf'),
+      path.join(process.cwd(), 'portfolio-frontend', 'public', 'Parth_Nautiyal_Resume.pdf'),
+      path.join(process.cwd(), 'public', 'Parth_Nautiyal_Resume.pdf')
+    ];
+    const pdfPath = candidatePdfPaths.find(p => fs.existsSync(p));
+    if (pdfPath) {
+      const publicDir = path.dirname(pdfPath);
+      const outPreviewPath = path.join(publicDir, 'resume-preview.png');
+      const pdf2pngBin = path.join(rootDir, 'scripts', 'pdf2png');
+      const pdf2pngSrc = path.join(rootDir, 'scripts', 'pdf2png.m');
+
+      let rendered = false;
+      if (fs.existsSync(pdf2pngBin)) {
+        try {
+          execSync(`"${pdf2pngBin}" "${pdfPath}" "${outPreviewPath}"`, { stdio: 'ignore' });
+          rendered = true;
+          console.log(`[parse-resume-tex] Generated razor-sharp preview via pdf2png: ${outPreviewPath}`);
+        } catch (e) {}
+      } else if (fs.existsSync(pdf2pngSrc) && process.platform === 'darwin') {
+        try {
+          execSync(`clang -O2 -framework Foundation -framework PDFKit -framework AppKit "${pdf2pngSrc}" -o "${pdf2pngBin}"`, { stdio: 'ignore' });
+          execSync(`"${pdf2pngBin}" "${pdfPath}" "${outPreviewPath}"`, { stdio: 'ignore' });
+          rendered = true;
+          console.log(`[parse-resume-tex] Compiled pdf2png and generated preview: ${outPreviewPath}`);
+        } catch (e) {}
+      }
+
+      if (!rendered) {
+        try {
+          execSync(`sips -s format png --resampleWidth 1190 "${pdfPath}" --out "${outPreviewPath}"`, { stdio: 'ignore' });
+          console.log(`[parse-resume-tex] Generated preview image: ${outPreviewPath}`);
+        } catch (e) {}
+      }
+    }
+  } catch (err) {
+    // Non-fatal preview generation error
   }
 
   console.log(`[parse-resume-tex] Successfully synchronized portfolio content with ${path.basename(TEX_FILE_PATH)}!`);

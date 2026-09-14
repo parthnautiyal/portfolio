@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewChecked, ViewChild, ElementRef, HostListener, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewChecked, ViewChild, ElementRef, HostListener, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -60,25 +60,31 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
   autocompleteIndex = -1;
   autocompleteBase = '';
 
-  // Draggable state
-  isDragging = false;
-  isShrunk = false;
-  shrinkSide: 'left' | 'right' | null = null;
-  position = { x: -1, y: -1 };
-  private dragStart = { x: 0, y: 0, posX: 0, posY: 0, moved: false };
-  private _livePos = { x: 0, y: 0 };
-  private rafId = 0;
+  isMobile = false;
+
+  // Collapsed edge tab state
+  isShrunk = true;
+  shrinkSide: 'left' | 'right' = 'left';
+  position = { x: 0, y: typeof window !== 'undefined' ? Math.floor(window.innerHeight * 0.42) : 320 };
   private keyListener: any;
   private personal = getPersonal();
 
-  @ViewChild('dragPill') private dragPillRef!: ElementRef<HTMLElement>;
+  @ViewChild('edgeTab') edgeTabRef?: ElementRef<HTMLButtonElement>;
 
-  constructor(private router: Router, private questService: QuestService, private ngZone: NgZone) {}
+  constructor(
+    private router: Router,
+    private questService: QuestService,
+    private ngZone: NgZone,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
     if (typeof window !== 'undefined') {
+      this.isMobile = window.innerWidth < 768;
       this.hasOpened = localStorage.getItem('portfolio_console_opened') === 'true';
-      this.position = { x: 16, y: window.innerHeight - 76 };
+      this.isShrunk = true;
+      this.shrinkSide = 'left';
+      this.position = { x: 0, y: Math.floor(window.innerHeight * 0.42) };
 
       this.keyListener = (e: KeyboardEvent) => {
         if (e.ctrlKey && e.key === '`') {
@@ -102,6 +108,8 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
     }
   }
 
+  private openedAt = 0;
+
   scrollToBottom() {
     try {
       this.consoleEndRef?.nativeElement?.scrollIntoView({ behavior: 'smooth' });
@@ -112,6 +120,7 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
     this.isOpen = !this.isOpen;
     this.isMinimized = false;
     if (this.isOpen) {
+      this.openedAt = Date.now();
       if (!this.hasOpened) {
         this.hasOpened = true;
         if (typeof window !== 'undefined') {
@@ -120,6 +129,11 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
       }
       setTimeout(() => this.cmdInputRef?.nativeElement?.focus(), 60);
     }
+  }
+
+  closeBackdrop(e?: MouseEvent | TouchEvent) {
+    if (Date.now() - this.openedAt < 400) return;
+    this.isOpen = false;
   }
 
   minimize() {
@@ -133,6 +147,23 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
     this.isMaximized = !this.isMaximized;
     this.isMinimized = false;
     setTimeout(() => this.cmdInputRef?.nativeElement?.focus(), 60);
+  }
+
+  private lastTitleTap = 0;
+
+  onTitleBarTouch(e: TouchEvent) {
+    const target = e.target as HTMLElement;
+    if (target && (target.tagName === 'BUTTON' || target.closest('button'))) {
+      return;
+    }
+    const now = Date.now();
+    if (now - this.lastTitleTap < 350) {
+      if (e.cancelable) e.preventDefault();
+      this.maximize();
+      this.lastTitleTap = 0;
+    } else {
+      this.lastTitleTap = now;
+    }
   }
 
   focusInput(e?: MouseEvent) {
@@ -331,110 +362,132 @@ export class DevConsolePanelComponent implements OnInit, OnDestroy, AfterViewChe
     }, 10);
   }
 
-  // ── Drag (mouse) ──────────────────────────────────────────────────
-  onMouseDown(e: MouseEvent) {
+  get terminalTop(): number {
+    if (typeof window === 'undefined') return 80;
+    if (this.isMaximized) return 16;
+    const terminalHeight = this.isMobile ? Math.min(460, window.innerHeight - 150) : 480;
+    const desired = this.position.y - Math.floor(terminalHeight / 2) + 22;
+    const minTop = this.isMobile ? 64 : 16;
+    const maxTop = window.innerHeight - terminalHeight - (this.isMobile ? 84 : 24);
+    return Math.max(minTop, Math.min(maxTop, desired));
+  }
+
+  get transformOrigin(): string {
+    const relY = Math.max(22, this.position.y - this.terminalTop + 22);
+    return `0px ${relY}px`;
+  }
+
+  private dragStartY = 0;
+  private dragStartPosY = 0;
+  private dragMoved = false;
+  private currentDragY = 0;
+  private dragRaf = 0;
+
+  onTabMouseDown(e: MouseEvent) {
     if (e.button !== 0) return;
     e.preventDefault();
-    this.startDrag(e.clientX, e.clientY);
+    this.startDrag(e.clientY);
+
+    const onMove = (me: MouseEvent) => {
+      this.handleDragMove(me.clientY);
+    };
+
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      this.finishDrag();
+    };
+
     this.ngZone.runOutsideAngular(() => {
-      const onMove = (me: MouseEvent) => this.drag(me.clientX, me.clientY);
-      const onUp = () => {
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-        this.ngZone.run(() => this.endDrag());
-      };
-      document.addEventListener('mousemove', onMove, { passive: true });
-      document.addEventListener('mouseup', onUp);
+      window.addEventListener('mousemove', onMove, { passive: true });
+      window.addEventListener('mouseup', onUp);
     });
   }
 
-  onTouchStart(e: TouchEvent) {
-    const t = e.touches[0];
-    this.startDrag(t.clientX, t.clientY);
-    this.ngZone.runOutsideAngular(() => {
-      const onMove = (me: TouchEvent) => { const tt = me.touches[0]; this.drag(tt.clientX, tt.clientY); };
-      const onEnd = () => {
-        document.removeEventListener('touchmove', onMove);
-        document.removeEventListener('touchend', onEnd);
-        this.ngZone.run(() => this.endDrag());
-      };
-      document.addEventListener('touchmove', onMove, { passive: true });
-      document.addEventListener('touchend', onEnd);
-    });
-  }
+  onTabTouchStart(e: TouchEvent) {
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    this.startDrag(touch.clientY);
 
-  private startDrag(cx: number, cy: number) {
-    this.isDragging = true;
-    this.dragStart = { x: cx, y: cy, posX: this.position.x, posY: this.position.y, moved: false };
-    this._livePos = { x: this.position.x, y: this.position.y };
-    const el = this.dragPillRef?.nativeElement;
-    if (el) el.style.willChange = 'left, top';
-  }
+    const onMove = (te: TouchEvent) => {
+      if (te.cancelable) te.preventDefault();
+      this.handleDragMove(te.touches[0].clientY);
+    };
 
-  private drag(cx: number, cy: number) {
-    if (!this.isDragging) return;
-    const dx = cx - this.dragStart.x;
-    const dy = cy - this.dragStart.y;
-    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) this.dragStart.moved = true;
-    cancelAnimationFrame(this.rafId);
-    this.rafId = requestAnimationFrame(() => {
-      const newX = Math.max(0, Math.min(window.innerWidth - 180, this.dragStart.posX + dx));
-      const newY = Math.max(0, Math.min(window.innerHeight - 70, this.dragStart.posY + dy));
-      this._livePos = { x: newX, y: newY };
-      const el = this.dragPillRef?.nativeElement;
-      if (el) {
-        el.style.left = newX + 'px';
-        el.style.top = newY + 'px';
+    const onEnd = (te: TouchEvent) => {
+      if (!this.dragMoved && te.cancelable) {
+        te.preventDefault();
       }
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onEnd);
+      window.removeEventListener('touchcancel', onEnd);
+      this.finishDrag();
+    };
+
+    this.ngZone.runOutsideAngular(() => {
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('touchend', onEnd);
+      window.addEventListener('touchcancel', onEnd);
     });
   }
 
-  private endDrag() {
-    cancelAnimationFrame(this.rafId);
-    this.isDragging = false;
-    const el = this.dragPillRef?.nativeElement;
-    if (el) el.style.willChange = '';
-    if (!this.dragStart.moved) {
-      this.toggleConsole();
-      return;
+  private startDrag(clientY: number) {
+    this.dragStartY = clientY;
+    this.dragStartPosY = this.position.y;
+    this.currentDragY = this.position.y;
+    this.dragMoved = false;
+    const btn = this.edgeTabRef?.nativeElement;
+    if (btn) {
+      btn.style.willChange = 'top';
+      btn.style.transition = 'none';
     }
-    this.position = { ...this._livePos };
-    const x = this.position.x;
-    if (x < 50) {
-      this.isShrunk = true;
-      this.shrinkSide = 'left';
-      this.position = { x: 0, y: this.position.y };
-    } else if (x > window.innerWidth - 220) {
-      this.isShrunk = true;
-      this.shrinkSide = 'right';
-      this.position = { x: window.innerWidth - 44, y: this.position.y };
-    } else {
-      this.isShrunk = false;
-      this.shrinkSide = null;
+  }
+
+  private handleDragMove(clientY: number) {
+    const dy = clientY - this.dragStartY;
+    if (Math.abs(dy) > 4) {
+      this.dragMoved = true;
     }
+    if (this.dragMoved) {
+      const newY = Math.max(60, Math.min(window.innerHeight - 70, this.dragStartPosY + dy));
+      this.currentDragY = newY;
+      cancelAnimationFrame(this.dragRaf);
+      this.dragRaf = requestAnimationFrame(() => {
+        const btn = this.edgeTabRef?.nativeElement;
+        if (btn) {
+          btn.style.top = `${this.currentDragY}px`;
+        }
+      });
+    }
+  }
+
+  private finishDrag() {
+    cancelAnimationFrame(this.dragRaf);
+    const btn = this.edgeTabRef?.nativeElement;
+    if (btn) {
+      btn.style.willChange = '';
+      btn.style.transition = '';
+    }
+
+    this.ngZone.run(() => {
+      if (this.dragMoved) {
+        this.position.y = this.currentDragY;
+      } else {
+        this.toggleConsole();
+      }
+      this.cdr.markForCheck();
+    });
   }
 
   expand() {
-    this.isShrunk = false;
-    const side = this.shrinkSide;
-    this.shrinkSide = null;
-    this.position = { x: side === 'left' ? 16 : window.innerWidth - 220, y: this.position.y };
+    this.toggleConsole();
   }
 
   @HostListener('window:resize')
   onResize() {
-    if (typeof window === 'undefined' || this.position.x === -1) return;
-    if (this.isShrunk) {
-      this.position = {
-        x: this.shrinkSide === 'left' ? 0 : window.innerWidth - 44,
-        y: Math.min(this.position.y, window.innerHeight - 70)
-      };
-    } else {
-      this.position = {
-        x: Math.min(this.position.x, window.innerWidth - 180),
-        y: Math.min(this.position.y, window.innerHeight - 70)
-      };
-    }
+    if (typeof window === 'undefined') return;
+    this.isMobile = window.innerWidth < 768;
+    this.position = { x: 0, y: Math.floor(window.innerHeight * 0.42) };
   }
 
   executeCommand(cmdStr: string) {
