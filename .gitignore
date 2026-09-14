@@ -32,3 +32,6 @@ dist-ssr
 node_modules
 .serena
 .vercel
+scripts/pdf2png
+.npm
+.angular

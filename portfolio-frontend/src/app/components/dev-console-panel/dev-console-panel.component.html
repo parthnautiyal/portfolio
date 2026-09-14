@@ -1,78 +1,75 @@
-<!-- Shrunk tab (when dragged to edge) -->
+<!-- Backdrop overlay (Mobile & Desktop click-outside) -->
+<div
+  *ngIf="isOpen"
+  class="fixed inset-0 z-[97] bg-black/50 md:bg-black/20 backdrop-blur-xs cursor-default print:hidden"
+  (click)="closeBackdrop($event)"
+></div>
+
+<!-- Shrunk tab (always collapsed on the left edge until clicked, can be dragged vertically) -->
 <button
-  *ngIf="isShrunk"
-  (click)="expand()"
+  #edgeTab
+  *ngIf="!isOpen"
+  (mousedown)="onTabMouseDown($event)"
+  (touchstart)="onTabTouchStart($event)"
   [style.top.px]="position.y"
-  [style.left.px]="shrinkSide === 'left' ? 0 : null"
-  [style.right.px]="shrinkSide === 'right' ? 0 : null"
-  [class]="'fixed z-40 w-11 h-11 bg-slate-900 text-green-400 border border-slate-700/50 flex items-center justify-center shadow-2xl transition-all cursor-pointer ' + (shrinkSide === 'left' ? 'rounded-r-2xl' : 'rounded-l-2xl')"
-  title="Expand Dev Console"
+  class="fixed left-0 z-[99] w-11 h-11 bg-slate-900 hover:bg-slate-800 text-green-400 border border-l-0 border-slate-700/60 rounded-r-2xl flex items-center justify-center shadow-2xl transition-transform cursor-grab active:cursor-grabbing hover:scale-105 select-none touch-none"
+  title="Dev Console (Click to open, drag vertically to reposition)"
 >
-  <svg *ngIf="shrinkSide === 'left'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-  <svg *ngIf="shrinkSide === 'right'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+  <div class="relative flex items-center justify-center pointer-events-none">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+    <span *ngIf="!hasOpened" class="absolute -top-1.5 -right-1.5 flex h-2 w-2">
+      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+      <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+    </span>
+  </div>
 </button>
 
-<!-- Floating draggable toggle pill -->
+<!-- Console panel (Terminal Window - Anchored directly to collapsed button position with smooth pop expansion) -->
 <div
-  #dragPill
-  *ngIf="!isShrunk && (!isOpen || isMinimized)"
-  (mousedown)="onMouseDown($event)"
-  (touchstart)="onTouchStart($event)"
-  [style.left.px]="position.x !== -1 ? position.x : 16"
-  [style.top.px]="position.y !== -1 ? position.y : null"
-  [class]="'fixed z-40 select-none print:hidden touch-none ' + (isDragging ? 'cursor-grabbing opacity-75' : 'cursor-grab')"
->
-  <button
-    [class]="'flex items-center gap-2 p-2.5 pr-4 rounded-full shadow-lg border backdrop-blur-md transition-all pointer-events-none ' + (
-      isOpen
-        ? 'bg-slate-950 text-green-400 border-green-500/30'
-        : 'bg-slate-900 text-green-400 border-slate-700/50'
-    ) + ' ' + (!hasOpened && !isOpen ? 'animate-highlight-pulse' : '')"
-    title="Toggle Dev Console (Ctrl + `)"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
-    <span class="text-[0.62rem] font-bold text-green-400/80">dev-console</span>
-  </button>
-</div>
-
-<!-- Console panel (Terminal Window) -->
-<div
-  *ngIf="isOpen && !isShrunk"
+  *ngIf="isOpen"
   (mousedown)="$event.stopPropagation()"
   (touchstart)="$event.stopPropagation()"
-  [class]="'fixed z-50 border border-green-500/30 bg-slate-950/98 text-green-400 font-mono flex flex-col shadow-2xl transition-all duration-150 ' + (isMaximized ? 'inset-2 rounded-xl' : 'rounded-xl w-[94vw] sm:w-[600px] shadow-[0_0_50px_rgba(0,0,0,0.8)]')"
-  [style.top]="isMaximized ? '8px' : 'auto'"
-  [style.right]="isMaximized ? '8px' : 'auto'"
-  [style.bottom]="isMaximized ? '8px' : 'calc(100vh - ' + position.y + 'px + 8px)'"
-  [style.left]="isMaximized ? '8px' : ((position.x !== -1 ? position.x : 16) + 'px')"
+  [class]="'fixed z-[99] border border-green-500/30 bg-slate-950/98 text-green-400 font-mono flex flex-col shadow-2xl terminal-pop-anim ' + (
+    isMaximized
+      ? 'inset-2 sm:inset-4 rounded-xl h-[calc(100dvh-16px)] sm:h-[calc(100vh-32px)]'
+      : (isMobile
+          ? 'left-3 right-3 rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.85)] max-h-[70vh]'
+          : 'left-4 w-[94vw] sm:w-[620px] rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.85)] max-h-[80vh]')
+  )"
+  [style.top.px]="isMaximized ? (isMobile ? 8 : 16) : terminalTop"
+  [style.transform-origin]="transformOrigin"
 >
   <!-- macOS/Linux Terminal Title Bar -->
   <div
     (dblclick)="maximize()"
+    (touchend)="onTitleBarTouch($event)"
     class="flex items-center justify-between border-b border-green-500/20 bg-slate-900/80 px-3.5 py-2.5 cursor-default shrink-0 select-none rounded-t-xl"
-    title="Double-click to toggle fullscreen"
+    title="Double-click or double-tap to toggle fullscreen"
   >
     <div class="flex items-center gap-2">
       <!-- Red: close -->
       <button
+        type="button"
         (click)="isOpen = false"
-        class="h-3 w-3 rounded-full bg-red-500/90 hover:bg-red-400 transition-colors cursor-pointer flex items-center justify-center group"
+        class="h-3.5 w-3.5 rounded-full bg-red-500/90 hover:bg-red-400 transition-colors cursor-pointer flex items-center justify-center group"
         title="Close"
       >
         <svg class="opacity-0 group-hover:opacity-100 transition-opacity text-slate-950" xmlns="http://www.w3.org/2000/svg" width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
       <!-- Yellow: minimize/restore -->
       <button
+        type="button"
         (click)="minimize()"
-        class="h-3 w-3 rounded-full bg-yellow-500/90 hover:bg-yellow-400 transition-colors cursor-pointer flex items-center justify-center group"
+        class="h-3.5 w-3.5 rounded-full bg-yellow-500/90 hover:bg-yellow-400 transition-colors cursor-pointer flex items-center justify-center group"
         title="Minimize"
       >
         <svg class="opacity-0 group-hover:opacity-100 transition-opacity text-slate-950" xmlns="http://www.w3.org/2000/svg" width="8" height="2" viewBox="0 0 10 2"><line x1="0" y1="1" x2="10" y2="1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
       <!-- Green: maximize toggle -->
       <button
+        type="button"
         (click)="maximize()"
-        class="h-3 w-3 rounded-full bg-green-500/90 hover:bg-green-400 transition-colors cursor-pointer flex items-center justify-center group"
+        class="h-3.5 w-3.5 rounded-full bg-green-500/90 hover:bg-green-400 transition-colors cursor-pointer flex items-center justify-center group"
         [title]="isMaximized ? 'Restore' : 'Fullscreen'"
       >
         <svg class="opacity-0 group-hover:opacity-100 transition-opacity text-slate-950" xmlns="http://www.w3.org/2000/svg" width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
@@ -82,14 +79,25 @@
         guest@parth-macbook: ~
       </span>
     </div>
-    <span class="text-[0.6rem] text-slate-500 font-semibold tracking-wider">bash · 80x24</span>
+    <div class="flex items-center gap-2">
+      <!-- Mobile 1-tap Fullscreen Toggle Pill -->
+      <button
+        type="button"
+        (click)="maximize()"
+        class="sm:hidden text-[0.62rem] font-semibold text-slate-300 hover:text-green-300 px-2 py-0.5 rounded border border-green-500/20 bg-slate-800/80 transition-all flex items-center gap-1"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+        {{ isMaximized ? 'Restore' : 'Fullscreen' }}
+      </button>
+      <span class="text-[0.6rem] text-slate-500 font-semibold tracking-wider hidden sm:inline">bash · 80x24</span>
+    </div>
   </div>
 
   <!-- Terminal Viewport (Clicking anywhere focuses prompt) -->
   <div
     *ngIf="!isMinimized"
     (click)="focusInput($event)"
-    [class]="'overflow-y-auto p-3.5 space-y-1 text-[0.72rem] select-text scrollbar-thin scrollbar-thumb-green-500/20 cursor-text ' + (isMaximized ? 'flex-1' : 'h-[440px]')"
+    [class]="'overflow-y-auto p-3.5 space-y-1 text-[0.72rem] select-text scrollbar-thin scrollbar-thumb-green-500/20 cursor-text ' + (isMobile || isMaximized ? 'flex-1' : 'h-[440px]')"
   >
     <!-- Historical Output lines -->
     <div

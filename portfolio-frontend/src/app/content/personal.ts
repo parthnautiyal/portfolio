@@ -8,5 +8,6 @@ export const personal = {
   "github": "https://github.com/parthnautiyal",
   "linkedin": "https://www.linkedin.com/in/parthnautiyal/",
   "leetcode": "https://leetcode.com/u/parth_nautiyal/",
-  "resumeUrl": "/Parth_Nautiyal_Resume.pdf"
+  "resumeUrl": "/Parth_Nautiyal_Resume.pdf",
+  "overleafUrl": "https://www.overleaf.com/read/ggtqqhjpqgsw#c32362"
 };

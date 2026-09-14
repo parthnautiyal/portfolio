@@ -14,6 +14,8 @@ export type FailureState = {
   ollamaOffline: boolean;
 };
 
+export type ArchitectureTab = 'topology' | 'sync-engine' | 'pipeline' | 'observability';
+
 @Component({
   selector: 'app-system-architecture-page',
   standalone: true,
@@ -28,6 +30,9 @@ export type FailureState = {
   styleUrls: ['./system-architecture-page.component.css']
 })
 export class SystemArchitecturePageComponent implements OnInit, OnDestroy {
+  activeTab: ArchitectureTab = 'topology';
+  selectedNodeId: string = 'overleaf-source';
+
   failureState: FailureState = {
     geminiLimit: false,
     gatewayLatency: false,
@@ -38,6 +43,10 @@ export class SystemArchitecturePageComponent implements OnInit, OnDestroy {
   private routeSub!: Subscription;
 
   constructor(private route: ActivatedRoute) {}
+
+  get activeFailureCount(): number {
+    return Object.values(this.failureState).filter(Boolean).length;
+  }
 
   ngOnInit() {
     this.routeSub = this.route.queryParams.subscribe(params => {
@@ -50,12 +59,56 @@ export class SystemArchitecturePageComponent implements OnInit, OnDestroy {
           ollamaOffline: selectParam === 'ollama'
         };
       }
+      const tabParam = params['tab'] as ArchitectureTab;
+      if (tabParam && ['topology', 'sync-engine', 'pipeline', 'observability'].includes(tabParam)) {
+        this.activeTab = tabParam;
+      }
     });
   }
 
   ngOnDestroy() {
     if (this.routeSub) {
       this.routeSub.unsubscribe();
+    }
+  }
+
+  setActiveTab(tab: ArchitectureTab) {
+    this.activeTab = tab;
+  }
+
+  jumpToAstParser() {
+    this.activeTab = 'sync-engine';
+  }
+
+  jumpToOverleafSync() {
+    this.activeTab = 'sync-engine';
+  }
+
+  jumpToMultiLlm() {
+    this.activeTab = 'topology';
+    this.selectedNodeId = 'multi-llm';
+  }
+
+  jumpToEdgeAvailability() {
+    this.activeTab = 'observability';
+  }
+
+  resetSimulations() {
+    this.failureState = {
+      geminiLimit: false,
+      gatewayLatency: false,
+      cloudMountOffline: false,
+      ollamaOffline: false
+    };
+  }
+
+  toggleQuickSimulation() {
+    if (this.activeFailureCount > 0) {
+      this.resetSimulations();
+    } else {
+      this.failureState.geminiLimit = true;
+      this.activeTab = 'topology';
+      this.selectedNodeId = 'multi-llm';
     }
   }
 

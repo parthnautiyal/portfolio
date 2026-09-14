@@ -7,19 +7,13 @@
   </a>
   <nav aria-label="Main navigation" class="mx-auto flex max-w-[1600px] items-center justify-between px-6 md:px-12 xl:px-16 py-4">
     <a
-      [href]="personal.linkedin"
-      target="_blank"
-      rel="noreferrer"
-      aria-label="LinkedIn Profile"
-      class="flex items-center gap-3 text-xl md:text-2xl font-semibold tracking-tight text-[var(--color-text-bright)] hover:text-[var(--color-primary)] transition-colors duration-200"
-      (click)="onLinkClick('LinkedIn Profile', personal.linkedin)"
+      routerLink="/"
+      aria-label="Portfolio Home"
+      class="flex items-center gap-2.5 text-xl md:text-2xl font-bold tracking-tight text-[var(--color-text-bright)] hover:text-[var(--color-primary)] transition-colors duration-200"
+      (click)="onLinkClick('Brand Logo', '/')"
     >
-      <img
-        src="/parth_avatar.jpg"
-        alt=""
-        class="h-8 w-8 rounded-full object-cover border border-[var(--border-color)] shadow-sm shrink-0"
-      />
-      <span>{{ personal.name.split(' ')[0] }}</span>
+      <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20 text-xs font-mono font-black">&gt;_</span>
+      <span>Portfolio</span>
     </a>
 
     <!-- Central spacious links menu -->
@@ -69,17 +63,8 @@
       </a>
     </div>
 
-    <!-- Mobile menu trigger and quick actions -->
-    <div class="flex md:hidden items-center gap-2">
-      <a
-        routerLink="/chat"
-        class="h-9 w-9 flex items-center justify-center rounded-full btn-gradient text-xs shadow-md transition-all active:scale-95"
-        (click)="onLinkClick('Chatbot Mobile Shortcut', '')"
-        title="Chatbot Assistant"
-      >
-        💬
-      </a>
-
+    <!-- Mobile menu trigger -->
+    <div class="flex md:hidden items-center">
       <button
         type="button"
         (click)="toggleMobileMenu()"
@@ -124,14 +109,6 @@
             {{ themeMode }}
           </span>
         </button>
-
-        <a
-          routerLink="/chat"
-          class="w-full h-11 flex items-center justify-center gap-2 rounded-xl btn-gradient text-sm font-semibold shadow-md transition-all active:scale-98"
-          (click)="onLinkClick('Chatbot CTA', '')"
-        >
-          💬 Chatbot Assistant
-        </a>
 
         <!-- Contact CTA -->
         <a

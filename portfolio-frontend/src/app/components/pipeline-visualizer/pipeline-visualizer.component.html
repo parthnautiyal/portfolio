@@ -9,9 +9,9 @@
     </p>
   </div>
 
-  <div class="grid gap-6 md:grid-cols-[0.4fr_0.6fr]">
+  <div class="grid gap-6 md:grid-cols-[0.4fr_0.6fr] min-w-0 w-full">
     <!-- Left column: Stages sequence list -->
-    <div class="space-y-2.5">
+    <div class="space-y-2.5 min-w-0">
       <button
         *ngFor="let stage of pipelineStages"
         (click)="setActiveStage(stage.id)"
@@ -43,12 +43,12 @@
     </div>
 
     <!-- Right column: Active stage code viewer -->
-    <div class="glass-panel p-4 rounded-xl flex flex-col justify-between h-full min-h-[300px]">
-      <div>
+    <div class="glass-panel p-4 rounded-xl flex flex-col justify-between h-full min-h-[300px] min-w-0 max-w-full">
+      <div class="min-w-0">
         <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 border-b border-slate-200/20 dark:border-slate-800 pb-2 mb-3">
           {{ activeStage.configTitle }}
         </h4>
-        <pre class="text-[0.62rem] font-mono text-emerald-500 dark:text-emerald-400 overflow-x-auto whitespace-pre leading-relaxed p-4 rounded-lg bg-slate-950 border border-slate-850">{{ activeStage.configContent }}</pre>
+        <pre class="text-[0.62rem] font-mono text-emerald-500 dark:text-emerald-400 overflow-x-auto max-w-full whitespace-pre leading-relaxed p-4 rounded-lg bg-slate-950 border border-slate-850 scrollbar-thin">{{ activeStage.configContent }}</pre>
       </div>
       <div class="text-[0.6rem] text-slate-400 mt-3 flex items-center gap-1">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
