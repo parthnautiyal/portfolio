@@ -31,9 +31,9 @@ export class ExperienceComponent implements OnInit {
   internItem?: ExperienceItem;
 
   // Dynamic Career Timeline Metrics
-  careerStartDate = new Date(2024, 0, 1);  // Jan 1, 2024
-  internEndDate = new Date(2024, 6, 1);    // Jul 1, 2024
-  sde1EndDate = new Date(2026, 2, 1);      // Mar 1, 2026
+  careerStartDate = new Date(2024, 0, 9);  // Jan 9, 2024 (Official Joining date)
+  internEndDate = new Date(2024, 6, 10);   // Jul 10, 2024 (Full-time Conversion to SDE I)
+  sde1EndDate = new Date(2026, 2, 1);      // Mar 1, 2026 (Promotion to SDE II)
   currentDate = new Date();
 
   totalDays = 0;
@@ -110,34 +110,30 @@ export class ExperienceComponent implements OnInit {
     this.calculateDynamicDurations();
   }
 
+  private getDaysBetween(start: Date, end: Date): number {
+    const utc1 = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+    const utc2 = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+    return Math.max(0, Math.floor((utc2 - utc1) / (1000 * 60 * 60 * 24)));
+  }
+
   private calculateDynamicDurations() {
     const now = new Date();
     this.currentDate = now;
 
-    const startCareer = this.careerStartDate.getTime();
-    const endIntern = this.internEndDate.getTime();
-    const endSde1 = this.sde1EndDate.getTime();
-    const nowTime = Math.max(endSde1, now.getTime());
+    this.totalDays = this.getDaysBetween(this.careerStartDate, now);
+    this.internDays = this.getDaysBetween(this.careerStartDate, this.internEndDate);
+    this.sde1Days = this.getDaysBetween(this.internEndDate, this.sde1EndDate);
+    this.sde2Days = Math.max(1, this.getDaysBetween(this.sde1EndDate, now));
 
-    const totalMs = nowTime - startCareer;
-    const internMs = endIntern - startCareer;
-    const sde1Ms = endSde1 - endIntern;
-    const sde2Ms = nowTime - endSde1;
-
-    const msPerDay = 1000 * 60 * 60 * 24;
-    this.totalDays = Math.floor(totalMs / msPerDay);
-    this.internDays = Math.floor(internMs / msPerDay);
-    this.sde1Days = Math.floor(sde1Ms / msPerDay);
-    this.sde2Days = Math.max(1, Math.floor(sde2Ms / msPerDay));
-
-    this.internWidthPct = Math.round((internMs / totalMs) * 1000) / 10;
-    this.sde1WidthPct = Math.round((sde1Ms / totalMs) * 1000) / 10;
+    const totalSpanDays = Math.max(1, this.totalDays);
+    this.internWidthPct = Math.round((this.internDays / totalSpanDays) * 1000) / 10;
+    this.sde1WidthPct = Math.round((this.sde1Days / totalSpanDays) * 1000) / 10;
     this.sde1LeftPct = this.internWidthPct;
-    this.sde2WidthPct = Math.round((sde2Ms / totalMs) * 1000) / 10;
+    this.sde2WidthPct = Math.max(0.1, Math.round((this.sde2Days / totalSpanDays) * 1000) / 10);
     this.sde2LeftPct = Math.round((this.internWidthPct + this.sde1WidthPct) * 10) / 10;
 
-    const jul2025Ms = new Date(2025, 6, 1).getTime() - startCareer;
-    this.jul2025LeftPct = Math.round((jul2025Ms / totalMs) * 1000) / 10;
+    const jul2025Days = this.getDaysBetween(this.careerStartDate, new Date(2025, 6, 1));
+    this.jul2025LeftPct = Math.round((jul2025Days / totalSpanDays) * 1000) / 10;
 
     this.totalDurationText = this.getFormattedDuration(this.careerStartDate, now);
     this.internDurationText = this.getFormattedDuration(this.careerStartDate, this.internEndDate);
