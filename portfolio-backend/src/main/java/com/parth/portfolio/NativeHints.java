@@ -5,6 +5,7 @@ import com.parth.portfolio.chat.ChatResponse;
 import com.parth.portfolio.contact.ContactRequest;
 import com.parth.portfolio.jobmatch.JobMatchRequest;
 import com.parth.portfolio.projects.Project;
+import com.pgvector.PGvector;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -30,5 +31,14 @@ public class NativeHints implements RuntimeHintsRegistrar {
 
         // Angular content TS files read by JobMatchController via classpath
         hints.resources().registerPattern("content/**");
+
+        // RAG knowledge base read by RagIngestionRunner via classpath
+        hints.resources().registerPattern("knowledge-base/**");
+
+        // OpenNLP sentence model loaded by LangChain4j DocumentSplitters.recursive(...)
+        hints.resources().registerPattern("opennlp/**");
+
+        // pgjdbc instantiates registered PGobject subtypes reflectively (pgvector's vector type)
+        hints.reflection().registerType(PGvector.class, MemberCategory.values());
     }
 }

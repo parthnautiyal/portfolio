@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.parth.portfolio.rag.RagService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -42,6 +44,11 @@ public class ChatController {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final RagService ragService;
+
+    public ChatController(RagService ragService) {
+        this.ragService = ragService;
+    }
 
     @PostMapping
     public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request) {
@@ -64,6 +71,13 @@ public class ChatController {
         if (request.getKbContext() != null && !request.getKbContext().trim().isEmpty()) {
             activeContext += "\n\nADDITIONAL USER KNOWLEDGE BASE CONTEXT:\n" + request.getKbContext() 
                     + "\n\nUse this additional context to answer the user's question if relevant.";
+        }
+
+        // RAG: semantic retrieval from the pgvector knowledge base (empty when RAG is unavailable)
+        List<String> retrieved = ragService.retrieveRelevantContext(message, 4);
+        if (!retrieved.isEmpty()) {
+            activeContext += "\n\nRELEVANT KNOWLEDGE BASE CONTEXT:\n" + String.join("\n---\n", retrieved)
+                    + "\n\nPrefer this retrieved context when it answers the user's question.";
         }
 
         // If no keys are configured, try Ollama or return default fallback
