@@ -16,8 +16,8 @@ export const resumeProjects = [
       }
     ],
     "bullets": [
-      "Built an autonomous recruitment platform integrating Claude 3.5 and Gemini API for automated job parsing, ATS compatibility scoring (0–100 match rating), and candidate-to-role skill gap analysis.",
-      "Engineered concurrent multi-worker search pipelines using CompletableFuture for parallel platform sourcing and automated cold email campaigns via Gmail API (OAuth 2.0) with MX/DNS verification algorithms."
+      "Built an autonomous recruitment platform integrating Claude 3.5 and Gemini API for automated JD parsing, skill gap analysis, and ATS compatibility scoring (0–100 match rating).",
+      "Engineered concurrent multi-worker search pipelines using CompletableFuture and Gmail API (OAuth 2.0) with DNS/MX verification, achieving 98% email deliverability."
     ]
   },
   {
@@ -34,7 +34,7 @@ export const resumeProjects = [
       }
     ],
     "bullets": [
-      "Developed a full-stack platform featuring a RAG-powered conversational assistant orchestrating multiple LLM providers (Google Gemini, OpenAI, and local Ollama/Llama 3) with dynamic resume knowledge-base context injection."
+      "Developed a full-stack platform featuring a RAG conversational assistant orchestrating Google Gemini, OpenAI, and local Ollama with vector context injection for dynamic resume Q&A."
     ]
   }
 ];

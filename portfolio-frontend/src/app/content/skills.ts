@@ -131,12 +131,6 @@ export const skillCategories = [
         "icon": "SiPostgresql",
         "url": "https://github.com/pgvector/pgvector",
         "color": "#336791"
-      },
-      {
-        "name": "Qdrant",
-        "icon": "TbDatabase",
-        "url": "https://qdrant.tech",
-        "color": "#D946EF"
       }
     ]
   },

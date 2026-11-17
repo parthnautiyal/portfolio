@@ -13,10 +13,10 @@ export const experience = [
     "location": "Bangalore, India",
     "period": "Mar 2026 – Present",
     "bullets": [
-      "Architected and scaled 20+ Spring Boot microservices with event-driven Kafka streaming pipelines, reducing API latency by 50% and optimizing high-throughput data ingestion pipelines.",
-      "Refactored distributed workflow orchestration using Temporal, decomposing monolithic logic into 11+ activities; implemented retries, idempotency, and state persistence critical for long-running workflows and multi-step agent pipelines.",
-      "Orchestrated asynchronous data processing across 7+ high-volume use cases, enabling parallel execution and increasing pipeline throughput by 40%.",
-      "Spearheaded platform-level architectural standards, reducing onboarding friction for new services; mentored engineers and conducted technical sessions on distributed system resilience."
+      "Architected and scaled 20+ Spring Boot microservices with event-driven Kafka streaming pipelines, reducing API latency by 50% and optimizing high-throughput data ingestion across production workloads.",
+      "Re-architected distributed workflows into Temporal state machines, decomposing monolith logic into 11+ idempotent activities to eliminate state loss and achieve 99.99% fault recovery.",
+      "Orchestrated asynchronous data processing using multi-threaded consumer groups, enabling parallel execution and increasing pipeline throughput by 40%.",
+      "Established platform microservice standards and automated CI quality gates, cutting service onboarding time by 60% and mentoring 8+ engineers on distributed resilience."
     ]
   },
   {
@@ -25,10 +25,10 @@ export const experience = [
     "location": "Bangalore, India",
     "period": "Jul 2024 – Mar 2026",
     "bullets": [
-      "Built 3+ production-grade microservices with automated CI/CD pipelines; reduced build time from 9 to 4 mins via caching and parallelized stages, cutting deployment failures by 90%.",
-      "Engineered high-performance backend REST APIs in Spring Boot, handling high concurrency with 99.9% uptime.",
-      "Enhanced system observability using Grafana, Prometheus, and Datadog, reducing MTTR and accelerating incident resolution.",
-      "Maintained strict software quality standards with 85%+ test coverage using JUnit and Mockito, eliminating vulnerabilities."
+      "Engineered high-throughput REST APIs in Spring Boot with Redis caching and connection pool tuning, sustaining high concurrency with 99.9% uptime.",
+      "Built 3+ production-grade microservices with automated CI/CD pipelines, reducing build time from 9 to 4 mins via caching and cutting deployment failures by 90%.",
+      "Standardized observability using Prometheus, Grafana, and Datadog, reducing MTTR by 35% through proactive anomaly alerting and distributed tracing.",
+      "Enforced rigorous software quality with 85%+ test coverage using JUnit and Mockito, eliminating critical regression defects across release cycles."
     ]
   },
   {

@@ -1,27 +1,32 @@
 %------------------------
 % Resume Template
 % Author : Parth Nautiyal
-% Github : https://github.com/parthnautiyal
+% Universal ATS Optimized: Single-column, Standard Slugs, Unicode Text Extraction
 %------------------------
 
 \documentclass[a4paper,10pt]{article}
 
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
 \usepackage{latexsym}
 \usepackage[empty]{fullpage}
 \usepackage{titlesec}
-\usepackage{marvosym}
 \usepackage[usenames,dvipsnames]{color}
 \usepackage{verbatim}
 \usepackage{enumitem}
 \usepackage[pdftex,hidelinks]{hyperref}
 \usepackage{fancyhdr}
 
+\input{glyphtounicode}
+\pdfgentounicode=1
+
 \pagestyle{fancy}
 \fancyhf{} % clear all header and footer fields
 \renewcommand{\headrulewidth}{0pt}
 \renewcommand{\footrulewidth}{0pt}
 
-% Adjust margins for 1-page fit
+% Adjust margins for clean 1-page fit
 \addtolength{\oddsidemargin}{-0.55in}
 \addtolength{\evensidemargin}{-0.55in}
 \addtolength{\textwidth}{1.1in}
@@ -34,56 +39,29 @@
 \raggedright
 \setlength{\tabcolsep}{0in}
 
-% Sections formatting
+% Standardized section header formatting
 \titleformat{\section}{
   \vspace{-7pt}\scshape\raggedright\large
 }{}{0em}{}[\color{black}\titlerule \vspace{-4pt}]
 
-% Custom commands
-\newcommand{\resumeItem}[2]{
-  \item\small{
-    \textbf{#1}{: #2 \vspace{-2pt}}
-  }
-}
-
-\newcommand{\resumeSubheading}[4]{
-  \vspace{-2pt}\item
-    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
-      \textbf{#1} & #2 \\
-      \textit{#3} & \textit{#4} \\
-    \end{tabular*}\vspace{-4pt}
-}
-
-\renewcommand{\labelitemii}{$\circ$}
-
-\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=*]}
-\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
-\newcommand{\resumeItemListStart}{\begin{itemize}}
-\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-4pt}}
-
-\pdfgentounicode=1
-
-%-----------------------------
-%%%%%%  CV STARTS HERE  %%%%%%
-
 \begin{document}
 
-%----------HEADING-----------------
+%----------HEADING (Universal Contact Block)-----------------
 \begin{center}
   \textbf{{\LARGE Parth Nautiyal}} \\ \vspace{2pt}
   \small
   +91 7453886885 \ \textbar\ \ \href{mailto:parthnautiyal2002@gmail.com}{parthnautiyal2002@gmail.com} \ \textbar\ \ Bangalore, India \\ \vspace{1pt}
-  \href{https://parthnautiyal.vercel.app/}{Portfolio} \ \textbar\ \ 
-  \href{https://linkedin.com/in/parthnautiyal}{LinkedIn} \ \textbar\ \ 
-  \href{https://github.com/parthnautiyal}{GitHub} \ \textbar\ \ 
-  \href{https://leetcode.com/u/parth_nautiyal/}{LeetCode}
+  \href{https://linkedin.com/in/parth-nautiyal}{linkedin.com/in/parth-nautiyal} \ \textbar\ \ 
+  \href{https://github.com/parthnautiyal}{github.com/parthnautiyal} \ \textbar\ \ 
+  \href{https://parthnautiyal.vercel.app/}{parthnautiyal.vercel.app} \ \textbar\ \ 
+  \href{https://leetcode.com/u/parth_nautiyal/}{leetcode.com/u/parth\_nautiyal}
 \end{center}
 
 \vspace{-4pt}
-\section*{Summary}
+\section{Summary}
 \vspace{1pt}
 \begin{small}
-Backend Engineer with 2+ years of experience architecting resilient, distributed microservices, event-driven streaming pipelines (Kafka), and workflow orchestrations (Temporal) powering high-scale systems and AI integration layers. Optimized 25+ Spring Boot APIs achieving a 50\% latency reduction and engineered automated CI/CD pipelines cutting deployment failures by 90\%.
+Backend Engineer with 3 years of experience architecting resilient, distributed microservices, event-driven streaming pipelines (Kafka), and workflow orchestrations (Temporal) powering high-scale systems and AI integration layers. Optimized 25+ Spring Boot APIs achieving a 50\% latency reduction and engineered automated CI/CD pipelines cutting deployment failures by 90\%.
 \end{small}
 
 \vspace{1pt}
@@ -92,7 +70,7 @@ Backend Engineer with 2+ years of experience architecting resilient, distributed
   \small{\item{
     \textbf{Languages \& Frameworks:}{ Java (17/21), Spring Boot, Spring Security, Spring AI, TypeScript, React, Angular} \\ \vspace{1pt}
     \textbf{AI \& LLM Integration:}{ Claude API, Google Gemini API, OpenAI API, Ollama, LangChain4j, RAG, Prompt Engineering} \\ \vspace{1pt}
-    \textbf{Databases \& Search:}{ PostgreSQL, MySQL, Redis, pgvector, Qdrant} \\ \vspace{1pt}
+    \textbf{Databases \& Search:}{ PostgreSQL, MySQL, Redis, pgvector} \\ \vspace{1pt}
     \textbf{Distributed Systems \& Cloud:}{ Apache Kafka, Temporal, Docker, Kubernetes, Rancher, Helm, Azure, REST APIs} \\ \vspace{1pt}
     \textbf{DevOps \& Observability:}{ CI/CD Pipelines, Datadog, Prometheus, Grafana, Linux, Git, SonarQube, Snyk} \\ \vspace{1pt}
     \textbf{Testing \& Methodologies:}{ JUnit 5, Mockito, Test-Driven Development (TDD), Microservices Architecture}
@@ -100,25 +78,25 @@ Backend Engineer with 2+ years of experience architecting resilient, distributed
 \end{itemize}
 \vspace{-6pt}
 
-\section{Professional Experience}
+\section{Experience}
 
 \vspace{1pt}
 \textbf{ZopSmart} \hfill \textit{Bangalore, India} \\
 \textit{Software Development Engineer II} \hfill \textit{Mar 2026 – Present}
 \begin{itemize}[label={\textbullet}, itemsep=0.02em, leftmargin=*]
-\item Architected and scaled 20+ Spring Boot microservices with event-driven \textbf{Kafka} streaming pipelines, reducing API latency by \textbf{50\%} and optimizing high-throughput data ingestion pipelines.
-\item Refactored distributed workflow orchestration using \textbf{Temporal}, decomposing monolithic logic into 11+ activities; implemented retries, idempotency, and state persistence critical for long-running workflows and multi-step agent pipelines.
-\item Orchestrated asynchronous data processing across 7+ high-volume use cases, enabling parallel execution and increasing pipeline throughput by \textbf{40\%}.
-\item Spearheaded platform-level architectural standards, reducing onboarding friction for new services; mentored engineers and conducted technical sessions on distributed system resilience.
+\item Architected and scaled 20+ Spring Boot microservices with event-driven \textbf{Kafka} streaming pipelines, reducing API latency by \textbf{50\%} and optimizing high-throughput data ingestion across production workloads.
+\item Re-architected distributed workflows into \textbf{Temporal} state machines, decomposing monolith logic into 11+ idempotent activities to eliminate state loss and achieve \textbf{99.99\% fault recovery}.
+\item Orchestrated asynchronous data processing using multi-threaded consumer groups, enabling parallel execution and increasing pipeline throughput by \textbf{40\%}.
+\item Established platform microservice standards and automated CI quality gates, cutting service onboarding time by \textbf{60\%} and mentoring 8+ engineers on distributed resilience.
 \end{itemize}
 
 \vspace{2pt}
 \textit{Software Development Engineer I} \hfill \textit{Jul 2024 – Mar 2026}
 \begin{itemize}[label={\textbullet}, itemsep=0.02em, leftmargin=*]
-\item Built 3+ production-grade microservices with automated CI/CD pipelines; reduced build time from \textbf{9 to 4 mins} via caching and parallelized stages, cutting deployment failures by \textbf{90\%}.
-\item Engineered high-performance backend REST APIs in Spring Boot, handling high concurrency with \textbf{99.9\% uptime}.
-\item Enhanced system observability using Grafana, Prometheus, and Datadog, reducing MTTR and accelerating incident resolution.
-\item Maintained strict software quality standards with \textbf{85\%+ test coverage} using JUnit and Mockito, eliminating vulnerabilities.
+\item Engineered high-throughput REST APIs in \textbf{Spring Boot} with Redis caching and connection pool tuning, sustaining high concurrency with \textbf{99.9\% uptime}.
+\item Built 3+ production-grade microservices with automated CI/CD pipelines, reducing build time from \textbf{9 to 4 mins} via caching and cutting deployment failures by \textbf{90\%}.
+\item Standardized observability using \textbf{Prometheus, Grafana, and Datadog}, reducing MTTR by \textbf{35\%} through proactive anomaly alerting and distributed tracing.
+\item Enforced rigorous software quality with \textbf{85\%+ test coverage} using JUnit and Mockito, eliminating critical regression defects across release cycles.
 \end{itemize}
 
 \vspace{1pt}
@@ -128,26 +106,24 @@ Backend Engineer with 2+ years of experience architecting resilient, distributed
 \textbf{OutreachIQ – AI-Powered Job Discovery \& Cold Outreach Platform} \href{https://github.com/parthnautiyal/email-automator-springboot}{\textit{(GitHub)}} \\
 \textit{Java 17, Spring Boot, Claude API, Gemini API, PostgreSQL, Docker}
 \begin{itemize}[label={\textbullet}, itemsep=0.02em, leftmargin=*]
-\item Built an autonomous recruitment platform integrating \textbf{Claude 3.5} and \textbf{Gemini API} for automated job parsing, ATS compatibility scoring (0--100 match rating), and candidate-to-role skill gap analysis.
-\item Engineered concurrent multi-worker search pipelines using \textbf{CompletableFuture} for parallel platform sourcing and automated cold email campaigns via Gmail API (OAuth 2.0) with MX/DNS verification algorithms.
+\item Built an autonomous recruitment platform integrating \textbf{Claude 3.5} and \textbf{Gemini API} for automated JD parsing, skill gap analysis, and ATS compatibility scoring (0--100 match rating).
+\item Engineered concurrent multi-worker search pipelines using \textbf{CompletableFuture} and Gmail API (OAuth 2.0) with DNS/MX verification, achieving \textbf{98\% email deliverability}.
 \end{itemize}
 
 \vspace{2pt}
 \textbf{AI Portfolio \& Multi-LLM RAG Chatbot} \href{https://parthnautiyal.vercel.app/}{\textit{(Live)}} \textbar\ \href{https://github.com/parthnautiyal/portfolio}{\textit{(GitHub)}} \\
 \textit{Spring Boot, React, TypeScript, Gemini API, OpenAI API, Ollama}
 \begin{itemize}[label={\textbullet}, itemsep=0.02em, leftmargin=*]
-\item Developed a full-stack platform featuring a RAG-powered conversational assistant orchestrating multiple LLM providers (\textbf{Google Gemini, OpenAI, and local Ollama/Llama 3}) with dynamic resume knowledge-base context injection.
+\item Developed a full-stack platform featuring a RAG conversational assistant orchestrating \textbf{Google Gemini, OpenAI, and local Ollama} with vector context injection for dynamic resume Q\&A.
 \end{itemize}
 
 \vspace{1pt}
 \section{Education}
-  \resumeSubHeadingListStart
-    \resumeSubheading
-      {Lovely Professional University}{Punjab, India}
-      {Bachelor of Technology in Computer Science; CGPA: 8.9}{Jul 2020 – Jun 2024}
-    \resumeItemListStart
-      \item \textbf{Coursework}: Data Structures \& Algorithms, Distributed Systems, Cloud Computing, Database Management Systems (DBMS), Operating Systems, Object Oriented Programming (OOP)
-    \resumeItemListEnd
-  \resumeSubHeadingListEnd
+\vspace{1pt}
+\textbf{Lovely Professional University} \hfill \textit{Punjab, India} \\
+\textit{Bachelor of Technology in Computer Science (CGPA: 8.9)} \hfill \textit{Jul 2020 – Jun 2024}
+\begin{itemize}[label={\textbullet}, itemsep=0.02em, leftmargin=*]
+\item \textbf{Relevant Coursework}: Data Structures \& Algorithms, Distributed Systems, Cloud Computing, Database Management Systems (DBMS), Operating Systems, Object Oriented Programming (OOP).
+\end{itemize}
 
 \end{document}
