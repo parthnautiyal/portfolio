@@ -201,7 +201,7 @@ public class JobMatchController {
                     Summary: Full-stack engineer with hands-on experience optimizing Spring Boot APIs and implementing CI/CD pipelines.
                     Email: parthnautiyal2002@gmail.com
                     GitHub: https://github.com/parthnautiyal
-                    LinkedIn: https://linkedin.com/in/parthnautiyal
+                    LinkedIn: https://linkedin.com/in/parth-nautiyal
                     
                     Experience:
                     - Software Development Engineer II at ZopSmart (Mar 2026 - Present): Scaling 20+ Spring Boot microservices, Kafka event-driven architectures, Temporal workflow orchestration.

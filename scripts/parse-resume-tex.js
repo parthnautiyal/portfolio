@@ -166,25 +166,22 @@ function parsePersonal(tex) {
 }
 
 function parseExperience(tex) {
-  const expSectionMatch = tex.match(/\\section\{Professional Experience\}([\s\S]*?)(?:\\section\{|$)/);
+  const expSectionMatch = tex.match(/\\section\{(?:Professional\s+)?Experience\}([\s\S]*?)(?:\\section\{|$)/);
   if (!expSectionMatch) return [];
 
   const rawSection = expSectionMatch[1];
   const items = [];
 
-  let currentCompany = 'ZopSmart';
-  let currentLocation = 'Bangalore, India';
-
-  const companyMatch = rawSection.match(/\\textbf\{([^}]+)\}\s*\\hfill\s*\\textit\{([^}]+)\}/);
-  if (companyMatch) {
-    currentCompany = cleanLatex(companyMatch[1]);
-    currentLocation = cleanLatex(companyMatch[2]);
-  }
+  const companyHeaders = [...rawSection.matchAll(/\\textbf\{([^}]+)\}\s*\\hfill\s*\\textit\{([^}]+)\}/g)]
+    .map(m => ({ index: m.index, company: cleanLatex(m[1]), location: cleanLatex(m[2]) }));
 
   const roleRegex = /\\textit\{([^}]+)\}\s*\\hfill\s*\\textit\{([^}]+)\}[\s\S]*?\\begin\{itemize\}[\s\S]*?\]([\s\S]*?)\\end\{itemize\}/g;
   let match;
 
   while ((match = roleRegex.exec(rawSection)) !== null) {
+    const header = companyHeaders.filter(h => h.index < match.index).pop();
+    const currentCompany = header ? header.company : 'ZopSmart';
+    const currentLocation = header ? header.location : 'Bangalore, India';
     const role = cleanLatex(match[1]);
     const period = cleanLatex(match[2]);
     const rawBullets = match[3];
@@ -327,36 +324,43 @@ function parseEducation(tex) {
   const rawSection = eduSectionMatch[1];
   const items = [];
 
-  const subHeadingMatch = rawSection.match(/\\resumeSubheading\s*\{([^}]+)\}\{([^}]+)\}\s*\{([^}]+)\}\{([^}]+)\}/);
+  // Macro layout: \resumeSubheading{School}{Location}{Degree; CGPA}{Period}
+  // Plain layout: \textbf{School} \hfill \textit{Location} \\ \textit{Degree (CGPA: x)} \hfill \textit{Period}
+  const subHeadingMatch =
+    rawSection.match(/\\resumeSubheading\s*\{([^}]+)\}\{([^}]+)\}\s*\{([^}]+)\}\{([^}]+)\}/) ||
+    rawSection.match(/\\textbf\{([^}]+)\}\s*\\hfill\s*\\textit\{([^}]+)\}\s*\\\\\s*\\textit\{([^}]+)\}\s*\\hfill\s*\\textit\{([^}]+)\}/);
 
   if (subHeadingMatch) {
     const school = cleanLatex(subHeadingMatch[1]);
     const location = cleanLatex(subHeadingMatch[2]);
-    const degreeLine = cleanLatex(subHeadingMatch[3]);
+    let degreeLine = cleanLatex(subHeadingMatch[3]);
     const period = cleanLatex(subHeadingMatch[4]);
 
     const details = [];
     let degree = 'Bachelor of Technology';
     let field = 'Computer Science';
 
-    if (degreeLine.includes(';')) {
-      const parts = degreeLine.split(';');
-      const degPart = parts[0].trim();
-      const cgpaPart = parts[1].trim();
+    const parenCgpa = degreeLine.match(/\(([^)]*CGPA[^)]*)\)/i);
+    if (parenCgpa) {
+      details.push(parenCgpa[1].trim());
+      degreeLine = degreeLine.replace(parenCgpa[0], '').trim();
+    } else if (degreeLine.includes(';')) {
+      const [degPart, cgpaPart] = degreeLine.split(';').map(s => s.trim());
       if (cgpaPart) details.push(cgpaPart);
-      if (degPart.toLowerCase().includes('in')) {
-        const dParts = degPart.split(/in\s+/i);
-        degree = dParts[0].trim();
-        field = dParts[1].trim();
-      } else {
-        degree = degPart;
-      }
+      degreeLine = degPart;
+    }
+    const inSplit = degreeLine.split(/\s+in\s+/i);
+    if (inSplit.length > 1) {
+      degree = inSplit[0].trim();
+      field = inSplit.slice(1).join(' in ').trim();
+    } else if (degreeLine) {
+      degree = degreeLine;
     }
 
-    const courseworkMatch = rawSection.match(/\\item\s+\\textbf\{Coursework\}:\s*([\s\S]*?)(?=\\resumeItemListEnd|\\end\{itemize\}|\n\s*\n|$)/);
+    const courseworkMatch = rawSection.match(/\\item\s+\\textbf\{(?:Relevant\s+)?Coursework\}:\s*([\s\S]*?)(?=\\resumeItemListEnd|\\end\{itemize\}|\n\s*\n|$)/);
     if (courseworkMatch) {
       const cleanCoursework = cleanLatex(courseworkMatch[1]);
-      const courses = cleanCoursework.split(',').map(c => c.trim()).filter(Boolean);
+      const courses = cleanCoursework.split(',').map(c => c.trim().replace(/\.$/, '')).filter(Boolean);
       details.push(...courses);
     }
 
@@ -400,6 +404,18 @@ function main() {
   console.log(`  - Projects: ${projectsData.length} project(s)`);
   console.log(`  - Skills: ${skillsData.length} category(ies), ${skillsData.reduce((acc, c) => acc + c.items.length, 0)} total skills`);
   console.log(`  - Education: ${educationData.length} entry(ies)`);
+
+  // A layout change in the .tex must fail loudly, not silently blank sections of the live site.
+  const emptySections = Object.entries({
+    experience: experienceData.filter(e => !e.role.toLowerCase().includes('intern')),
+    projects: projectsData,
+    skills: skillsData,
+    education: educationData
+  }).filter(([, data]) => data.length === 0).map(([name]) => name);
+  if (emptySections.length > 0) {
+    console.error(`[parse-resume-tex] Error: parsed 0 entries for: ${emptySections.join(', ')}. Refusing to overwrite content files.`);
+    process.exit(1);
+  }
 
   const experienceTypeDef = `export type ExperienceItem = {
   role: string;
@@ -485,8 +501,23 @@ export type SkillCategory = {
       if (!rendered) {
         try {
           execSync(`sips -s format png --resampleWidth 1190 "${pdfPath}" --out "${outPreviewPath}"`, { stdio: 'ignore' });
+          rendered = true;
           console.log(`[parse-resume-tex] Generated preview image: ${outPreviewPath}`);
         } catch (e) {}
+      }
+
+      // Linux (CI): poppler-utils
+      if (!rendered) {
+        try {
+          const outPrefix = outPreviewPath.replace(/\.png$/, '');
+          execSync(`pdftoppm -png -singlefile -f 1 -l 1 -scale-to-x 1190 -scale-to-y -1 "${pdfPath}" "${outPrefix}"`, { stdio: 'ignore' });
+          rendered = true;
+          console.log(`[parse-resume-tex] Generated preview image via pdftoppm: ${outPreviewPath}`);
+        } catch (e) {}
+      }
+
+      if (!rendered) {
+        console.warn('[parse-resume-tex] Warning: no PDF rasterizer available; resume-preview.png not updated.');
       }
     }
   } catch (err) {

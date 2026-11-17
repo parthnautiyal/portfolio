@@ -327,7 +327,7 @@ npx ng build
 
 **Parth Nautiyal**
 * **Portfolio:** [parthnautiyal.vercel.app](https://parthnautiyal.vercel.app/)
-* **LinkedIn:** [linkedin.com/in/parthnautiyal](https://www.linkedin.com/in/parthnautiyal/)
+* **LinkedIn:** [linkedin.com/in/parth-nautiyal](https://www.linkedin.com/in/parth-nautiyal/)
 * **GitHub:** [github.com/parthnautiyal](https://github.com/parthnautiyal)
 * **LeetCode:** [leetcode.com/u/parth_nautiyal](https://leetcode.com/u/parth_nautiyal/)
 * **Email:** [parthnautiyal2002@gmail.com](mailto:parthnautiyal2002@gmail.com)
